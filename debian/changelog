@@ -1,83 +1,476 @@
-mtools (4.0.10) stable; urgency=low
+mtools (4.0.10-1ubuntu1) lucid; urgency=low
 
-  * More copyright stuff
-  * Fixed issues with max filesize (was 2GB instead of 4GB, and
-    warned only after copying the beginning)
-	
- -- Alain Knaff <alain@knaff.lu>  Tue,  3 Mar 2009 22:14:04 +0100
-mtools (4.0.9) stable; urgency=low
+  * Added debian/patches/11.truncation-fix.patch:
+    - This corrects the behavior of name mangling and truncation when dealing
+      with long filenames, and prevents possible conflicts between a shortname
+      and a long filename. Thanks to Alexandar Sack for helping revise the patch
+      (LP: #481482)
 
-  * More copyright stuff
+ -- Michael Casadevall <mcasadevall@ubuntu.com>  Thu, 12 Nov 2009 13:37:53 -0500
 
- -- Alain Knaff <alain@knaff.lu>  Mon,  2 Mar 2009 22:15:54 +0100
-mtools (4.0.8) stable; urgency=low
+mtools (4.0.10-1) unstable; urgency=low
 
-  * Copyright notices
+  * New upstream version 
+  * Standards version is 3.8.1
+  * DH_COMPAT is 7
+  * Run dh_prep instead of dh_clean
 
- -- Alain Knaff <alain@knaff.lu>  Sun,  1 Mar 2009 00:36:22 +0100
-mtools (4.0.7) stable; urgency=low
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Thu, 02 Apr 2009 12:28:09 +1100
 
-  * Fixed conversion to native on OS/2
-  * Fix parsing of --help flag
+mtools (4.0.9-1) unstable; urgency=low
 
- -- Alain Knaff <alain@knaff.lu>  Tue, 24 Feb 2009 19:55:46 +0100
-mtools (4.0.6) stable; urgency=low
+  * New upstream version.
+    - Upstream doesn't ship Changelog anymore
+  * Rename debian/changelog-legacy to debian/old-changelog
 
-  * Fallback for missing wchar_t iconv codepage on OS/2
-  * Fixes for LSEEK64 support
-  * Support for --help that returns a 0 exit status
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Tue, 03 Mar 2009 12:46:41 +1100
 
- -- Alain Knaff <alain@knaff.lu>  Sun, 22 Feb 2009 02:04:32 +0100
-mtools (4.0.5) stable; urgency=low
+mtools (4.0.4-1) unstable; urgency=low
 
-  * Make setpgrp() usage in floppyd conditional
-  * Re-instate PACKED around structure (ARM)
-  * LSEEK64
+  * New upstream version.
+    - Not needed: 06-infodir.diff
+  * Build depend on quilt, autotools-dev
+  * Don't build depend on dpatch
+  * Standards-Version is 3.8.0
+  * Priority is optional
+  * Fix the following lintian issues:
+    W: floppyd: manpage-has-errors-from-man usr/share/man/man1/floppyd.1.gz
+       23: warning: `iX' not defined
+       110: warning: `lp' not defined
+    W: mtools source: maintainer-script-lacks-debhelper-token
+       debian/mtools.prerm
+    W: mtools: maintainer-script-ignores-errors postinst
+    W: mtools: maintainer-script-ignores-errors prerm
+    W: floppyd: copyright-refers-to-versionless-license-file
+       usr/share/common-licenses/GPL
+    W: floppyd: copyright-without-copyright-notice
+    W: mtools: copyright-refers-to-versionless-license-file
+       usr/share/common-licenses/GPL
+    W: mtools: copyright-without-copyright-notice
+    W: floppyd: syntax-error-in-debian-changelog line 446 "badly formatted
+       heading line"
+    W: mtools: manpage-has-bad-whatis-entry usr/share/man/man1/tgz.1.gz
+    W: mtools: info-document-missing-dir-section usr/share/info/mtools.info.gz
 
- -- Alain Knaff <alain@knaff.lu>  Thu, 19 Feb 2009 23:55:04 +0100
-mtools (4.0.4) stable; urgency=low
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Mon, 16 Feb 2009 18:09:30 +1100
 
-  * BSD support: SCSI, use getuserid/getgroupid in floppyd
-  * Another attempt at putwc fix for OS/2
-  * Further GNU fixes
-  * Fallback for putwc if there is wchar (OS/2)
+mtools (3.9.11-1) unstable; urgency=low
 
- -- Alain Knaff <alain@knaff.lu>  Sun, 15 Feb 2009 16:18:32 +0100
-mtools (4.0.3) stable; urgency=low
+  * Merge Ubuntu's changes
+  * Don't build with -m486. Closes: #474817
+  * Don't build-depend on xlibs-static-dev. Build-depends on
+    libxfont-dev. Closes: #421561
+  * floppyd does not depend on mtools. Closes: #450596
+  * Fix "mzip unreliable on 2.6.18". Closes: #393878
+    Patch by Thomas Richter <thor@mail.math.tu-berlin.de>
+  * mtools.1: fixed typos. Closes: #468744
+    Patch by A. Costa <agcosta@gis.net>
+  * debian/watch: added
+  * Fix the following lintian issues:
+    W: mtools source: debian-rules-ignores-make-clean-error line 28
+    W: mtools source: out-of-date-standards-version 3.7.2 (current is 3.7.3)
+    W: mtools source: debian-rules-ignores-make-clean-error line 28
+    W: mtools source: out-of-date-standards-version 3.7.2 (current is 3.7.3)
+    W: mtools: description-contains-homepage
+    W: floppyd: description-contains-homepage
+    E: mtools: copyright-file-contains-full-gfdl-license
+    E: floppyd: copyright-file-contains-full-gfdl-license
 
-  * Fix multipart pathname parsing bug in vfat.c (forgot limited length)
-  * Supplied fallback define for putwc
-  * Copyright notices in all sources
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Tue, 08 Apr 2008 07:54:04 +1000
 
- -- Alain Knaff <alain@knaff.lu>  Mon,  9 Feb 2009 21:46:01 +0100
-mtools (4.0.2) stable; urgency=low
+mtools (3.9.11-0ubuntu1) hardy; urgency=low
 
-  * Fixed off-by-2 error in unix_name in file_name.c
+  * Don't build with -m486.
 
- -- Alain Knaff <alain@knaff.lu>  Mon, 26 Jan 2009 22:58:06 +0100
-mtools (4.0.1) stable; urgency=low
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 24 Jan 2008 18:00:06 +0000
 
-  * Missing functions on Solaris 
+mtools (3.9.11-0) unstable; urgency=low
 
- -- Alain Knaff <alain@knaff.lu>  Sun,  7 Dec 2008 21:38:55 +0100
-mtools (4.0.0) stable; urgency=low
+  * New upstream version.
+    - Not needed: debian/patches/03-amuFormat.dpatch
+    - Doesn't apply anymore: debian/patches/05-readLabel.dpatch
+  * Add debian/patches/06-infodir.dpatch to use the install-info
+    option --infodir.
+  * Fix the following lintian messages:
+    - W: mtools source: debian-rules-sets-DH_COMPAT line 8
+    - W: mtools source: substvar-source-version-is-deprecated floppyd
+  * Set DH_COMPAT to 5.
+  * Don't ship NEWPARAMS.
 
-  * Offset for -i-specified image files
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Wed, 08 Aug 2007 17:23:33 +1000
 
- -- Alain Knaff <alain@knaff.lu>  Sat, 29 Nov 2008 09:20:30 +0100
-mtools (4.0.0-pre2) stable; urgency=low
+mtools (3.9.10.ds1-3) unstable; urgency=high
 
-  * Use transliteration to represent characters which don't exist in
-  target set
+  * Replaced libx11-dev and libxau-dev by xlibs-static-dev and
+    libxt-dev as build-dependencies. Please refer to #347025.
+    Closes: #367558. Patch by Vincent Rivière <riviere@iut-rodez.fr>.
 
- -- Alain Knaff <alain@knaff.lu>  Tue, 18 Nov 2008 22:42:23 +0100
-mtools (4.0.0-pre1) stable; urgency=low
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Sat, 08 Jul 2006 12:36:15 +1000
 
-  * Unicode support
+mtools (3.9.10.ds1-2) unstable; urgency=low
 
- -- Alain Knaff <alain@knaff.lu>  Sat,  1 Nov 2008 20:52:58 +0100
-mtools (3.9.11-20071226) stable; urgency=low
+  * Set Standards-Version to 3.7.2.
+  * Set DH_COMPAT to 5.
+  * Fixed "fails to show label for read-only floppies", closes:
+    #295151. Patch by Bart Martens <bart.martens@advalvas.be>.
+  * Fixed "manpage in section 2", closes: #365490.
+    Patch by Justin Pryzby <justinpryzby@users.sourceforge.net>.
+  * Fixed a number of typos in man pages, closes: #305653, #305654,
+    #305656, #305657, #305658. Patches by A Costa <agcosta@gis.net>.
+  * Fixed "manpage fails to escape hyphen", closes: #201034.
 
-  * first release of debian package
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Sun, 25 Jun 2006 13:04:34 +1000
 
- -- Alain Knaff <alain@knaff.lu>  Tue, 28 Aug 2007 23:23:37 +0100
+mtools (3.9.10.ds1-1) unstable; urgency=low
+
+  * New maintainer.
+  * Ack NMUs, closes: #347025, #292237.
+  * New upstream version, closes: #339771.
+    Removed the following files from the prestine original tarball:
+    .#patchlevel.c.1.18, .#mtools.spec.1.4, .#mtools.texi.1.11,
+    .#fat_size_calculation.tex.1.1, config.status and config.log.
+  * Changed amuFormat.sh to use bash.
+  * Set Standards-Version to 3.6.2.
+  * Added homepage to description.
+
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Sun, 29 Jan 2006 11:35:46 +1100
+
+mtools (3.9.9-2.2) unstable; urgency=low
+
+  * NMU
+  * Fixed "FTBFS: build-depends on removed xlibs-dev", closes: #347025.
+
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Tue, 17 Jan 2006 20:27:44 +1100
+
+mtools (3.9.9-2.1) unstable; urgency=low
+
+  * NMU
+  * Added a copy of the GFDL text to debian/copyright and correct
+    license location in debian/patches/02-manpages.dpatch fixing 
+    tgz.1 (Closes: #292237)
+
+ -- Paul Brossier <piem@altern.org>  Sat,  5 Feb 2005 01:27:35 +0000
+
+mtools (3.9.9-2) unstable; urgency=low
+
+  * Acknowledging NMU fixes. Thanks Matt. (closes: #217413, #191861, #191861)
+  * Bumbed Standars-Version to 3.6.1.
+  * Added Co-Maintainer (me) to Uploaders field. 
+
+ -- AndrÃ©s RoldÃ¡n <aroldan@debian.org>  Sun,  1 Feb 2004 22:36:38 +0000
+
+mtools (3.9.9-1.1) unstable; urgency=low
+
+  * Non-maintainer upload
+  * Added patch 01-plainio.dpatch to fix garbage output of mtype under some
+    circumstances (closes: #217413)
+  * Added manpage for mcheck (closes: #191861)
+  * Convert mtools.conf to devfs names if devfs is used (closes: #178043)
+
+ -- Martin Pitt <mpitt@debian.org>  Wed, 14 Jan 2004 00:40:05 +0100
+
+mtools (3.9.9-1) unstable; urgency=low
+
+  * New upstream version.
+  * Build now depends on dpatch package.
+  * Added manpage for mxtar and mcomp (closes: #182990, #182991)
+  * Option -i is documented in manpage (closes: #180831).
+
+ -- Luis Bustamante <luferbu@fluidsignal.com>  Mon,  3 Mar 2003 11:30:18 -0500
+
+mtools (3.9.8-13) unstable; urgency=low
+
+  * Aplied latest patch from upstream mtools-3.9.8-20030118.diff.gz.
+  * Fixed mtools.conf manpage (closes: #177111).
+
+ -- Luis Bustamante <luferbu@fluidsignal.com>  Sun, 19 Jan 2003 14:28:47 -0500
+
+mtools (3.9.8-12) unstable; urgency=low
+
+  * Applied accumulative patch from upstream mtools-3.9.8-20021118.diff.gz
+    (closes: #153571).
+  * Removed all debian patches. They were already applied by upstream author
+    in previous patch. 
+  * Updated to standards version 3.5.8.
+  
+ -- Luis Bustamante <luferbu@fluidsignal.com>  Thu, 19 Dec 2002 19:27:24 -0500
+
+mtools (3.9.8-11) unstable; urgency=low
+
+  * Fixed error which made 2M floppies unusable (closes: #135713).
+  * Fixed mcopy behavior when source and destination are the same file
+    (closes: #94135).
+  * Added -F option, support for image files. Thanks to Fredrik Staxäng
+    <sfgk@hcqngr.hh.fr> (closes: #18323).
+  * Updated to standards version 3.5.7.
+
+ -- Luis Bustamante <luferbu@fluidsignal.com>  Mon, 28 Oct 2002 00:08:39 -0500
+
+mtools (3.9.8-10) unstable; urgency=low
+
+  * New maintainer (closes: #149967).
+  * Builded package from the scratch. Applied latest patch from upstream
+    (mtools-200020203.diff.gz).
+  * Added manual page for lz and uz. Written by Robert King
+    <Robert.King@mailbox.gu.edu.au> (closes: #19091).
+  * Fixed problem with parse_range(). Patch from Moritz Barsnick
+    <barsnick@gmx.net>. 
+
+ -- Luis Bustamante <luferbu@fluidsignal.com>  Fri, 17 Jun 2002 15:59:21 -0500
+
+mtools (3.9.8-9) unstable; urgency=low
+
+  * New maintainer (closes: #147794).
+  * Added tgz manpage, courtesy of Filip Van Raemdonck (closes: #99423).
+
+ -- Domenico Andreoli <cavok@debian.org>  Fri, 24 May 2002 15:50:14 +0200
+
+mtools (3.9.8-8) unstable; urgency=low
+
+  * Orphan
+
+ -- Junichi Uekawa <dancer@debian.org>  Wed, 22 May 2002 21:21:04 +0900
+
+mtools (3.9.8-7) unstable; urgency=low
+
+  * Fixed a mformat option parsing bug (closes: #130531).
+  * removed emacs local setting from debian/changelog.
+  * added README.Debian noting of the upstream.
+
+ -- Junichi Uekawa <dancer@debian.org>  Tue, 29 Jan 2002 21:57:32 +0900
+
+mtools (3.9.8-6) unstable; urgency=low
+
+  * New maintainer (closes: #130833)
+
+ -- Junichi Uekawa <dancer@debian.org>  Mon, 28 Jan 2002 01:16:52 +0900
+
+mtools (3.9.8-5) unstable; urgency=low
+
+  * Orphaned this package.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Fri, 25 Jan 2002 13:04:59 +0100
+
+mtools (3.9.8-4) unstable; urgency=high
+
+  * s/1992k/1992kB/ in the package description. (closes: #120774)
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Fri, 11 Jan 2002 01:06:59 +0100
+
+mtools (3.9.8-3) unstable; urgency=low
+
+  * Applied upstream mtools-3.9.8-20010602.diff.gz patch.
+  * mread is gone. (closes: #43879)
+  * Corrected the priority of floppyd from optional to extra.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Sat,  2 Jun 2001 15:34:08 +0200
+
+mtools (3.9.8-2) unstable; urgency=low
+
+  * Corrected the version number in patchlevel.c.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Tue, 29 May 2001 21:41:00 +0200
+
+mtools (3.9.8-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Sun, 27 May 2001 16:25:01 +0200
+
+mtools (3.9.7+20001213-2) unstable; urgency=low
+
+  * Added a fix to get mtools running on ARM:
+      - configure.in: recognize *-*-linux-gnu
+      - configure.in: add "-mstructure-size-boundary=8" to the
+                      CFLAGS on ARM
+    (fixes: #79180)
+  * s/xlib6g-dev/xlibs-dev/ in the build dependencies. (closes: #79740)
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Sun, 14 Jan 2001 18:12:21 +0100
+
+mtools (3.9.7+20001213-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Mon, 18 Dec 2000 09:05:11 +0100
+
+mtools (3.9.7+20001126-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Mon, 11 Dec 2000 14:31:23 +0100
+
+mtools (3.9.7+20001113c-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Tue, 14 Nov 2000 00:12:51 +0100
+
+mtools (3.9.7+20001110-1) unstable; urgency=low
+
+  * New upstream release.
+  * This release includes a patch to let mtools compile on Alpha.
+    (closes: #76093)
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Sat, 11 Nov 2000 13:00:17 +0100
+
+mtools (3.9.7+20001018-1) unstable; urgency=low
+
+  * New upstream release.
+  * This version gives a correct error message at some non-MSDOS disks.
+    (closes: #74342, #74955)
+  * Generated and installed manual pages for minfo and floppyyd_installtest.
+  * Upload sponsored by Tony Mancill <tmancill@debian.org>.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Mon, 23 Oct 2000 22:48:49 +0200
+
+mtools (3.9.7+20000821-1) unstable; urgency=low
+
+  * New upstream release.
+  * This version has updated config.guess and config.sub.
+    (closes: #49103)
+  * This version fixes the segfault with "mdir -f".
+    (closes: #29885, #61675)
+  * One documentation error is fixed in this version. (closes: #29183)
+  * New package description (taken from the LSM entry).
+  * Changed the priority of floppyd from standard to optional.
+  * Upload sponsored by Tony Mancill <tmancill@debian.org>.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Tue, 22 Aug 2000 16:36:25 +0200
+
+mtools (3.9.7-1) unstable; urgency=low
+
+  * New maintainer.
+  * New upstream release. (closes: #65204)
+  * This version shows the label of a diskette even in subdirectories.
+    (closes: #57962)
+  * "mcopy -o" works correctly in this version. (closes: #42986)
+  * Moved floppyd to an extra package. (closes: #46184)
+  * New debian/rules using debhelper.
+  * Removed USERCFLAGS from debian/rules.
+  * Removed README and README.BEBOX.
+  * Added NEWPARAMS and TODO.
+  * Mention Zip disks in the description of mtools. (closes: #67457)
+  * Added a mtools.conf.5.gz link that points to mtools.5.gz.
+    /etc/mtools.conf refers to mtools.conf.5.gz. (closes: #46594)
+  * Added links to undocumented.7 for the following programs:
+      lz mcheck mcomp minfo mxtar tgz uz floppyd_installtest
+  * Added Build-Depends.
+  * Standards-Version: 3.1.1.1
+  * Upload sponsored by Tony Mancill <tmancill@debian.org>.
+
+ -- Adrian Bunk <bunk@fs.tum.de>  Thu, 27 Jul 2000 00:42:17 +0200
+
+mtools (3.9.6-3.1) frozen unstable; urgency=low
+
+  * Non-maintainer upload to fix security problems
+  * set sysconfdir to /etc instead of /usr/etc
+  * Apply patch from Colin Phipps <crp22@cam.ac.uk>:
+    + floppyd didn't call initgroups
+    + symlink attack in lock-test in floppyd
+    + lock-file in floppy was world-readable, exposing the X authority
+    + partially Closes: Bug#57867
+      The DoS against floppyd is still possible, and should be fixed.
+
+ -- Wichert Akkerman <wakkerma@debian.org>  Sun, 20 Feb 2000 16:01:47 +0100
+
+mtools (3.9.6-3) unstable; urgency=low
+
+  * debian/control: fix Maintainer realname for consistency.
+
+ -- Mark W. Eichin <eichin@thok.org>  Wed,  3 Nov 1999 16:13:59 -0500
+
+mtools (3.9.6-2) unstable; urgency=low
+
+  * mainloop.c: use O_RDONLY (portable, but needed for The Hurd.)  
+    closes: #37757.
+
+ -- Mark W. Eichin <eichin@thok.org>  Sun, 31 Oct 1999 14:45:20 -0500
+
+mtools (3.9.6-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Mark W. Eichin <eichin@thok.org>  Wed, 25 Aug 1999 14:21:03 -0400
+
+mtools (3.9.1-2) frozen unstable; urgency=high
+
+  * Upload for frozen for 2.1.  closes: #32797.
+
+ -- Mark W. Eichin <eichin@thok.org>  Thu, 18 Feb 1999 01:00:03 -0500
+
+mtools (3.9.1-1) unstable; urgency=low
+
+  * New upstream release.  Includes mformat.1 and buffer.c patches.
+    closes: #23964, #12083.
+  * debian/changelog, debian/control: Correct maintainer address.
+  * debian/mtools.conf: new file, should have debian-specific disk
+    configuration, and has other OS examples elided.  Currently this means
+    A: and B: floppies, M: dosemu hdimage.first, N: dosemu fdimage.  I've
+    put in Z: as a "SCSI" zip disk (/dev/sda4) but I'm leaving it
+    commented out for now pending further comments, or suggestions for
+    automatic configuration of this file. closes: #29202, #23923,
+    #29888.
+  * debian/mtools.conf: use "partition=1 offset=128" for dosemu
+    hdimage.first.  closes: #19090, #23768.
+  * debian/rules: install debian/mtools.conf.
+
+ -- Mark W. Eichin <eichin@thok.org>  Thu,  4 Feb 1999 01:30:48 -0500
+
+mtools (3.9-2) unstable; urgency=low
+
+  * buffer.c: elide leftover "test disk" code. [#21376]
+
+ -- Mark Eichin <eichin@kitten.gen.ma.us>  Sun, 26 Apr 1998 15:37:30 -0400
+
+mtools (3.9-1) unstable; urgency=low
+
+  * New upstream release.
+  * mformat.1: document -1, -0, -A. [#12083]
+
+ -- Mark Eichin <eichin@kitten.gen.ma.us>  Sun,  5 Apr 1998 18:47:48 -0400
+
+mtools (3.8-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Mark W. Eichin <eichin@kitten.gen.ma.us>  Tue,  4 Nov 1997 16:58:39 -0500
+
+mtools (3.6-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Mark W. Eichin <eichin@kitten.gen.ma.us>  Sat, 26 Apr 1997 19:37:01 -0400
+
+mtools (3.5a-1) unstable; urgency=low
+
+  * New upstream release. (minor portability fixes to handle memmove
+    properly, instead of the way 3.5 did it.  No difference under linux
+    but it's easier to just have the latest release available...)
+
+ -- Mark W. Eichin <eichin@kitten.gen.ma.us>  Tue, 25 Mar 1997 01:29:29 -0500
+
+mtools (3.4-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Mark W. Eichin <eichin@kitten.gen.ma.us>  Mon, 24 Mar 1997 00:10:19 -0500
+
+mtools (3.3-1) unstable; urgency=low
+
+  * New upstream release. fixes mdel.
+
+ -- Mark W. Eichin <eichin@kitten.gen.ma.us>  Thu, 6 Mar 1997 23:17:44 -0500
+
+mtools (3.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * Use distclean to get config* stuff out of diffs.
+
+ -- Mark W. Eichin <eichin@kitten.gen.ma.us>  Thu, 20 Feb 1997 01:09:05 -0500
+
+mtools (3.1-1) unstable; urgency=low
+
+  * Converted to new package format.
+
+ -- Vincent Renardias <vincent@waw.com>  Thu, 13 Feb 1997 01:54:37 +0100

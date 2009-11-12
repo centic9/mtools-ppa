@@ -1,0 +1,86 @@
+04_manpages.dpatch by Anibal Monsalve Salazar <anibal@debian.org>
+Fixed a number of typos in man pages, closes: #305653, #305654, #305656, #305657, #305658
+Fixed "manpage fails to escape hyphen", closes: #201034.
+
+--- mtools-3.9.10.ds1/floppyd.1	2005-03-01 09:14:32.000000000 +1100
++++ mtools-3.9.10.ds1/floppyd.1	2006-06-25 12:52:20.000000000 +1000
+@@ -1,6 +1,7 @@
+ .TH floppyd 1 "28Feb05" mtools-3.9.10
+ .SH Name
+ floppyd - floppy daemon for remote access to floppy drive
++.br
+ floppyd_installtest - tests whether floppyd is installed and running
+ '\" t
+ .de TQ
+--- mtools-3.9.10.ds1/mattrib.1	2005-03-01 09:14:32.000000000 +1100
++++ mtools-3.9.10.ds1/mattrib.1	2006-06-25 12:35:38.000000000 +1000
+@@ -56,7 +56,7 @@
+ Recursive.  Recursively list the attributes of the files in the subdirectories.
+ .TP
+ \&\fR\&\f(CWX\fR\ 
+-Concise. Prints the attributes whithout any whitespace padding.  If
++Concise. Prints the attributes without any whitespace padding.  If
+ neither the "/" option is given, nor the \fImsdosfile\fR contains a
+ wildcard, and there is only one Msdos file parameter on the command
+ line, only the attribute is printed, and not the filename.  This option
+--- mtools-3.9.10.ds1/mdel.1	2005-03-01 09:14:32.000000000 +1100
++++ mtools-3.9.10.ds1/mdel.1	2006-06-25 12:51:34.000000000 +1000
+@@ -1,6 +1,7 @@
+ .TH mdel 1 "28Feb05" mtools-3.9.10
+ .SH Name
+ mdel - delete an MSDOS file
++.br
+ mdeltree - recursively delete an MSDOS directory and its contents
+ '\" t
+ .de TQ
+--- mtools-3.9.10.ds1/mdir.1	2005-03-01 09:14:32.000000000 +1100
++++ mtools-3.9.10.ds1/mdir.1	2006-06-25 12:27:44.000000000 +1000
+@@ -49,7 +49,7 @@
+ the amount of free space takes up some non trivial amount of time, as
+ the whole FAT must be read in and scanned.  The \fR\&\f(CW-f\fR flag bypasses
+ this step.  This flag is not needed on FAT32 filesystems, which store
+-the size explicitely.
++the size explicitly.
+ .TP
+ \&\fR\&\f(CWb\fR\ 
+ Concise listing. Lists each directory name or filename, one per line
+--- mtools-3.9.10.ds1/mpartition.1	2005-03-01 09:14:32.000000000 +1100
++++ mtools-3.9.10.ds1/mpartition.1	2006-06-25 12:30:45.000000000 +1000
+@@ -66,7 +66,7 @@
+ can be bootable at a time.
+ .TP
+ \&\fR\&\f(CWd\fR\ 
+-"Desactivates" the partition, i.e. makes it unbootable.
++"Deactivates" the partition, i.e. makes it unbootable.
+ .PP
+ If no operation is given, the current settings are printed.
+ .PP
+@@ -104,7 +104,7 @@
+ .TP
+ \&\fR\&\f(CWf\fR\ 
+ Usually, before writing back any changes to the partition, mpartition
+-performs certain consistenct checks, such as checking for overlaps and
++performs certain consistency checks, such as checking for overlaps and
+ proper alignment of the partitions.  If any of these checks fails, the
+ partition table is not changes.  The \fR\&\f(CW-f\fR allows you to override
+ these safeguards.
+--- mtools-3.9.10.ds1/mtools.1	2005-03-01 09:14:33.000000000 +1100
++++ mtools-3.9.10.ds1/mtools.1	2006-06-25 13:05:25.000000000 +1000
+@@ -422,7 +422,7 @@
+ doesn't exist for 20 sector formats.
+ .PP
+ These formats are supported by numerous DOS shareware utilities such as
+-\&\fR\&\f(CWfdformat\fR and \fR\&\f(CWvgacopy\fR. In his infinite hybris, Bill Gate$
++\&\fR\&\f(CWfdformat\fR and \fR\&\f(CWvgacopy\fR. In his infinite hubris, Bill Gate$
+ believed that he invented this, and called it \fR\&\f(CW\(ifDMF disks\(is\fR, or
+ \&\fR\&\f(CW\(ifWindows formatted disks\(is\fR. But in reality, it has already existed
+ years before! Mtools supports these formats on Linux, on SunOs and on
+@@ -448,7 +448,7 @@
+ The 2m format was originally invented by Ciriaco Garcia de Celis. It
+ also uses bigger sectors than usual in order to fit more data on the
+ disk.  However, it uses the standard format (18 sectors of 512 bytes
+-each) on the first cylinder, in order to make these disks easyer to
++each) on the first cylinder, in order to make these disks easier to
+ handle by DOS. Indeed this method allows to have a standard sized
+ bootsector, which contains a description of how the rest of the disk
+ should be read.
