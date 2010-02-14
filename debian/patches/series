@@ -1,9 +1,8 @@
-01-plainio.diff
-02-manpages.diff
-04-manpages.diff
-07-m486.diff
-08.scsi.c.diff
-09.mtools.1.diff
-10.remove-iX-lp.diff
-11.trunication-fix.patch
-12.unzip-support.patch
+01-217413-plainio.patch
+02-manpages.patch
+04-manpages.patch
+07-474817-m486.patch
+08-393878-scsi.c.patch
+09-468744-mtools.1.patch
+10-remove-iX-lp.patch
+11-truncation-fix.patch

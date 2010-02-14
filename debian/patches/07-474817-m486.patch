@@ -1,0 +1,30 @@
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=474817
+
+FTBFS: cc1: error: unrecognized command line option "-m486"
+
+Patched-by: Matthias Klose <doko@ubuntu.com>
+Modified-by: Anibal Monsalve Salazar <anibal@debian.org>
+Signed-off-by: Anibal Monsalve Salazar <anibal@debian.org>
+
+--- a/configure.in	2009-08-30 03:13:58.000000000 +1000
++++ b/configure.in	2010-02-15 13:20:50.000000000 +1100
+@@ -286,7 +286,7 @@ my_host_os=`echo $host_os1 $host_os2 $ho
+ objs=`echo $srcdir/*.c | sed 's/\.c$/.o/' `
+ if [ "X$GCC" = "Xyes" ] ; then
+     if [ "$host_cpu" = i486 ] ; then
+-	    CFLAGS="$CFLAGS -m486"
++	    CFLAGS="$CFLAGS"
+     fi
+     Wall=-Wall
+     if [ "$host_os3" = sunos ] ; then
+--- a/configure	2009-11-04 07:27:54.000000000 +1100
++++ b/configure	2010-02-15 13:20:50.000000000 +1100
+@@ -6558,7 +6558,7 @@ my_host_os=`echo $host_os1 $host_os2 $ho
+ objs=`echo $srcdir/*.c | sed 's/\.c$/.o/' `
+ if [ "X$GCC" = "Xyes" ] ; then
+     if [ "$host_cpu" = i486 ] ; then
+-	    CFLAGS="$CFLAGS -m486"
++	    CFLAGS="$CFLAGS"
+     fi
+     Wall=-Wall
+     if [ "$host_os3" = sunos ] ; then

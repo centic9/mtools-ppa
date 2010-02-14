@@ -1,9 +1,29 @@
-08.scsi.c.dpatch by Thomas Richter <thor@mail.math.tu-berlin.de>
-#393878 mzip unreliable on 2.6.18
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=393878
 
---- mtools-3.9.10/scsi.c	2002-11-02 13:09:28.000000000 +0100
-+++ mtools-3.9.10/scsi.c	2006-10-17 21:11:01.000000000 +0200
-@@ -37,12 +37,7 @@
+From: Thomas Richter <thor@mail.math.tu-berlin.de>
+
+mzip unreliable on 2.6.18
+
+The mzip command, used to set passwords on ZIP and JAZ mediums do not
+seem to work reliably anymore with the 2.6.18 kernel. Symptoms are
+that, sometimes, mzip reports "bad password" even though the password
+is, in fact, correct. (Yes, the password is indeed correct, I used the
+one letter password 'x' for testing, and that's really hard to forget,
+and the problem is reproducable ;-) The problem is likely in the
+emulation of the obsolete SCSI ioctl in the kernel used by mzip (to be
+handled in a separate bug report) but nevertheless, the following
+patch makes use of the more modern SG_IO iotcl for the same job, and
+in my tests, fixes mzip.
+
+The following patch to "scsi.c" addresses this issue, and also avoids
+a kernel warning on the obsolete interface.
+
+Modified-by: Anibal Monsalve Salazar <anibal@debian.org>
+Signed-off-by: Anibal Monsalve Salazar <anibal@debian.org>
+
+--- a/scsi.c	2009-03-01 10:10:07.000000000 +1100
++++ b/scsi.c	2010-02-15 13:32:02.000000000 +1100
+@@ -54,12 +54,7 @@
  #endif
  
  #ifdef OS_linux
@@ -17,9 +37,7 @@
  #endif
  
  #ifdef _SCO_DS
---- mtools-3.9.10/scsi.c	2007-05-26 19:02:56.000000000 +1000
-+++ mtools-3.9.10/scsi.c	2008-04-08 20:30:16.000000000 +1000
-@@ -148,37 +148,33 @@ int scsi_cmd(int fd, unsigned char *cdb,
+@@ -169,37 +164,33 @@ int scsi_cmd(int fd, unsigned char *cdb,
  	return 0;
  	
  #elif defined OS_linux

@@ -1,11 +1,10 @@
 Source: mtools
 Section: otherosfs
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-XSBC-Original-Maintainer: Anibal Monsalve Salazar <anibal@debian.org>
+Maintainer: Anibal Monsalve Salazar <anibal@debian.org>
 Uploaders: Luis Bustamante <luferbu@fluidsignal.com>, Andrés Roldán <aroldan@debian.org>
 Build-Depends: debhelper (>= 7), autotools-dev, quilt, libxfont-dev, libxt-dev, texinfo
-Standards-Version: 3.8.1
+Standards-Version: 3.8.4
 Homepage: http://www.mtools.linux.lu/
 
 Package: floppyd

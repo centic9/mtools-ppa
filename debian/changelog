@@ -1,23 +1,29 @@
-mtools (4.0.10-1ubuntu2) karmic; urgency=low
+mtools (4.0.12-1) unstable; urgency=low
 
-  * Add patch 12.unzip-support.patch
-    - support zip-files via unzip
+  * New upstream version
+  * Merge 4.0.10-1ubuntu1 
+  * Debian source format is 3.0 (quilt)
+  * Update debian/patches/*
+  * Fix dh_undocumented-is-obsolete
+  * Fix out-of-date-standards-version
+  * Fix install-info-used-in-maintainer-script
+  * Fix maintainer-script-empty
 
- -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Tue, 13 Apr 2010 23:05:42 +0200
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Mon, 15 Feb 2010 09:44:39 +1100
 
 mtools (4.0.10-1ubuntu1) lucid; urgency=low
 
-  * Added debian/patches/11.truncation-fix.patch:
-    - This corrects the behavior of name mangling and truncation when dealing
-      with long filenames, and prevents possible conflicts between a shortname
-      and a long filename. Thanks to Alexandar Sack for helping revise the patch
-      (LP: #481482)
+  * Add debian/patches/11-truncation-fix.patch:
+    Correct the behavior of name mangling and truncation when dealing with
+    long filenames, and prevent possible conflicts between a shortname and
+    a long filename. Thanks to Alexandar Sack for helping revise the patch
+    LP: #481482
 
  -- Michael Casadevall <mcasadevall@ubuntu.com>  Thu, 12 Nov 2009 13:37:53 -0500
 
 mtools (4.0.10-1) unstable; urgency=low
 
-  * New upstream version 
+  * New upstream version; closes: #513227
   * Standards version is 3.8.1
   * DH_COMPAT is 7
   * Run dh_prep instead of dh_clean
@@ -39,7 +45,7 @@ mtools (4.0.4-1) unstable; urgency=low
   * Build depend on quilt, autotools-dev
   * Don't build depend on dpatch
   * Standards-Version is 3.8.0
-  * Priority is optional
+  * Priority is optional; closes: #416575
   * Fix the following lintian issues:
     W: floppyd: manpage-has-errors-from-man usr/share/man/man1/floppyd.1.gz
        23: warning: `iX' not defined

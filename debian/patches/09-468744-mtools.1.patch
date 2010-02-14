@@ -1,9 +1,15 @@
-09.mtools.1.dpatch by A. Costa <agcosta@gis.net>
-'man mtools' typos #468744
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=468744
 
---- mtools-3.9.11/mtools.1	2007-04-11 23:16:01.000000000 +1000
-+++ mtools-3.9.11/mtools.1	2008-04-08 21:02:10.000000000 +1000
-@@ -458,12 +458,12 @@ data than the others. Unfortunately, DOS
+From: "A. Costa" <agcosta@gis.net>
+
+'man mtools' typos: s/same/space/ etc.
+
+Modified-by: Anibal Monsalve Salazar <anibal@debian.org>
+Signed-off-by: Anibal Monsalve Salazar <anibal@debian.org>
+
+--- a/mtools.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mtools.1	2010-02-15 13:38:09.000000000 +1100
+@@ -480,12 +480,12 @@ data than the others. Unfortunately, DOS
  each track contains the same amount of data. Thus 2m hides the fact that
  the first track contains less data by using a \fIshadow
  FAT\fR. (Usually, DOS stores the FAT in two identical copies, for

@@ -1,0 +1,31 @@
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=217413
+
+From: Panagiotis Issaris <panagiotis.issaris@mech.kuleuven.ac.be>
+
+Using mtype on any file outputs garbage. This behavior only occurs when
+the configuration file contains more than one active (not commented out)
+line. When there's no configuration file (mtools.conf) the problem does
+not occur.
+
+The problem was caused by the allocation of memory which was not being
+initialised fully before being used. In some cases the swap field of the
+SimpleFile_t struct was not being set to zero and had a random value.
+
+Because of this the swap_buffer routine incorrectly got invoked when swap 
+was not zero.
+
+Signed-off-by: Martin Pitt <mpitt@debian.org>
+Signed-off-by: Andrés Roldán <aroldan@debian.org>
+Modified-by: Anibal Monsalve Salazar <anibal@debian.org>
+Signed-off-by: Anibal Monsalve Salazar <anibal@debian.org>
+
+--- a/plain_io.c	2009-11-04 07:31:30.000000000 +1100
++++ b/plain_io.c	2010-02-15 11:21:11.000000000 +1100
+@@ -485,6 +485,7 @@ APIRET rc;
+ 		printOom();
+ 		return 0;
+ 	}
++	memset((void*)This, 0, sizeof(SimpleFile_t));
+ 	This->scsi_sector_size = 512;
+ 	This->seekable = 1;
+ #ifdef OS_hpux

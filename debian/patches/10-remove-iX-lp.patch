@@ -9,9 +9,12 @@ man --warnings -l mtools.5 >/dev/null
 <standard input>:34: warning: `iX' not defined
 <standard input>:137: warning: `lp' not defined
 
---- a/floppyd.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/floppyd.1	2009-02-16 21:50:11.000000000 +1100
-@@ -19,9 +19,6 @@ documentation, and may not be entirely a
+Patched-by: Anibal Monsalve Salazar <anibal@debian.org>
+Signed-off-by: Anibal Monsalve Salazar <anibal@debian.org>
+
+--- a/floppyd.1	2010-02-15 12:37:35.000000000 +1100
++++ b/floppyd.1	2010-02-15 14:01:02.000000000 +1100
+@@ -20,9 +20,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
  .SH Description
@@ -21,7 +24,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  \&\fR\&\f(CWFloppyd\fR is used as a server to grant access to the floppy drive
  to clients running on a remote machine, just as an X server grants
-@@ -109,7 +106,6 @@ floppyd -d /dev/fd0
+@@ -110,7 +107,6 @@ floppyd -d /dev/fd0
  .fi
  .in -0.3i
  .ft R
@@ -29,7 +32,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -126,7 +122,6 @@ floppyd -d -x :1 -p 5704 /dev/fd0 
+@@ -127,7 +123,6 @@ floppyd -d -x :1 -p 5704 /dev/fd0 
  .fi
  .in -0.3i
  .ft R
@@ -37,7 +40,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -142,7 +137,6 @@ floppyd-1    5704/tcp    # floppy daemon
+@@ -143,7 +138,6 @@ floppyd-1    5704/tcp    # floppy daemon
  .fi
  .in -0.3i
  .ft R
@@ -45,7 +48,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -159,7 +153,6 @@ floppyd-1 stream  tcp  wait  floppy  /us
+@@ -160,7 +154,6 @@ floppyd-1 stream  tcp  wait  floppy  /us
  .fi
  .in -0.3i
  .ft R
@@ -53,7 +56,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -177,7 +170,6 @@ drive x: file="$DISPLAY" remote
+@@ -178,7 +171,6 @@ drive x: file="$DISPLAY" remote
  .fi
  .in -0.3i
  .ft R
@@ -61,7 +64,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -192,7 +184,6 @@ drive z: file="$DISPLAY//2" remote
+@@ -193,7 +185,6 @@ drive z: file="$DISPLAY//2" remote
  .fi
  .in -0.3i
  .ft R
@@ -69,7 +72,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -219,7 +210,6 @@ commands:
+@@ -220,7 +211,6 @@ commands:
  .fi
  .in -0.3i
  .ft R
@@ -77,15 +80,15 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .TP
-@@ -233,7 +223,6 @@ To generate a html copy,  run:
+@@ -234,7 +224,6 @@ To generate a html copy,  run:
  .fi
  .in -0.3i
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -250,7 +239,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -249,7 +238,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -93,8 +96,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/floppyd_installtest.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/floppyd_installtest.1	2009-02-16 21:50:11.000000000 +1100
+--- a/floppyd_installtest.1	2009-11-04 07:34:01.000000000 +1100
++++ b/floppyd_installtest.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,9 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -119,9 +122,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -88,7 +83,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -86,7 +81,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -129,8 +132,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mattrib.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mattrib.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mattrib.1	2010-02-15 12:37:35.000000000 +1100
++++ b/mattrib.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,12 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -158,9 +161,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -125,7 +117,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -123,7 +115,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -168,8 +171,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mbadblocks.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mbadblocks.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mbadblocks.1	2009-11-04 07:34:01.000000000 +1100
++++ b/mbadblocks.1	2010-02-15 14:01:02.000000000 +1100
 @@ -23,10 +23,6 @@ The \fR\&\f(CWmbadblocks\fR command is u
  its unused bad blocks as bad. It uses the following syntax:
  .PP
@@ -195,9 +198,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -90,7 +84,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -88,7 +82,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -205,8 +208,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mcat.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mcat.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mcat.1	2009-11-04 07:34:01.000000000 +1100
++++ b/mcat.1	2010-02-15 14:01:02.000000000 +1100
 @@ -23,10 +23,6 @@ The \fR\&\f(CWmcat\fR command is used to
  to the floppy device. It uses the following syntax:
  .PP
@@ -232,9 +235,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -95,7 +89,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -93,7 +87,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -242,8 +245,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mcd.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mcd.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mcd.1	2009-11-04 07:34:01.000000000 +1100
++++ b/mcd.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,12 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -279,9 +282,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -108,7 +99,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -106,7 +97,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -289,8 +292,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mclasserase.1	2009-02-16 02:26:35.000000000 +1100
-+++ b/mclasserase.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mclasserase.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mclasserase.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,9 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -323,9 +326,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -106,7 +100,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -104,7 +98,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -333,8 +336,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mcopy.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mcopy.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mcopy.1	2009-11-04 07:34:01.000000000 +1100
++++ b/mcopy.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,13 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -379,9 +382,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -175,7 +164,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -173,7 +162,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -389,9 +392,9 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mdel.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mdel.1	2009-02-16 21:50:11.000000000 +1100
-@@ -19,10 +19,6 @@ documentation, and may not be entirely a
+--- a/mdel.1	2010-02-15 12:37:35.000000000 +1100
++++ b/mdel.1	2010-02-15 14:01:02.000000000 +1100
+@@ -20,10 +20,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
  .SH Description
@@ -402,7 +405,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  The \fR\&\f(CWmdel\fR command is used to delete an MS-DOS file. Its syntax
  is:
-@@ -61,7 +57,6 @@ commands:
+@@ -62,7 +58,6 @@ commands:
  .fi
  .in -0.3i
  .ft R
@@ -410,15 +413,15 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .TP
-@@ -75,7 +70,6 @@ To generate a html copy,  run:
+@@ -76,7 +71,6 @@ To generate a html copy,  run:
  .fi
  .in -0.3i
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -92,7 +86,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -91,7 +85,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -426,8 +429,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mdeltree.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mdeltree.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mdeltree.1	2009-11-04 07:34:01.000000000 +1100
++++ b/mdeltree.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,11 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -454,9 +457,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -92,7 +85,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -90,7 +83,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -464,8 +467,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mdir.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mdir.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mdir.1	2010-02-15 12:37:35.000000000 +1100
++++ b/mdir.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,10 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -491,9 +494,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -113,7 +107,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -111,7 +105,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -501,8 +504,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mdu.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mdu.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mdu.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mdu.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,11 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -529,9 +532,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -91,7 +84,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -89,7 +82,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -539,8 +542,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mformat.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mformat.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mformat.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mformat.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,10 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -566,9 +569,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -274,7 +268,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -272,7 +266,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -576,8 +579,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/minfo.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/minfo.1	2009-02-16 21:50:11.000000000 +1100
+--- a/minfo.1	2009-11-04 07:34:02.000000000 +1100
++++ b/minfo.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,9 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -602,9 +605,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -93,7 +88,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -91,7 +86,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -612,8 +615,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mkmanifest.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mkmanifest.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mkmanifest.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mkmanifest.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,8 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -669,9 +672,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -173,7 +165,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -171,7 +163,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -679,8 +682,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mlabel.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mlabel.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mlabel.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mlabel.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,9 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -705,9 +708,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -109,7 +104,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -107,7 +102,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -715,8 +718,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mmd.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mmd.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mmd.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mmd.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,11 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -743,9 +746,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -87,7 +80,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -85,7 +78,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -753,8 +756,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mmount.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mmount.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mmount.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mmount.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,10 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -780,9 +783,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -91,7 +85,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -89,7 +83,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -790,8 +793,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mmove.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mmove.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mmove.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mmove.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,9 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -816,9 +819,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -93,7 +88,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -91,7 +86,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -826,8 +829,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mpartition.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mpartition.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mpartition.1	2010-02-15 12:37:35.000000000 +1100
++++ b/mpartition.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,10 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -853,9 +856,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -179,7 +173,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -177,7 +171,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -863,8 +866,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mrd.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mrd.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mrd.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mrd.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,12 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -892,9 +895,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -92,7 +84,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -90,7 +82,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -902,8 +905,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mren.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mren.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mren.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mren.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,9 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -928,9 +931,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -99,7 +94,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -97,7 +92,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -938,8 +941,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mshowfat.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mshowfat.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mshowfat.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mshowfat.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,9 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -964,9 +967,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -86,7 +81,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -84,7 +79,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -974,8 +977,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mtools.1	2009-02-16 02:26:35.000000000 +1100
-+++ b/mtools.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mtools.1	2010-02-15 13:38:09.000000000 +1100
++++ b/mtools.1	2010-02-15 14:01:02.000000000 +1100
 @@ -30,11 +30,6 @@ without any preliminary mounting or init
  change floppies too without unmounting and mounting.
  .PP
@@ -988,7 +991,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  Mtools can be found at the following places (and their mirrors):
   
-@@ -47,7 +42,6 @@ ftp://ibiblio.unc.edu/pub/Linux/utils/di
+@@ -48,7 +43,6 @@ ftp://ibiblio.unc.edu/pub/Linux/utils/di
  .fi
  .in -0.3i
  .ft R
@@ -996,7 +999,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -62,7 +56,6 @@ ftp://www.tux.org/pub/knaff/mtools
+@@ -64,7 +58,6 @@ ftp://www.tux.org/pub/knaff/mtools
  .fi
  .in -0.3i
  .ft R
@@ -1004,7 +1007,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -84,8 +77,6 @@ list is archived at http://www.tux.org/h
+@@ -86,8 +79,6 @@ list is archived at http://lists.gnu.org
  .SH Common\ features\ of\ all\ mtools\ commands
  .PP
  .SS Options\ and\ filenames
@@ -1013,7 +1016,7 @@ man --warnings -l mtools.5 >/dev/null
  MS-DOS filenames are composed of a drive letter followed by a colon, a
  subdirectory, and a filename. Only the filename part is mandatory, the
  drive letter and the subdirectory are optional. Filenames without a
-@@ -140,7 +131,6 @@ Example:
+@@ -142,7 +133,6 @@ Example:
  .fi
  .in -0.3i
  .ft R
@@ -1021,7 +1024,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -159,7 +149,6 @@ Example:
+@@ -161,7 +151,6 @@ Example:
  .fi
  .in -0.3i
  .ft R
@@ -1029,7 +1032,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -167,11 +156,6 @@ This looks for the image at the offset o
+@@ -169,11 +158,6 @@ This looks for the image at the offset o
  at its beginning.
  .PP
  .SS Current\ working\ directory
@@ -1041,7 +1044,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  The \fR\&\f(CWmcd\fR command (\(ifmcd\(is) is used to establish the device and
  the current working directory (relative to the MS-DOS filesystem),
-@@ -180,11 +164,6 @@ MS-DOS, there is only one working direct
+@@ -182,11 +166,6 @@ MS-DOS, there is only one working direct
  per drive.
  .PP
  .SS VFAT-style\ long\ file\ names
@@ -1053,7 +1056,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  This version of mtools supports VFAT style long filenames. If a Unix
  filename is too long to fit in a short DOS name, it is stored as a
-@@ -207,7 +186,6 @@ hot+cold        HOT_CO~1        illegal 
+@@ -209,7 +188,6 @@ hot+cold        HOT_CO~1        illegal 
  .fi
  .in -0.3i
  .ft R
@@ -1061,7 +1064,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -241,7 +219,6 @@ the \fIprimary\fR name, and the derived 
+@@ -243,7 +221,6 @@ the \fIprimary\fR name, and the derived 
  .fi
  .in -0.3i
  .ft R
@@ -1069,7 +1072,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR Mtools creates a VFAT entry for Reallylongname, and uses REALLYLO as
  a short name. Reallylongname is the primary name, and REALLYLO is the
-@@ -254,7 +231,6 @@ secondary name.
+@@ -256,7 +233,6 @@ secondary name.
  .fi
  .in -0.3i
  .ft R
@@ -1077,7 +1080,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR Motd fits into the DOS filename limits. Mtools doesn't need to
  derivate another name. Motd is the primary name, and there is no
-@@ -279,7 +255,6 @@ ab:c            ab_c-1          illegal 
+@@ -281,7 +257,6 @@ ab:c            ab_c-1          illegal 
  .fi
  .in -0.3i
  .ft R
@@ -1085,7 +1088,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -293,11 +268,6 @@ Illegal characters are replaces by under
+@@ -295,11 +270,6 @@ Illegal characters are replaces by under
  A \fR\&\f(CW-\fR\fIn\fR number is generated,
  .PP
  .SS Name\ clashes
@@ -1097,7 +1100,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  When writing a file to disk, its long name or short name may collide
  with an already existing file or directory. This may happen for all
-@@ -373,7 +343,6 @@ If a name clash occurs in a Unix directo
+@@ -375,7 +345,6 @@ If a name clash occurs in a Unix directo
  to overwrite the file, or to skip it.
  .PP
  .SS Case\ sensitivity\ of\ the\ VFAT\ filesystem
@@ -1105,7 +1108,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  The VFAT filesystem is able to remember the case of the
  filenames. However, filenames which differ only in case are not allowed
-@@ -394,12 +363,6 @@ from the behavior of the old version of 
+@@ -396,12 +365,6 @@ from the behavior of the old version of 
  lower case Unix filenames.
  .PP
  .SS high\ capacity\ formats
@@ -1118,7 +1121,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  Mtools supports a number of formats which allow to store more data on
  disk as usual. Due to different operating system abilities, these
-@@ -418,7 +381,6 @@ specific tool. For Linux, suitable flopp
+@@ -420,7 +383,6 @@ specific tool. For Linux, suitable flopp
  .fi
  .in -0.3i
  .ft R
@@ -1126,7 +1129,7 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
-@@ -427,10 +389,6 @@ See the manpages included in that packag
+@@ -429,10 +391,6 @@ See the manpages included in that packag
  \&\fR\&\f(CWxdfcopy\fR to format XDF.
  .PP
  .SS \ \ More\ sectors
@@ -1137,7 +1140,7 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  The oldest method of fitting more data on a disk is to use more sectors
  and more cylinders. Although the standard format uses 80 cylinders and
-@@ -449,7 +407,6 @@ years before! Mtools supports these form
+@@ -451,7 +409,6 @@ years before! Mtools supports these form
  the DELL Unix PC.
  .PP
  .SS \ \ Bigger\ sectors
@@ -1145,7 +1148,7 @@ man --warnings -l mtools.5 >/dev/null
  By using bigger sectors it is possible to go beyond the capacity which
  can be obtained by the standard 512-byte sectors. This is because of the
  sector header. The sector header has the same size, regardless of how
-@@ -463,7 +420,6 @@ This method allows to store up to 1992K 
+@@ -465,7 +422,6 @@ This method allows to store up to 1992K 
  Mtools supports these formats only on Linux.
  .PP
  .SS \ \ 2m
@@ -1153,8 +1156,8 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  The 2m format was originally invented by Ciriaco Garcia de Celis. It
  also uses bigger sectors than usual in order to fit more data on the
-@@ -486,8 +442,6 @@ to store anything else than a DOS fs\fR.
- Mtools supports these format only on Linux.
+@@ -488,8 +444,6 @@ to store anything else than a DOS fs\fR.
+ Mtools supports these formats only on Linux.
  .PP
  .SS \ \ XDF
 -.iX "c XDF disks"
@@ -1162,8 +1165,8 @@ man --warnings -l mtools.5 >/dev/null
  .PP
  XDF is a high capacity format used by OS/2. It can hold 1840 K per
  disk. That's lower than the best 2m formats, but its main advantage is
---- a/mtoolstest.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mtoolstest.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mtoolstest.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mtoolstest.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,10 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -1189,9 +1192,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -85,7 +79,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -83,7 +77,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -1199,8 +1202,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mtype.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mtype.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mtype.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mtype.1	2010-02-15 14:01:02.000000000 +1100
 @@ -74,7 +74,6 @@ commands:
  .fi
  .in -0.3i
@@ -1215,9 +1218,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -105,7 +103,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -103,7 +101,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -1225,8 +1228,8 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mzip.1	2009-02-16 02:26:34.000000000 +1100
-+++ b/mzip.1	2009-02-16 21:50:11.000000000 +1100
+--- a/mzip.1	2009-11-04 07:34:02.000000000 +1100
++++ b/mzip.1	2010-02-15 14:01:02.000000000 +1100
 @@ -18,15 +18,6 @@ documentation, and may not be entirely a
  end of this man page for details.
  .PP
@@ -1257,9 +1260,9 @@ man --warnings -l mtools.5 >/dev/null
  .ft R
 -.lp
   
- \&\fRA premade html can be found at:
- \&\fR\&\f(CW\(ifhttp://mtools.linux.lu\(is\fR
-@@ -147,7 +136,6 @@ To generate an info copy (browsable usin
+ \&\fRA premade html can be found at
+ \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
+@@ -145,7 +134,6 @@ To generate an info copy (browsable usin
  .fi
  .in -0.3i
  .ft R
@@ -1267,12 +1270,12 @@ man --warnings -l mtools.5 >/dev/null
   
  \&\fR
  .PP
---- a/mtools.5
-+++ b/mtools.5
+--- a/mtools.5	2010-02-15 12:12:13.000000000 +1100
++++ b/mtools.5	2010-02-15 14:01:02.000000000 +1100
 @@ -14,8 +14,6 @@ mtools.conf - mtools configuration files
  .tr \(pd"
  
- .ds St Mtools\ 4.0.10
+ .ds St Mtools\ 4.0.12
 -.oh '\\*(St''%'
 -.eh '%''\\*(St'
  .PP
@@ -1286,7 +1289,7 @@ man --warnings -l mtools.5 >/dev/null
 -.iX "c Name of configuration files"
 -.iX "c Location of configuration files"
  .PP
- \&\fR\&\f(CW\(if/usr/local/etc/mtools.conf\(is\fR is the system-wide configuration file,
+ \&\fR\&\f(CW\(if/etc/mtools.conf\(is\fR is the system-wide configuration file,
  and \fR\&\f(CW\(if~/.mtoolsrc\(is\fR is the user's private configuration file.
 @@ -42,8 +37,6 @@ On some systems, the system-wide configu
  \&\fR\&\f(CW\(if/etc/default/mtools.conf\(is\fR instead.
