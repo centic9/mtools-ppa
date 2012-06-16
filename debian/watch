@@ -1,3 +1,2 @@
 version=3
-opts=uversionmangle=s/\.(tar.*|tgz|zip|gz|bz2)$//i,dversionmangle=s/[-.+~]?(cvs|svn|git|snapshot|pre|hg)(.*)$//i,pasv \
-http://www.mtools.linux.lu/download.html (?:.*/)?mtools-?_?([\d+\.]+|\d+)\.(tar.*|tgz|zip|gz|bz2|) debian uupdate
+http://www.gnu.org/software/mtools/download.html ftp://ftp.gnu.org/gnu/mtools/mtools-([\d\.]*).tar.bz2

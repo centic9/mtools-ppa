@@ -1,7 +1,7 @@
 #ifndef MTOOLS_STREAM_H
 #define MTOOLS_STREAM_H
 
-/*  Copyright 1996-1999,2001,2002,2005,2006,2008,2009 Alain Knaff.
+/*  Copyright 1996-1999,2001,2002,2005,2006,2008,2009,2011 Alain Knaff.
  *  This file is part of mtools.
  *
  *  Mtools is free software: you can redistribute it and/or modify
@@ -43,6 +43,8 @@ typedef struct Class_t {
 	int (*pre_allocate)(Stream_t *, mt_size_t);
 
 	doscp_t *(*get_dosConvert)(Stream_t *);
+
+	int (*discard)(Stream_t *);
 } Class_t;
 
 #define READS(stream, buf, address, size) \
@@ -62,6 +64,9 @@ typedef struct Class_t {
 
 #define GET_DOSCONVERT(stream)			\
 	(stream)->Class->get_dosConvert((stream))
+
+#define DISCARD(stream)			\
+	(stream)->Class->discard((stream))
 
 int flush_stream(Stream_t *Stream);
 Stream_t *copy_stream(Stream_t *Stream);
@@ -88,6 +93,15 @@ int get_data_pass_through(Stream_t *Stream, time_t *date, mt_size_t *size,
 int read_pass_through(Stream_t *Stream, char *buf, mt_off_t start, size_t len);
 int write_pass_through(Stream_t *Stream, char *buf, mt_off_t start, size_t len);
 
+mt_off_t sectorsToBytes(Stream_t *This, off_t off);
+
+mt_size_t getfree(Stream_t *Stream);
+int getfreeMinBytes(Stream_t *Stream, mt_size_t ref);
+
+Stream_t *find_device(char drive, int mode, struct device *out_dev,
+		      union bootsector *boot,
+		      char *name, int *media, mt_size_t *maxSize,
+		      int *isRop);
 
 #endif
 

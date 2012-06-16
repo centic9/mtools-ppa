@@ -60,9 +60,6 @@
 /* Define to 1 if you have the <libc.h> header file. */
 #undef HAVE_LIBC_H
 
-/* Define to 1 if you have the `nsl' library (-lnsl). */
-#undef HAVE_LIBNSL
-
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
 
@@ -71,6 +68,9 @@
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
+
+/* Define to 1 if you have the <linux/fs.h> header file. */
+#undef HAVE_LINUX_FS_H
 
 /* Define to 1 if you have the <linux/unistd.h> header file. */
 #undef HAVE_LINUX_UNISTD_H
@@ -311,6 +311,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION

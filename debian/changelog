@@ -1,3 +1,26 @@
+mtools (4.0.17-1) unstable; urgency=low
+
+  * New upstream version
+    Closes: #676367, #567027
+  * Merged upstream:
+    01-217413-plainio.patch
+    02-manpages.patch
+    04-manpages.patch
+    07-474817-m486.patch
+    08-393878-scsi.c.patch
+    09-468744-mtools.1.patch
+    10-remove-iX-lp.patch
+    11-truncation-fix.patch
+  * DH compatibility level is 9
+  * Standards version is 3.9.3
+  * Enable hardened build flags
+  * Update debian/watch
+  * Update Uploaders
+    Closes: #540837
+  * Update Homepage
+
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Sat, 16 Jun 2012 21:22:06 +1000
+
 mtools (4.0.12-1) unstable; urgency=low
 
   * New upstream version
