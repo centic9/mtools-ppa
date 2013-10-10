@@ -1,3 +1,20 @@
+mtools (4.0.18-1ubuntu1) saucy; urgency=low
+
+  * Use dh_autotools-dev to update config.{sub,guess} for AArch64.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 10 Oct 2013 13:41:02 +0200
+
+mtools (4.0.18-1) unstable; urgency=low
+
+  * New upstream version 4.0.18
+  * Standards Version is 3.9.4
+  * Support zip files in scripts/uz
+    Add 01-607426-support-zip-files-in-uz.patch
+    Patch by Dominik Stadler
+    Closes: #607426
+
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Sat, 25 May 2013 14:35:17 +1000
+
 mtools (4.0.17-1) unstable; urgency=low
 
   * New upstream version

@@ -8,7 +8,7 @@ DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/buildflags.mk
 
 %:
-	dh $@ 
+	dh $@ --with autotools_dev
 
 override_dh_builddeb:
 	dh_builddeb -- -Zbzip2 -z9
