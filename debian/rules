@@ -9,6 +9,3 @@ include /usr/share/dpkg/buildflags.mk
 
 %:
 	dh $@ --with autotools_dev
-
-override_dh_builddeb:
-	dh_builddeb -- -Zbzip2 -z9

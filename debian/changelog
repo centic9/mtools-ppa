@@ -1,8 +1,19 @@
-mtools (4.0.18-1ubuntu1) saucy; urgency=low
+mtools (4.0.18-2) unstable; urgency=medium
 
-  * Use dh_autotools-dev to update config.{sub,guess} for AArch64.
+  * Don't have autotools-dev listed twice in Build-depends.
+  * Standards Version is 3.9.6.
+  * Use default compression for binary packages.
+  * Refresh patches.
 
- -- Matthias Klose <doko@ubuntu.com>  Thu, 10 Oct 2013 13:41:02 +0200
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Fri, 19 Sep 2014 02:11:58 +0100
+
+mtools (4.0.18-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Apply patch from Matthias Klose to update config.{sub,guess} using
+    dh_autotools-dev. (Closes: #727290)
+
+ -- Ian Campbell <ijc@debian.org>  Wed, 17 Sep 2014 20:14:49 +0100
 
 mtools (4.0.18-1) unstable; urgency=low
 

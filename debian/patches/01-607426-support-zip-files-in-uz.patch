@@ -7,8 +7,10 @@ I created a small patch to mtools that enables support for zip-files for
 uz/lz, which I find very handy as I now have one utility to look at and
 extract archive files.
 
---- a/scripts/uz	2010-10-17 05:16:38.000000000 +1100
-+++ b/scripts/uz	2013-05-25 14:22:25.000000000 +1000
+Index: mtools-4.0.18/scripts/uz
+===================================================================
+--- mtools-4.0.18.orig/scripts/uz
++++ mtools-4.0.18/scripts/uz
 @@ -43,10 +43,12 @@ uzcmd='gzip -cd'
  case $0 in
  *uz)
