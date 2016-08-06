@@ -96,7 +96,7 @@ AC_CHECK_HEADERS(getopt.h sys/stat.h stdlib.h unistd.h linux/unistd.h \
 libc.h fcntl.h limits.h sys/file.h sys/ioctl.h sys/time.h strings.h string.h \
 sys/param.h memory.h malloc.h signal.h sys/signal.h utime.h sgtty.h \
 sys/floppy.h mntent.h sys/sysmacros.h netinet/in.h assert.h \
-iconv.h wctype.h wchar.h locale.h)
+iconv.h wctype.h wchar.h locale.h linux/fs.h)
 AC_CHECK_HEADERS(termio.h sys/termio.h, [break])
 AC_CHECK_HEADERS(termios.h sys/termios.h, [break])
 
@@ -285,9 +285,6 @@ fi
 my_host_os=`echo $host_os1 $host_os2 $host_os3 | sort -u`
 objs=`echo $srcdir/*.c | sed 's/\.c$/.o/' `
 if [ "X$GCC" = "Xyes" ] ; then
-    if [ "$host_cpu" = i486 ] ; then
-	    CFLAGS="$CFLAGS -m486"
-    fi
     Wall=-Wall
     if [ "$host_os3" = sunos ] ; then
 	    Wall=""
@@ -318,11 +315,6 @@ fi
 
 if [ $host_os3 = hpux ] ; then
 	    LDFLAGS="$LDFLAGS -z"
-fi
-
-
-if [ $host_vendor = linux ] ; then
-    LDFLAGS="$LDFLAGS -z"
 fi
 
 if [ $host_os3 = xenix ] ; then
@@ -366,7 +358,7 @@ AC_ARG_ENABLE(floppyd,
 fi])
 
 AC_CHECK_LIB(socket,main)
-AC_CHECK_LIB(nsl,main)
+dnl AC_CHECK_LIB(nsl,getpwnam)
 AC_CHECK_LIB(bsd,main)
 AC_CHECK_HEADERS(sys/socket.h arpa/inet.h netdb.h)
 

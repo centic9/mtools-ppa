@@ -1,3 +1,60 @@
+mtools (4.0.17) stable; urgency=low
+
+  * mbadblocks now takes a list of bad blocks (either as sectors
+    or as clusters)
+  * mbadblocks now is able to do write scanning for bad blocks
+  * mshowfat can show cluster of specific offset
+  * Enable mtools to deal with very small sector sizes...
+  * Fixed encoding of all-lowercase names (no need to mangle
+    these)
+  * Consider every directory entry after an ENDMARK (0x00) to be deleted
+  * After writing a new entry at end of a directory, be sure to also add
+    an ENDMARK (0x00)
+  * Deal with possibility of a NULL pointer being returned by
+    localtime during timestamp conversion
+ -- Alain Knaff <alain@knaff.lu>  Wed, 29 Jun 2011 00:21:20 +0200
+mtools (4.0.16) stable; urgency=low
+
+  * configure.in fixes
+  * fixed formatting of fat_size_calculation.tex document
+  * compatibility with current autoconfig versions
+  * Make it clear that label is limited to 11 characters
+  * Fixed typo in initialization of FAT32 info sector
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 16 Apr 2011 18:00:30 +0200
+mtools (4.0.15) stable; urgency=low
+
+  * Added missing -i option to mshortname
+  * Splitted .deb package into mtools and floppyd in order to
+    match Ubuntu
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 17 Oct 2010 19:42:46 +0200
+mtools (4.0.14) stable; urgency=low
+
+  * New mshortname command
+  * Fix floppyd for disks bigger than 2 Gig
+  * Remove obsolete -z flag
+  * Remove now unsupported AC_USE_SYSTEM_EXTENSIONS
+  * Fixed output formatting of mdir if MTOOLS_DOTTED_DIR is set
+  * Mformat now correctly writes backup boot sector
+  * Fixed signedness of serial number in mlabel
+  * Fixed buffer size problem in mlabel
+  * Make mlabel write backup boot sector if FAT32
+  * Catch situation where both clear and new label are given to mlabel
+  * Quote filename parameters to scripts
+  * Mformat: Close file descriptor for boot sector
+  * Added lzip support to scripts/uz
+  * Added Tot_sectors option to mformat
+  * Fixed hidden sector handling in mformat
+  * Minfo generates mformat command lines containing new -T option
+  * Mlabel prints error if label too long
+
+ -- Alain Knaff <alain@knaff.lu>  Tue, 12 Oct 2010 00:19:48 +0200
+mtools (4.0.13) stable; urgency=low
+
+  * Merged Debian patches
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 28 Feb 2010 15:33:45 +0100
 mtools (4.0.12) stable; urgency=low
 
   * Mingw compatibility fixes
@@ -8,7 +65,7 @@ mtools (4.0.11) stable; urgency=low
   * Fixed compiler in mlabel.c and elsewhere
   * Fixed h flag in mattrib.c
   * Added missing error checking in floppyd and elsewhere
-	
+
  -- Alain Knaff <alain@knaff.lu>  Sat, 29 Aug 2009 14:38:19 +0200
 mtools (4.0.10) stable; urgency=low
 
@@ -69,7 +126,7 @@ mtools (4.0.2) stable; urgency=low
  -- Alain Knaff <alain@knaff.lu>  Mon, 26 Jan 2009 22:58:06 +0100
 mtools (4.0.1) stable; urgency=low
 
-  * Missing functions on Solaris 
+  * Missing functions on Solaris
 
  -- Alain Knaff <alain@knaff.lu>  Sun,  7 Dec 2008 21:38:55 +0100
 mtools (4.0.0) stable; urgency=low

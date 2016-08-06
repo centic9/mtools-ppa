@@ -1,4 +1,5 @@
-.TH mlabel 1 "03Nov09" mtools-4.0.12
+'\" t
+.TH mlabel 1 "29Jun11" mtools-4.0.17
 .SH Name
 mlabel - make an MSDOS volume label
 '\" t
@@ -18,9 +19,6 @@ documentation, and may not be entirely accurate or complete.  See the
 end of this man page for details.
 .PP
 .SH Description
-.iX "p mlabel"
-.iX "c Labeling a disk"
-.iX "c Disk label"
 .PP
 The \fR\&\f(CWmlabel\fR command adds a volume label to a disk. Its syntax is:
 .ft I
@@ -34,6 +32,9 @@ The \fR\&\f(CWmlabel\fR command adds a volume label to a disk. Its syntax is:
 \&\fInew_label\fR is not given, and if neither the \fR\&\f(CWc\fR nor the
 \&\fR\&\f(CWs\fR options are set, it prompts the user for a new volume label.
 To delete an existing volume label, press return at the prompt.
+.PP
+The label is limited to 11 single-byte characters,
+e.g. \fR\&\f(CWName1234567\fR.
 .PP
 Reasonable care is taken to create a valid MS-DOS volume label.  If an
 invalid label is specified, \fR\&\f(CWmlabel\fR changes the label (and
@@ -78,7 +79,7 @@ commands:
 .fi
 .in -0.3i
 .ft R
-.lp
+.PP
  
 \&\fR
 .TP
@@ -92,7 +93,7 @@ To generate a html copy,  run:
 .fi
 .in -0.3i
 .ft R
-.lp
+.PP
  
 \&\fRA premade html can be found at
 \&\fR\&\f(CW\(ifhttp://www.gnu.org/software/mtools/manual/mtools.html\(is\fR
@@ -107,7 +108,7 @@ To generate an info copy (browsable using emacs' info mode), run:
 .fi
 .in -0.3i
 .ft R
-.lp
+.PP
  
 \&\fR
 .PP

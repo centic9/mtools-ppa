@@ -1,6 +1,6 @@
 #ifndef MTOOLS_DIRENTRY_H
 #define MTOOLS_DIRENTRY_H
-/*  Copyright 1998,2000-2002,2005,2008,2009 Alain Knaff.
+/*  Copyright 1998,2000-2002,2005,2008-2010 Alain Knaff.
  *  This file is part of mtools.
  *
  *  Mtools is free software: you can redistribute it and/or modify
@@ -43,6 +43,7 @@ int isNotFound(direntry_t *entry);
 direntry_t *getParent(direntry_t *entry);
 void dir_write(direntry_t *entry);
 void low_level_dir_write(direntry_t *entry);
+void low_level_dir_write_end(Stream_t *Dir, int entry);
 int fatFreeWithDirentry(direntry_t *entry);
 int labelit(struct dos_name_t *dosname,
 	    char *longname,
@@ -51,6 +52,7 @@ int labelit(struct dos_name_t *dosname,
 int isSubdirOf(Stream_t *inside, Stream_t *outside);
 char *getPwd(direntry_t *entry);
 void fprintPwd(FILE *f, direntry_t *entry, int escape);
+void fprintShortPwd(FILE *f, direntry_t *entry);
 int write_vfat(Stream_t *, dos_name_t *, char *, int, direntry_t *);
 
 void wipeEntry(struct direntry_t *entry);

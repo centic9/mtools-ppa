@@ -1,13 +1,14 @@
-Summary: mtools, read/write/list/format DOS disks under Unix
-Name: mtools
-Version: 4.0.12
-Release: 1
-Group: Utilities/System
-URL: http://mtools.linux.lu
-Source0: mtools-%{version}.tar.gz
-#Patch1: mtools-%{version}-20071226.diff.gz
-Buildroot: %{_tmppath}/%{name}-%{version}-buildroot
-License: GPL
+Name:           mtools
+Summary:        mtools, read/write/list/format DOS disks under Unix
+Version:        4.0.17
+Release:        1
+License:        GPLv3+
+Group:          Utilities/System
+URL:            http://www.gnu.org/software/mtools/
+Source:         ftp://ftp.gnu.org/gnu/%{name}/%{name}-%{version}.tar.gz
+Buildroot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+
 %description
 Mtools is a collection of utilities to access MS-DOS disks from GNU
 and Unix without mounting them. It supports long file names, OS/2 Xdf
@@ -17,14 +18,20 @@ disks, ZIP/JAZ disks and 2m disks (store up to 1992k on a high density
 
 %prep
 %setup -q
-#%patch1 -p1
-./configure --prefix=%{buildroot}%{_prefix} --sysconfdir=/etc --infodir=%{buildroot}%{_infodir} --mandir=%{buildroot}%{_mandir} --enable-floppyd
+
+./configure \
+    --prefix=%{buildroot}%{_prefix} \
+    --sysconfdir=/etc \
+    --infodir=%{buildroot}%{_infodir} \
+    --mandir=%{buildroot}%{_mandir} \
+    --enable-floppyd \
 
 %build
 make
 
 %clean
-[ X%{buildroot} != X ] && [ X%{buildroot} != X/ ] && rm -r %{buildroot}
+echo rm -rf $RPM_BUILD_ROOT
+[ X%{buildroot} != X ] && [ X%{buildroot} != X/ ] && rm -fr %{buildroot}
 
 %install
 make install
@@ -57,6 +64,7 @@ rm %{buildroot}%{_infodir}/dir
 %{_mandir}/man1/mpartition.1*
 %{_mandir}/man1/mrd.1*
 %{_mandir}/man1/mren.1*
+%{_mandir}/man1/mshortname.1*
 %{_mandir}/man1/mshowfat.1*
 %{_mandir}/man1/mtools.1*
 %{_mandir}/man5/mtools.5*
@@ -84,6 +92,7 @@ rm %{buildroot}%{_infodir}/dir
 %{_bindir}/mpartition
 %{_bindir}/mrd
 %{_bindir}/mren
+%{_bindir}/mshortname
 %{_bindir}/mshowfat
 %{_bindir}/mtools
 %{_bindir}/mtoolstest
@@ -97,6 +106,7 @@ rm %{buildroot}%{_infodir}/dir
 %{_bindir}/tgz
 %{_bindir}/uz
 %{_bindir}/lz
+%doc NEWS
 
 %pre
 groupadd floppy 2>/dev/null || echo -n ""
@@ -124,5 +134,47 @@ if [ -f %{_bindir}/install-info ] ; then
 fi
 
 %changelog
+* Wed Jun 29 2011 Alain Knaff <alain@knaff.lu>
+- mbadblocks now takes a list of bad blocks (either as sectors
+  or as clusters)
+- mbadblocks now is able to do write scanning for bad blocks
+- mshowfat can show cluster of specific offset
+- Enable mtools to deal with very small sector sizes...
+- Fixed encoding of all-lowercase names (no need to mangle
+  these)
+- Consider every directory entry after an ENDMARK (0x00) to be deleted
+- After writing a new entry at end of a directory, be sure to also add
+  an ENDMARK (0x00)
+- Deal with possibility of a NULL pointer being returned by
+  localtime during timestamp conversion
+* Sat Apr 16 2011 Alain Knaff <alain@knaff.lu>
+- configure.in fixes
+- fixed formatting of fat_size_calculation.tex document
+- compatibility with current autoconfig versions
+- Make it clear that label is limited to 11 characters
+- Fixed typo in initialization of FAT32 info sector
+* Sun Oct 17 2010 Alain Knaff <alain@knaff.lu>
+- Added missing -i option to mshortname
+* Sun Oct 17 2010 Alain Knaff <alain@knaff.lu>
+- Released v4_0_14:
+- New mshortname command
+- Fix floppyd for disks bigger than 2 Gig
+- Remove obsolete -z flag
+- Remove now unsupported AC_USE_SYSTEM_EXTENSIONS
+- Fixed output formatting of mdir if MTOOLS_DOTTED_DIR is set
+- Mformat now correctly writes backup boot sector
+- Fixed signedness of serial number in mlabel
+- Fixed buffer size problem in mlabel
+- Make mlabel write backup boot sector if FAT32
+- Catch situation where both clear and new label are given to mlabel
+- Quote filename parameters to scripts
+- Mformat: Close file descriptor for boot sector
+- Added lzip support to scripts/uz
+- Added Tot_sectors option to mformat
+- Fixed hidden sector handling in mformat
+- Minfo generates mformat command lines containing new -T option
+- Mlabel prints error if label too long
+* Sun Feb 28 2010 Alain Knaff <alain@knaff.lu>
+- Merged Debian patches
 * Tue Nov 03 2009 Alain Knaff <alain@knaff.lu>
 - Mingw compatibility fixes
