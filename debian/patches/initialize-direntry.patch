@@ -1,0 +1,19 @@
+Author: Ronny Nilsson <rln-mtools@arbetsmyra.dyndns.org>
+Description: initialize direntry with memset to correct invalid bitfields
+ mcopy will create directory entries with invalid bitfields because of
+ uninitialized memory.  Initialize this structure with memset() to avoid
+ corrupt filesystems.
+Bug-Ubuntu: https://bugs.launchpad.net/bug/1619718
+Origin: https://lists.gnu.org/archive/html/info-mtools/2014-08/msg00000.html
+
+diff -rup mtools-4.0.18.orig/direntry.c mtools-4.0.18/direntry.c
+--- mtools-4.0.18.orig/direntry.c	2010-10-11 21:18:53.000000000 +0000
++++ mtools-4.0.18/direntry.c	2014-08-27 16:44:32.984959149 +0000
+@@ -24,6 +24,7 @@
+ 
+ void initializeDirentry(direntry_t *entry, Stream_t *Dir)
+ {
++	memset(entry, 0, sizeof(direntry_t));
+ 	entry->entry = -1;
+ /*	entry->parent = getDirentry(Dir);*/
+ 	entry->Dir = Dir;
