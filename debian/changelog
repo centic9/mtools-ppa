@@ -1,4 +1,4 @@
-mtools (4.0.18-2ubuntu0.16.04) xenial; urgency=medium
+mtools (4.0.18-2ubuntu1) yakkety; urgency=medium
 
   * debian/patches/initialize-direntry.patch: initialize direntry with
     memset to correct invalid bitfields.  Thanks to
