@@ -1,10 +1,18 @@
-mtools (4.0.18-2ubuntu1) yakkety; urgency=medium
+mtools (4.0.18-2.1) unstable; urgency=medium
 
-  * debian/patches/initialize-direntry.patch: initialize direntry with
-    memset to correct invalid bitfields.  Thanks to
-    Ronny Nilsson <rln-mtools@arbetsmyra.dyndns.org>.  LP: #1619718.
+  * Non-maintainer upload.
+  * Prevent an issue where mtools creates corrupted FAT entries for
+    directories when copied to a filesystem. This issue was reported upstream
+    at <https://lists.gnu.org/archive/html/info-mtools/2014-08/msg00000.html>
+    and as the underlying issue is based on uninitialised memory also affects
+    the reproducibility of the output of mtools which s required for
+    reproducible Debian Installer images. (Closes: #837044, #900409)
+  * Use the SOURCE_DATE_EPOCH environment variable if set instead of the
+    current time of day as the default timestamp (such as when adding files to
+    an existing file) to make its output reproducible. (Closes: #900410)
+  * Use "Priority: extra" over "Priority: optional" for Debian Policy § 2.0.5.
 
- -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 07 Sep 2016 23:40:07 -0700
+ -- Chris Lamb <lamby@debian.org>  Wed, 25 Jul 2018 20:23:59 +0800
 
 mtools (4.0.18-2) unstable; urgency=medium
 
