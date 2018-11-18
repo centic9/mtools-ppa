@@ -1,3 +1,9 @@
+mtools (4.0.18-2.1ubuntu0~ppa1) bionic; urgency=medium
+
+  * Upload for bionic.
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sun, 18 Nov 2018 08:23:47 +0100
+
 mtools (4.0.18-2.1) unstable; urgency=medium
 
   * Non-maintainer upload.
