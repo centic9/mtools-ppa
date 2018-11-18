@@ -1,0 +1,23 @@
+Index: mtools-4.0.18/scripts/uz
+===================================================================
+--- mtools-4.0.18.orig/scripts/uz	2014-06-26 22:16:10.657111236 +0200
++++ mtools-4.0.18/scripts/uz	2014-06-26 22:16:10.653111222 +0200
+@@ -67,7 +67,7 @@
+ 	echo >&2
+ 	found=
+ 
+-	for suffix in "" .gz .tgz .tar.gz .z .tar.z .taz .tpz .Z .tar.Z .tar.bz2 tar.lz .zip .jar .war .ear .aar; do
++	for suffix in "" .gz .tgz .tar.gz .z .tar.z .taz .tpz .Z .tar.Z .tar.bz2 tar.lz .zip .jar .war .ear .aar .tar.xz; do
+ 		if [ -r "${1}$suffix" ]; then
+ 			found=$1$suffix
+ 			break
+@@ -85,6 +85,9 @@
+ 		*.zip | *.jar | *.war | *.ear | *.aar)
+ 			unzip=1
+ 			;;
++		*.tar.xz)
++			uzcmd='xz -cd'
++			;;	
+ 	esac
+ 	if [ -z "$found" ]; then
+ 		echo "$0: could not read \"$1\"." >&2
