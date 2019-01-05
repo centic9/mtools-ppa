@@ -20,8 +20,6 @@
  */
 
 
-#define LOWERCASE
-
 #include "sysincludes.h"
 #include "msdos.h"
 #include "mtools.h"
@@ -52,7 +50,7 @@ static int dos_showfat(direntry_t *entry, MainParam_t *mp)
 	return GOT_ONE;
 }
 
-static int unix_showfat(MainParam_t *mp)
+static int unix_showfat(MainParam_t *mp UNUSEDP)
 {
 	fprintf(stderr,"File does not reside on a Dos fs\n");
 	return ERROR_ONE;
@@ -69,7 +67,8 @@ static void usage(int ret)
 	exit(ret);
 }
 
-void mshowfat(int argc, char **argv, int mtype)
+void mshowfat(int argc, char **argv, int mtype UNUSEDP) NORETURN;
+void mshowfat(int argc, char **argv, int mtype UNUSEDP)
 {
 	Arg_t arg;
 	int c, ret;
@@ -90,7 +89,6 @@ void mshowfat(int argc, char **argv, int mtype)
 				usage(0);
 			case '?':
 				usage(1);
-				break;
 		}
 	}
 

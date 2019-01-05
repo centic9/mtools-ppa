@@ -79,7 +79,8 @@ int scsi_max_length(void)
 #endif
 }
 
-int scsi_open(const char *name, int flag, int mode, void **extra_data)
+int scsi_open(const char *name, int flag UNUSEDP, int mode UNUSEDP,
+	      void **extra_data UNUSEDP)
 {
 #if (defined(OS_freebsd)) && (__FreeBSD__ >= 2)
     struct cam_device *cam_dev;
@@ -99,7 +100,7 @@ int scsi_open(const char *name, int flag, int mode, void **extra_data)
 }
 
 int scsi_cmd(int fd, unsigned char *cdb, int cmdlen, scsi_io_mode_t mode,
-	     void *data, size_t len, void *extra_data)
+	     void *data, size_t len, void *extra_data UNUSEDP)
 {
 #if defined OS_hpux
 	struct sctl_io sctl_io;
@@ -170,7 +171,7 @@ int scsi_cmd(int fd, unsigned char *cdb, int cmdlen, scsi_io_mode_t mode,
 	/*
 	** Init the command
 	*/
-	memset(&scsi_cmd,0,sizeof(scsi_cmd));
+	memset(&my_scsi_cmd,0,sizeof(my_scsi_cmd));
 	my_scsi_cmd.interface_id    = 'S';
 	my_scsi_cmd.dxfer_direction = (mode == SCSI_IO_READ)?(SG_DXFER_FROM_DEV):(SG_DXFER_TO_DEV);
 	my_scsi_cmd.cmd_len         = cmdlen;

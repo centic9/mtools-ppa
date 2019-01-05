@@ -1,31 +1,42 @@
 Source: mtools
 Section: otherosfs
-Priority: extra
-Maintainer: Anibal Monsalve Salazar <anibal@debian.org>
-Build-Depends: dpkg-dev (>= 1.16.1~), debhelper (>= 9), autotools-dev, libxfont-dev, libxt-dev, texinfo
-Standards-Version: 3.9.6
-Homepage: http://www.gnu.org/software/mtools/
+Priority: optional
+Maintainer: Chris Lamb <lamby@debian.org>
+Build-Depends:
+ debhelper-compat (= 12),
+ dpkg-dev (>= 1.16.1~),
+ libxfont-dev,
+ libxt-dev,
+ texinfo,
+Standards-Version: 4.3.0
+Homepage: https://www.gnu.org/software/mtools/
+Vcs-Git: https://salsa.debian.org/lamby/pkg-mtools.git
+Vcs-Browser: https://salsa.debian.org/lamby/pkg-mtools
 
 Package: floppyd
-Priority: extra
 Architecture: any
-Replaces: mtools (<< 3.9.7)
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Suggests: mtools
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Suggests:
+ mtools,
 Description: Daemon for remote access to floppy drives
- Floppyd is used as a server to grant access to the floppy drive to
- clients running on a remote machine, just as an X server grants access
- to the display to remote clients.
+ Floppyd is used as a server to grant access to the floppy drive to clients
+ running on a remote machine, just as an X server grants access to the display
+ to remote clients.
 
 Package: mtools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Suggests: floppyd
+Multi-Arch: foreign
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Suggests:
+ floppyd,
 Description: Tools for manipulating MSDOS files
- Mtools is a collection of utilities to access MS-DOS disks from Unix
- without mounting them. It supports Win'95 style long file names, OS/2
- Xdf disks, ZIP/JAZ disks and 2m disks (store up to 1992kB on a high
- density 3 1/2 disk).
+ Mtools is a collection of utilities to access MS-DOS disks from Unix without
+ mounting them. It supports Win'95 style long file names, OS/2 Xdf disks,
+ ZIP/JAZ disks and 2m disks (store up to 1992kB on a high density 3 1/2 disk).
  .
- Also included in this package are commands to eject and manipulate
- the write/password protection control of Zip disks.
+ Also included in this package are commands to eject and manipulate the
+ write/password protection control of Zip disks.

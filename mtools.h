@@ -26,15 +26,15 @@ typedef struct dos_name_t dos_name_t;
 extern int lockf(int, int, off_t);  /* SCO has no proper include file for lockf */
 #endif 
 
-#define SCSI_FLAG 1
-#define PRIV_FLAG 2
-#define NOLOCK_FLAG 4
-#define USE_XDF_FLAG 8
-#define MFORMAT_ONLY_FLAG 16
-#define VOLD_FLAG 32
-#define FLOPPYD_FLAG 64
-#define FILTER_FLAG 128
-#define SWAP_FLAG 256 
+#define SCSI_FLAG		0x001u
+#define PRIV_FLAG		0x002u
+#define NOLOCK_FLAG		0x004u
+#define USE_XDF_FLAG		0x008u
+#define MFORMAT_ONLY_FLAG	0x010u
+#define VOLD_FLAG		0x020u
+#define FLOPPYD_FLAG		0x040u
+#define FILTER_FLAG		0x080u
+#define SWAP_FLAG		0x100u
 
 #define IS_SCSI(x)  ((x) && ((x)->misc_flags & SCSI_FLAG))
 #define IS_PRIVILEGED(x) ((x) && ((x)->misc_flags & PRIV_FLAG))
@@ -47,15 +47,15 @@ extern int lockf(int, int, off_t);  /* SCO has no proper include file for lockf 
 typedef struct device {
 	const char *name;       /* full path to device */
 
-	char drive;	   	    	/* the drive letter */
-	int fat_bits;			/* FAT encoding scheme */
+	char drive;	   	/* the drive letter */
+	int fat_bits;		/* FAT encoding scheme */
 
-	unsigned int mode;		/* any special open() flags */
+	int mode;		/* any special open() flags */
 	unsigned int tracks;	/* tracks */
-	unsigned int heads;		/* heads */
-	unsigned int sectors;	/* sectors */
+	uint16_t heads;		/* heads */
+	uint16_t sectors;	/* sectors */
 	unsigned int hidden;	/* number of hidden sectors. Used for
-							 * mformatting partitioned devices */
+				 * mformatting partitioned devices */
 
 	off_t offset;	       	/* skip this many bytes */
 
@@ -64,20 +64,41 @@ typedef struct device {
 	unsigned int misc_flags;
 
 	/* Linux only stuff */
-	unsigned int ssize;
+	uint8_t ssize;
 	unsigned int use_2m;
 
 	char *precmd;		/* command to be executed before opening
-						 * the drive */
+				 * the drive */
 
 	/* internal variables */
 	int file_nr;		/* used during parsing */
-	unsigned int blocksize;	  /* size of disk block in bytes */
+	unsigned int blocksize;	/* size of disk block in bytes */
 
-	int codepage; /* codepage for shortname encoding */
+	int codepage;		/* codepage for shortname encoding */
 
 	const char *cfg_filename; /* used for debugging purposes */
 } device_t;
+
+struct OldDos_t {
+	unsigned int tracks;
+	uint16_t sectors;
+	uint16_t  heads;
+	
+	unsigned int dir_len;
+	unsigned int cluster_size;
+	unsigned int fat_len;
+
+	uint8_t media;
+};
+
+extern struct OldDos_t *getOldDosBySize(size_t size);
+extern struct OldDos_t *getOldDosByMedia(int media);
+extern struct OldDos_t *getOldDosByParams(unsigned int tracks,
+					  unsigned int heads,
+					  unsigned int sectors,
+					  unsigned int dir_len,
+					  unsigned int cluster_size);
+int setDeviceFromOldDos(int media, struct device *dev);
 
 
 #ifndef OS_linux
@@ -94,10 +115,25 @@ typedef struct doscp_t doscp_t;
 extern const char *short_illegals, *long_illegals;
 
 #define maximize(target, max) do { \
+  if(target > max) { \
+    target = max; \
+  } \
+} while(0)
+
+#define smaximize(target, max) do {		\
   if(max < 0) { \
     if(target > 0) \
       target = 0; \
   } else if(target > max) { \
+    target = max; \
+  } \
+} while(0)
+
+#define sizemaximize(target, max) do {		\
+  if(max < 0) { \
+    if(target > 0) \
+      target = 0; \
+  } else if(target > (size_t) max) {		\
     target = max; \
   } \
 } while(0)
@@ -122,14 +158,15 @@ int readwrite_sectors(int fd, /* file descriptor */
 
 int lock_dev(int fd, int mode, struct device *dev);
 
-char *unix_normalize (doscp_t *cp, char *ans, struct dos_name_t *dn);
+char *unix_normalize (doscp_t *cp, char *ans, struct dos_name_t *dn,
+		      size_t ans_size);
 void dos_name(doscp_t *cp, const char *filename, int verbose, int *mangled,
 	      struct dos_name_t *);
-struct directory *mk_entry(const dos_name_t *filename, char attr,
+struct directory *mk_entry(const dos_name_t *filename, unsigned char attr,
 			   unsigned int fat, size_t size, time_t date,
 			   struct directory *ndir);
 
-struct directory *mk_entry_from_base(const char *base, char attr,
+struct directory *mk_entry_from_base(const char *base, unsigned char attr,
 				     unsigned int fat, size_t size, time_t date,
 				     struct directory *ndir);
 
@@ -173,6 +210,32 @@ UNUSED(static __inline__ int compare (long ref, long testee))
 	return (ref && ref != testee);
 }
 
+UNUSED(static __inline__ char ch_toupper(char ch))
+{
+        return (char) toupper( (unsigned char) ch);
+}
+
+UNUSED(static __inline__ char ch_tolower(char ch))
+{
+        return (char) tolower( (unsigned char) ch);
+}
+
+UNUSED(static __inline__ wchar_t ch_towupper(wchar_t ch))
+{
+        return (wchar_t) towupper( (wint_t) ch);
+}
+
+UNUSED(static __inline__ wchar_t ch_towlower(wchar_t ch))
+{
+        return (wchar_t) towlower( (wint_t) ch);
+}
+
+UNUSED(static __inline__ void init_random(void))
+{
+	srandom((unsigned int)time (0));
+}
+
+
 Stream_t *GetFs(Stream_t *Fs);
 
 void label_name_uc(doscp_t *cp, const char *filename, int verbose, 
@@ -188,9 +251,10 @@ extern unsigned int mtools_ignore_short_case;
 extern unsigned int mtools_no_vfat;
 extern unsigned int mtools_numeric_tail;
 extern unsigned int mtools_dotted_dir;
+extern unsigned int mtools_lock_timeout;
 extern unsigned int mtools_twenty_four_hour_clock;
 extern const char *mtools_date_string;
-extern unsigned int mtools_rate_0, mtools_rate_any;
+extern uint8_t mtools_rate_0, mtools_rate_any;
 extern unsigned int mtools_default_codepage;
 extern int mtools_raw_tty;
 
@@ -200,9 +264,20 @@ char get_default_drive(void);
 void set_cmd_line_image(char *img);
 void read_config(void);
 off_t str_to_offset(char *str);
+unsigned int strtoui(const char *nptr, char **endptr, int base);
+unsigned int atoui(const char *nptr);
+int strtoi(const char *nptr, char **endptr, int base);
+unsigned long atoul(const char *nptr);
+uint8_t strtou8(const char *nptr, char **endptr, int base);
+uint8_t atou8(const char *str);
+uint16_t strtou16(const char *nptr, char **endptr, int base);
+uint16_t atou16(const char *str);
+uint32_t strtou32(const char *nptr, char **endptr, int base);
+uint32_t atou32(const char *str);
+
 extern struct device *devices;
 extern struct device const_devices[];
-extern const int nr_const_devices;
+extern const unsigned int nr_const_devices;
 
 #define New(type) ((type*)(calloc(1,sizeof(type))))
 #define Grow(adr,n,type) ((type*)(realloc((char *)adr,n*sizeof(type))))
@@ -274,7 +349,7 @@ FILE *open_mcwd(const char *mode);
 void unlink_mcwd(void);
 
 #ifndef OS_mingw32msvc
-int safePopenOut(const char **command, char *output, int len);
+ssize_t safePopenOut(const char **command, char *output, size_t len);
 #endif
 
 #define ROUND_DOWN(value, grain) ((value) - (value) % (grain))

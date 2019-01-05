@@ -151,6 +151,7 @@ static int test_mounted ( char *dev )
 }
 
 
+static void usage(int ret) NORETURN;
 static void usage(int ret)
 {
 	fprintf(stderr, 
@@ -221,9 +222,10 @@ static int door_command(int priv, int fd, int cmd1, int cmd2,
 	return short_command(priv, fd, cmd1, 0, cmd2, 0, extra_data);
 }
 
-void mzip(int argc, char **argv, int type)
+void mzip(int argc, char **argv, int type UNUSEDP) NORETURN;
+void mzip(int argc, char **argv, int type UNUSEDP)
 {
-	void *extra_data;
+	void *extra_data = NULL;
 	int c;
 	char drive;
 	device_t *dev;
@@ -293,7 +295,7 @@ void mzip(int argc, char **argv, int type)
 	     (!argv[optind][0] || argv[optind][1] != ':')))
 		usage(1);
 	
-	drive = toupper(argc - optind == 1 ? argv[argc - 1][0] : ':');
+	drive = ch_toupper(argc - optind == 1 ? argv[argc - 1][0] : ':');
 	
 	for (dev = devices; dev->name; dev++) {
 		unsigned char cdb[6] = { 0, 0, 0, 0, 0, 0 };
@@ -457,14 +459,14 @@ void mzip(int argc, char **argv, int type)
 		}
 		
 		if (newMode & 0x1) {
-			char first_try[_PASSWORD_LEN];
+			char first_try[_PASSWORD_LEN+1];
 			
 			passwd = getpass("Enter new password:");
 			strncpy(first_try, passwd,_PASSWORD_LEN);
 			passwd = getpass("Re-type new password:");
 			if(strncmp(first_try, passwd, _PASSWORD_LEN)) {
 				fprintf(stderr,
-					"You mispelled it. Password not set.\n");
+					"You misspelled it. Password not set.\n");
 				exit(1);
 			}
 		} else {

@@ -27,7 +27,7 @@
 #include "nameclash.h"
 #include "file_name.h"
 
-static void _label_name(doscp_t *cp, const char *filename, int verbose,
+static void _label_name(doscp_t *cp, const char *filename, int verbose UNUSEDP,
 			int *mangled, dos_name_t *ans, int preserve_case)
 {
 	int len;
@@ -51,7 +51,7 @@ static void _label_name(doscp_t *cp, const char *filename, int verbose,
 		if(isupper(wbuffer[i]))
 			have_upper = 1;
 		if(!preserve_case)
-			wbuffer[i] = towupper(wbuffer[i]);
+			wbuffer[i] = ch_towupper(wbuffer[i]);
 		if(
 #ifdef HAVE_WCHAR_H
 		   wcschr(L"^+=/[]:,?*\\<>|\".", wbuffer[i])
@@ -81,8 +81,8 @@ void label_name_pc(doscp_t *cp, const char *filename, int verbose,
 }
 
 int labelit(struct dos_name_t *dosname,
-	    char *longname,
-	    void *arg0,
+	    char *longname UNUSEDP,
+	    void *arg0 UNUSEDP,
 	    direntry_t *entry)
 {
 	time_t now;
@@ -103,7 +103,8 @@ static void usage(int ret)
 }
 
 
-void mlabel(int argc, char **argv, int type)
+void mlabel(int argc, char **argv, int type UNUSEDP) NORETURN;
+void mlabel(int argc, char **argv, int type UNUSEDP)
 {
 
 	const char *newLabel="";
@@ -118,7 +119,7 @@ void mlabel(int argc, char **argv, int type)
 	int c;
 	int mangled;
 	enum { SER_NONE, SER_RANDOM, SER_SET }  set_serial = SER_NONE;
-	long serial = 0;
+	unsigned long serial = 0;
 	int need_write_boot = 0;
 	int have_boot = 0;
 	char *eptr;
@@ -133,6 +134,7 @@ void mlabel(int argc, char **argv, int type)
 	init_clash_handling(&ch);
 	ch.name_converter = label_name_uc;
 	ch.ignore_entry = -2;
+	ch.is_label = 1;
 
 	verbose = 0;
 	clear = 0;
@@ -156,7 +158,7 @@ void mlabel(int argc, char **argv, int type)
 				break;
 			case 'n':
 				set_serial = SER_RANDOM;
-				srandom((long)time (0));
+				init_random();
 				serial=random();
 				break;
 			case 'N':
@@ -181,7 +183,7 @@ void mlabel(int argc, char **argv, int type)
 	if(argc - optind == 1) {
 	    if(!argv[optind][0] || argv[optind][1] != ':')
 		usage(1);
-	    drive = toupper(argv[argc -1][0]);
+	    drive = ch_toupper(argv[argc -1][0]);
 	    newLabel = argv[optind]+2;
 	} else {
 	    drive = get_default_drive();
@@ -217,7 +219,8 @@ void mlabel(int argc, char **argv, int type)
 
 	initializeDirentry(&entry, RootDir);
 	r=vfat_lookup(&entry, 0, 0, ACCEPT_LABEL | MATCH_ANY,
-		      shortname, longname);
+		      shortname, sizeof(shortname),
+		      longname, sizeof(longname));
 	if (r == -2) {
 		FREE(&RootDir);
 		exit(1);
@@ -299,17 +302,16 @@ void mlabel(int argc, char **argv, int type)
 		cp = GET_DOSCONVERT(Fs);
 		label_name_pc(cp, shrtLabel, verbose, &mangled, &dosname);
 
-		if(have_boot && boot.boot.descr >= 0xf0 &&
-		   labelBlock->dos4 == 0x29) {
-			strncpy(labelBlock->label, dosname.base, 11);
+		if(have_boot && boot.boot.descr >= 0xf0 && has_BPB4) {
+			strncpy(labelBlock->label, dosname.base, 8);
+			strncpy(labelBlock->label+8, dosname.ext, 3);
 			need_write_boot = 1;
 
 		}
 	}
 
 	if((set_serial != SER_NONE) & have_boot) {
-		if(have_boot && boot.boot.descr >= 0xf0 &&
-		   labelBlock->dos4 == 0x29) {
+		if(have_boot && boot.boot.descr >= 0xf0 && has_BPB4) {
 			set_dword(labelBlock->serial, serial);	
 			need_write_boot = 1;
 		}

@@ -21,8 +21,6 @@
  */
 
 
-#define LOWERCASE
-
 #include "sysincludes.h"
 #include "msdos.h"
 #include "mtools.h"
@@ -119,7 +117,7 @@ static int _unix_write(MainParam_t *mp, int needfilter, const char *unixFile)
 
 	/* if we are creating a file, check whether it already exists */
 	if(!arg->type) {
-		if (!arg->nowarn && &arg->type && !access(unixFile, 0)){
+		if (!arg->nowarn && !access(unixFile, 0)){
 			if(arg->noClobber) {
 				fprintf(stderr, "File \"%s\" exists. To overwrite, try again, and explicitly specify target directory\n",unixFile);
 				return ERROR_ONE;
@@ -394,7 +392,7 @@ static Stream_t *subDir(Stream_t *parent, const char *filename)
 	direntry_t entry;
 	initializeDirentry(&entry, parent);
 
-	switch(vfat_lookup(&entry, filename, -1, ACCEPT_DIR, 0, 0)) {
+	switch(vfat_lookup(&entry, filename, -1, ACCEPT_DIR, 0, 0, 0, 0)) {
 	    case 0:
 		return OpenFileByDirentry(&entry);
 	    case -1:
@@ -502,6 +500,7 @@ static void usage(int ret)
 	exit(ret);
 }
 
+void mcopy(int argc, char **argv, int mtype) NORETURN;
 void mcopy(int argc, char **argv, int mtype)
 {
 	Arg_t arg;

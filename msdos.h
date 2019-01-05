@@ -33,8 +33,8 @@
 #define NEW		1
 #define OLD		0
 
-#define _WORD(x) ((unsigned short)((unsigned char)(x)[0] + (((unsigned char)(x)[1]) << 8)))
-#define _DWORD(x) ((unsigned int)(_WORD(x) + (_WORD((x)+2) << 16)))
+#define _WORD(x) ((uint16_t)((unsigned char)(x)[0] + (((unsigned char)(x)[1]) << 8)))
+#define _DWORD(x) ((uint32_t)(_WORD(x) + (_WORD((x)+2) << 16)))
 
 #define DELMARK ((char) 0xe5)
 #define ENDMARK ((char) 0x00)
@@ -67,7 +67,7 @@ struct directory {
 #define STARTHI(dir) (_WORD((dir)->startHi))
 
 /* ASSUMPTION: long is at least 32 bits */
-UNUSED(static __inline__ void set_dword(unsigned char *data, unsigned long value))
+UNUSED(static __inline__ void set_dword(unsigned char *data, uint32_t value))
 {
 	data[3] = (value >> 24) & 0xff;
 	data[2] = (value >> 16) & 0xff;
@@ -130,6 +130,8 @@ typedef struct label_blk_t {
 	char fat_type[8];		/* 54 FAT type */
 } label_blk_t;
 
+#define has_BPB4 (labelBlock->dos4 == 0x28 || labelBlock->dos4 == 0x29)
+
 /* FAT32 specific info in the bootsector */
 struct fat32_t {
 	unsigned char bigFat[4];	/* 36 nb of sectors per FAT */
@@ -162,7 +164,7 @@ typedef struct oldboot_t {
 
 struct bootsector_s {
 	unsigned char jump[3];		/* 0  Jump to boot code */
-	char banner[8];	       		/* 3  OEM name & version */
+	char banner[8] NONULLTERM; 	/* 3  OEM name & version */
 	unsigned char secsiz[2];	/* 11 Bytes per sector hopefully 512 */
 	unsigned char clsiz;    	/* 13 Cluster size in sectors */
 	unsigned char nrsvsect[2];	/* 14 Number of reserved (boot) sectors */
@@ -199,30 +201,18 @@ union bootsector {
 
 #define OFFSET(x) (((char *) (boot->x)) - ((char *)(boot->jump)))
 
-
-extern struct OldDos_t {
-	unsigned int tracks;
-	unsigned int sectors;
-	unsigned int heads;
-	
-	unsigned int dir_len;
-	unsigned int cluster_size;
-	unsigned int fat_len;
-
-	int media;
-} old_dos[];
-
 /* max FAT12/FAT16 sizes, according to
    
- http://www.microsoft.com/hwdev/download/hardware/fatgen103.pdf
+ https://staff.washington.edu/dittrich/misc/fatgen103.pdf
+ https://download.microsoft.com/download/1/6/1/161ba512-40e2-4cc9-843a-923143f3456c/fatgen103.doc
 
  interestingly enough, another Microsoft document 
  [http://support.microsoft.com/default.aspx?scid=kb%3ben-us%3b67321]
  gives different values, but the first seems to be more sure about
  itself, so we believe that one ;-)
 */
-#define FAT12 4085 /* max. number of clusters described by a 12 bit FAT */
-#define FAT16 65525 /* max number of clusters for a 16 bit FAT */
+#define FAT12 0x0ff5 /* max. number + 1 of clusters described by a 12 bit FAT */
+#define FAT16 0xfff5 /* max number + 1 of clusters for a 16 bit FAT */
 
 #define ATTR_ARCHIVE 0x20
 #define ATTR_DIR 0x10

@@ -1,3 +1,39 @@
+mtools (4.0.23-1) unstable; urgency=medium
+
+  * Salvage package. (Closes: #916127)
+    - Add debian/gbp.conf.
+    - Add Vcs-{Git,Browser} headers.
+  * New upstream release. (Closes: #912285)
+    - Fix debian/watch by moving away from stale upstream download location.
+  * debian/control:
+    - Set "Multi-Arch: foreign" for mtools binary package. (Closes: #752452)
+    - Drop "Replaces: mtools (<< 3.9.7)"; currently satisfied in oldoldstable.
+    - Drop "Build-Depends" on autotools-dev.
+    - Move to debhelper-compat virtual package.
+    - Bump debhelper compatibility level to 12.
+    - Bump Standards-Version to 4.3.0.
+    - Replace "Priority: extra" with "optional".
+    - Reflow long descriptions.
+  * debian/rules:
+    - Use dh_missing --fail-missing.
+    - Run dh_auto_install in single-threaded mode due to upstream race
+      conditions.
+    - Tidy file.
+  * Drop patches applied upstream:
+    - 01-607426-support-zip-files-in-uz.patch.
+    - 02-837044-initialize-direntry.patch.
+    - 03-837044-corrupted-fat-entries-when-mcopy-copies-directory.patch.
+  * Move to secure upstream URIs.
+  * Install all upstream manpages.
+  * Move to DEP-5 debian/copyright.
+  * Add a simple autopkgtest.
+  * Install .info file to mtools binary.
+  * Correct grammatical errors in upstream documentation.
+  * wrap-and-sort -sa.
+  * Drop whitespace in debian/* files.
+
+ -- Chris Lamb <lamby@debian.org>  Sat, 05 Jan 2019 15:18:13 +0100
+
 mtools (4.0.18-2.1) unstable; urgency=medium
 
   * Non-maintainer upload.
@@ -68,7 +104,7 @@ mtools (4.0.17-1) unstable; urgency=low
 mtools (4.0.12-1) unstable; urgency=low
 
   * New upstream version
-  * Merge 4.0.10-1ubuntu1 
+  * Merge 4.0.10-1ubuntu1
   * Debian source format is 3.0 (quilt)
   * Update debian/patches/*
   * Fix dh_undocumented-is-obsolete
@@ -226,7 +262,7 @@ mtools (3.9.9-2.1) unstable; urgency=low
 
   * NMU
   * Added a copy of the GFDL text to debian/copyright and correct
-    license location in debian/patches/02-manpages.dpatch fixing 
+    license location in debian/patches/02-manpages.dpatch fixing
     tgz.1 (Closes: #292237)
 
  -- Paul Brossier <piem@altern.org>  Sat,  5 Feb 2005 01:27:35 +0000
@@ -235,7 +271,7 @@ mtools (3.9.9-2) unstable; urgency=low
 
   * Acknowledging NMU fixes. Thanks Matt. (closes: #217413, #191861, #191861)
   * Bumbed Standars-Version to 3.6.1.
-  * Added Co-Maintainer (me) to Uploaders field. 
+  * Added Co-Maintainer (me) to Uploaders field.
 
  -- AndrÃ©s RoldÃ¡n <aroldan@debian.org>  Sun,  1 Feb 2004 22:36:38 +0000
 
@@ -270,9 +306,9 @@ mtools (3.9.8-12) unstable; urgency=low
   * Applied accumulative patch from upstream mtools-3.9.8-20021118.diff.gz
     (closes: #153571).
   * Removed all debian patches. They were already applied by upstream author
-    in previous patch. 
+    in previous patch.
   * Updated to standards version 3.5.8.
-  
+
  -- Luis Bustamante <luferbu@fluidsignal.com>  Thu, 19 Dec 2002 19:27:24 -0500
 
 mtools (3.9.8-11) unstable; urgency=low
@@ -294,7 +330,7 @@ mtools (3.9.8-10) unstable; urgency=low
   * Added manual page for lz and uz. Written by Robert King
     <Robert.King@mailbox.gu.edu.au> (closes: #19091).
   * Fixed problem with parse_range(). Patch from Moritz Barsnick
-    <barsnick@gmx.net>. 
+    <barsnick@gmx.net>.
 
  -- Luis Bustamante <luferbu@fluidsignal.com>  Fri, 17 Jun 2002 15:59:21 -0500
 
@@ -462,7 +498,7 @@ mtools (3.9.6-3) unstable; urgency=low
 
 mtools (3.9.6-2) unstable; urgency=low
 
-  * mainloop.c: use O_RDONLY (portable, but needed for The Hurd.)  
+  * mainloop.c: use O_RDONLY (portable, but needed for The Hurd.)
     closes: #37757.
 
  -- Mark W. Eichin <eichin@thok.org>  Sun, 31 Oct 1999 14:45:20 -0500

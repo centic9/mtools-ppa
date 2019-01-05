@@ -1,0 +1,227 @@
+From: Chris Lamb <lamby@debian.org>
+Date: Sat, 5 Jan 2019 14:46:01 +0100
+Subject: Correct grammatical errors in upstream documentation.
+
+---
+ mmount.1      |  4 ++--
+ mtools.1      |  8 ++++----
+ mtools.info   | 14 +++++++-------
+ mtools.texi   | 14 +++++++-------
+ mtools.tmpl.1 |  8 ++++----
+ 5 files changed, 24 insertions(+), 24 deletions(-)
+
+diff --git a/mmount.1 b/mmount.1
+index b32e69f..ba62c8a 100644
+--- a/mmount.1
++++ b/mmount.1
+@@ -21,8 +21,8 @@ end of this man page for details.
+ .SH Description
+ .PP
+ The \fR\&\f(CWmmount\fR command is used to mount an MS-DOS disk. It is only
+-available on Linux, as it is only useful if the OS kernel allows to
+-configure the disk geometry. Its syntax is:
++available on Linux, as it is only useful if the OS kernel allows
++configuration of the disk geometry. Its syntax is:
+ .PP
+ \&\fR\&\f(CWmmount\fR \fImsdosdrive\fR [\fImountargs\fR]
+ .PP
+diff --git a/mtools.1 b/mtools.1
+index 78cdd89..e2220df 100644
+--- a/mtools.1
++++ b/mtools.1
+@@ -362,7 +362,7 @@ and not as Longfilename. However, if you then try to add LongFilename to
+ the same directory, it is refused, because case is ignored for clash
+ checks.
+ .PP
+-The VFAT file system allows to store the case of a filename in the
++The VFAT file system allows you to store the case of a filename in the
+ attribute byte, if all letters of the filename are the same case, and if
+ all letters of the extension are the same case too. Mtools uses this
+ information when displaying the files, and also to generate the Unix
+@@ -374,7 +374,7 @@ lower case Unix filenames.
+ .PP
+ .SS high\ capacity\ formats
+ .PP
+-Mtools supports a number of formats which allow to store more data on
++Mtools supports a number of formats which allows storage of more data on
+ disk as usual. Due to different operating system abilities, these
+ formats are not supported on all operating systems. Mtools recognizes
+ these formats transparently where supported.
+@@ -426,7 +426,7 @@ many data bytes are in the sector. Thus, we save some space by using
+ up header space once, whereas 8 sectors of 512 bytes have also 8
+ headers, for the same amount of useful data.
+ .PP
+-This method allows to store up to 1992K on a 3 1/2 HD disk.
++This method permits storage of up to 1992K on a 3 1/2 HD disk.
+ .PP
+ Mtools supports these formats only on Linux.
+ .PP
+@@ -436,7 +436,7 @@ The 2m format was originally invented by Ciriaco Garcia de Celis. It
+ also uses bigger sectors than usual in order to fit more data on the
+ disk.  However, it uses the standard format (18 sectors of 512 bytes
+ each) on the first cylinder, in order to make these disks easier to
+-handle by DOS. Indeed this method allows to have a standard sized
++handle by DOS. Indeed this method allows you to have a standard sized
+ boot sector, which contains a description of how the rest of the disk
+ should be read.
+ .PP
+diff --git a/mtools.info b/mtools.info
+index 76c945e..7f5a126 100644
+--- a/mtools.info
++++ b/mtools.info
+@@ -342,7 +342,7 @@ LongFileName, and not as Longfilename.  However, if you then try to add
+ LongFilename to the same directory, it is refused, because case is
+ ignored for clash checks.
+ 
+-   The VFAT file system allows to store the case of a filename in the
++   The VFAT file system allows you to store the case of a filename in the
+ attribute byte, if all letters of the filename are the same case, and if
+ all letters of the extension are the same case too.  Mtools uses this
+ information when displaying the files, and also to generate the Unix
+@@ -358,7 +358,7 @@ File: mtools.info,  Node: high capacity formats,  Next: exit codes,  Prev: case
+ 2.7 high capacity formats
+ =========================
+ 
+-Mtools supports a number of formats which allow to store more data on
++Mtools supports a number of formats which allows storage of more data on
+ disk as usual.  Due to different operating system abilities, these
+ formats are not supported on all operating systems.  Mtools recognizes
+ these formats transparently where supported.
+@@ -416,7 +416,7 @@ using _fewer_, but bigger sectors.  For example, 1 sector of 4K only
+ takes up header space once, whereas 8 sectors of 512 bytes have also 8
+ headers, for the same amount of useful data.
+ 
+-   This method allows to store up to 1992K on a 3 1/2 HD disk.
++   This method permits storage of up to 1992K on a 3 1/2 HD disk.
+ 
+    Mtools supports these formats only on Linux.
+ 
+@@ -430,7 +430,7 @@ The 2m format was originally invented by Ciriaco Garcia de Celis.  It
+ also uses bigger sectors than usual in order to fit more data on the
+ disk.  However, it uses the standard format (18 sectors of 512 bytes
+ each) on the first cylinder, in order to make these disks easier to
+-handle by DOS. Indeed this method allows to have a standard sized boot
++handle by DOS. Indeed this method allows you to a standard sized boot
+ sector, which contains a description of how the rest of the disk should
+ be read.
+ 
+@@ -1870,8 +1870,8 @@ File: mtools.info,  Node: mmount,  Next: mmove,  Prev: mmd,  Up: Commands
+ ===========
+ 
+ The 'mmount' command is used to mount an MS-DOS disk.  It is only
+-available on Linux, as it is only useful if the OS kernel allows to
+-configure the disk geometry.  Its syntax is:
++available on Linux, as it is only useful if the OS kernel permits
++configuration of the disk geometry.  Its syntax is:
+ 
+    'mmount' MSDOSDRIVE [MOUNTARGS]
+ 
+@@ -2335,7 +2335,7 @@ that I can include them into the next release.  For purely local file, I
+ recommend that you use the '/etc/mtools.conf' and '~/.mtoolsrc'
+ configuration files.
+ 
+-   However, the devices files also allows to supply geometry setting
++   However, the devices files also allows you supply geometry setting
+ routines.  These are necessary if you want to access high capacity
+ disks.
+ 
+diff --git a/mtools.texi b/mtools.texi
+index c20c289..c782906 100644
+--- a/mtools.texi
++++ b/mtools.texi
+@@ -403,7 +403,7 @@ and not as Longfilename. However, if you then try to add LongFilename to
+ the same directory, it is refused, because case is ignored for clash
+ checks.
+ 
+-The VFAT file system allows to store the case of a filename in the
++The VFAT file system allows you to store the case of a filename in the
+ attribute byte, if all letters of the filename are the same case, and if
+ all letters of the extension are the same case too. Mtools uses this
+ information when displaying the files, and also to generate the Unix
+@@ -422,7 +422,7 @@ lower case Unix filenames.
+ @cindex Formats, high capacity
+ @cindex Linux enhancements (High Capacity Formats)
+ 
+-Mtools supports a number of formats which allow to store more data on
++Mtools supports a number of formats which allows storage of more data on
+ disk as usual. Due to different operating system abilities, these
+ formats are not supported on all operating systems. Mtools recognizes
+ these formats transparently where supported.
+@@ -480,7 +480,7 @@ many data bytes are in the sector. Thus, we save some space by using
+ up header space once, whereas 8 sectors of 512 bytes have also 8
+ headers, for the same amount of useful data.
+ 
+-This method allows to store up to 1992K on a 3 1/2 HD disk.
++This method permits storage of up to 1992K on a 3 1/2 HD disk.
+ 
+ Mtools supports these formats only on Linux.
+ 
+@@ -492,7 +492,7 @@ The 2m format was originally invented by Ciriaco Garcia de Celis. It
+ also uses bigger sectors than usual in order to fit more data on the
+ disk.  However, it uses the standard format (18 sectors of 512 bytes
+ each) on the first cylinder, in order to make these disks easier to
+-handle by DOS. Indeed this method allows to have a standard sized
++handle by DOS. Indeed this method allows you to have a standard sized
+ boot sector, which contains a description of how the rest of the disk
+ should be read.
+ 
+@@ -2129,8 +2129,8 @@ if the directory already exists.
+ @cindex High capacity formats, mounting
+ 
+ The @code{mmount} command is used to mount an MS-DOS disk. It is only
+-available on Linux, as it is only useful if the OS kernel allows to
+-configure the disk geometry. Its syntax is:
++available on Linux, as it is only useful if the OS kernel allows
++configuration the disk geometry. Its syntax is:
+ 
+ @code{mmount} @var{msdosdrive} [@var{mountargs}]
+ 
+@@ -2657,7 +2657,7 @@ can include them into the next release.  For purely local file, I
+ recommend that you use the @code{@value{SYSCONFDIR}mtools.conf} and
+ @code{~/.mtoolsrc} configuration files.
+ 
+- However, the devices files also allows to supply geometry setting
++ However, the devices files also allows you to supply geometry setting
+ routines. These are necessary if you want to access high capacity
+ disks.
+ 
+diff --git a/mtools.tmpl.1 b/mtools.tmpl.1
+index 262aaf7..3d0330e 100644
+--- a/mtools.tmpl.1
++++ b/mtools.tmpl.1
+@@ -362,7 +362,7 @@ and not as Longfilename. However, if you then try to add LongFilename to
+ the same directory, it is refused, because case is ignored for clash
+ checks.
+ .PP
+-The VFAT file system allows to store the case of a filename in the
++The VFAT file system allows you to store the case of a filename in the
+ attribute byte, if all letters of the filename are the same case, and if
+ all letters of the extension are the same case too. Mtools uses this
+ information when displaying the files, and also to generate the Unix
+@@ -374,7 +374,7 @@ lower case Unix filenames.
+ .PP
+ .SS high\ capacity\ formats
+ .PP
+-Mtools supports a number of formats which allow to store more data on
++Mtools supports a number of formats which allows storage of more data on
+ disk as usual. Due to different operating system abilities, these
+ formats are not supported on all operating systems. Mtools recognizes
+ these formats transparently where supported.
+@@ -426,7 +426,7 @@ many data bytes are in the sector. Thus, we save some space by using
+ up header space once, whereas 8 sectors of 512 bytes have also 8
+ headers, for the same amount of useful data.
+ .PP
+-This method allows to store up to 1992K on a 3 1/2 HD disk.
++This method permits storage of up to 1992K on a 3 1/2 HD disk.
+ .PP
+ Mtools supports these formats only on Linux.
+ .PP
+@@ -436,7 +436,7 @@ The 2m format was originally invented by Ciriaco Garcia de Celis. It
+ also uses bigger sectors than usual in order to fit more data on the
+ disk.  However, it uses the standard format (18 sectors of 512 bytes
+ each) on the first cylinder, in order to make these disks easier to
+-handle by DOS. Indeed this method allows to have a standard sized
++handle by DOS. Indeed this method allows you to have a standard sized
+ boot sector, which contains a description of how the rest of the disk
+ should be read.
+ .PP

@@ -1,2 +1,2 @@
-version=3
-http://www.gnu.org/software/mtools/download.html ftp://ftp.gnu.org/gnu/mtools/mtools-([\d\.]*).tar.bz2
+version=4
+https://ftp.gnu.org/gnu/mtools mtools-(.*)\.tar\.bz2

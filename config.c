@@ -41,13 +41,14 @@ static const char *filename=NULL; /* current file name. Used for printing
 static int file_nr=0;
 
 
-static int flag_mask; /* mask of currently set flags */
+static unsigned int flag_mask; /* mask of currently set flags */
 
 /* devices */
-static int cur_devs; /* current number of defined devices */
+static unsigned int cur_devs; /* current number of defined devices */
 static int cur_dev; /* device being filled in. If negative, none */
 static int trusted=0; /* is the currently parsed device entry trusted? */
-static int nr_dev; /* number of devices that the current table can hold */
+static unsigned int nr_dev; /* number of devices that the current table can 
+			       hold */
 struct device *devices; /* the device table */
 static int token_nr; /* number of tokens in line */
 
@@ -57,12 +58,13 @@ static char default_drive='\0'; /* default drive */
 unsigned int mtools_skip_check=0;
 unsigned int mtools_fat_compatibility=0;
 unsigned int mtools_ignore_short_case=0;
-unsigned int mtools_rate_0=0;
-unsigned int mtools_rate_any=0;
+uint8_t mtools_rate_0=0;
+uint8_t mtools_rate_any=0;
 unsigned int mtools_no_vfat=0;
 unsigned int mtools_numeric_tail=1;
 unsigned int mtools_dotted_dir=0;
 unsigned int mtools_twenty_four_hour_clock=1;
+unsigned int mtools_lock_timeout=30;
 unsigned int mtools_default_codepage=850;
 const char *mtools_date_string="yyyy-mm-dd";
 char *country_string=0;
@@ -73,7 +75,9 @@ typedef struct switches_l {
     enum {
 	T_INT,
 	T_STRING,
-	T_UINT
+	T_UINT,
+	T_UINT8,
+	T_UINT16
     } type;
 } switches_t;
 
@@ -82,20 +86,21 @@ static switches_t global_switches[] = {
     { "MTOOLS_FAT_COMPATIBILITY", (caddr_t) & mtools_fat_compatibility, T_UINT },
     { "MTOOLS_SKIP_CHECK", (caddr_t) & mtools_skip_check, T_UINT },
     { "MTOOLS_NO_VFAT", (caddr_t) & mtools_no_vfat, T_UINT },
-    { "MTOOLS_RATE_0", (caddr_t) &mtools_rate_0, T_UINT },
-    { "MTOOLS_RATE_ANY", (caddr_t) &mtools_rate_any, T_UINT },
+    { "MTOOLS_RATE_0", (caddr_t) &mtools_rate_0, T_UINT8 },
+    { "MTOOLS_RATE_ANY", (caddr_t) &mtools_rate_any, T_UINT8 },
     { "MTOOLS_NAME_NUMERIC_TAIL", (caddr_t) &mtools_numeric_tail, T_UINT },
     { "MTOOLS_DOTTED_DIR", (caddr_t) &mtools_dotted_dir, T_UINT },
     { "MTOOLS_TWENTY_FOUR_HOUR_CLOCK",
       (caddr_t) &mtools_twenty_four_hour_clock, T_UINT },
     { "MTOOLS_DATE_STRING",
       (caddr_t) &mtools_date_string, T_STRING },
+    { "MTOOLS_LOCK_TIMEOUT", (caddr_t) &mtools_lock_timeout, T_UINT },
     { "DEFAULT_CODEPAGE", (caddr_t) &mtools_default_codepage, T_UINT }
 };
 
 typedef struct {
     const char *name;
-    int flag;
+    unsigned int flag;
 } flags_t;
 
 static flags_t openflags[] = {
@@ -129,7 +134,7 @@ static flags_t misc_flags[] = {
 static struct {
     const char *name;
     signed char fat_bits;
-    int tracks;
+    unsigned int tracks;
     unsigned short heads;
     unsigned short sectors;
 } default_formats[] = {
@@ -165,8 +170,8 @@ static switches_t dswitches[]= {
     { "MODE", OFFS(mode), T_UINT },
     { "TRACKS",  OFFS(tracks), T_UINT },
     { "CYLINDERS",  OFFS(tracks), T_UINT },
-    { "HEADS", OFFS(heads), T_UINT },
-    { "SECTORS", OFFS(sectors), T_UINT },
+    { "HEADS", OFFS(heads), T_UINT16 },
+    { "SECTORS", OFFS(sectors), T_UINT16 },
     { "HIDDEN", OFFS(hidden), T_UINT },
     { "PRECMD", OFFS(precmd), T_STRING },
     { "BLOCKSIZE", OFFS(blocksize), T_UINT },
@@ -190,6 +195,7 @@ char get_default_drive(void)
 	return 'A';
 }
 
+static void syntax(const char *msg, int thisLine) NORETURN;
 static void syntax(const char *msg, int thisLine)
 {
     char drive='\0';
@@ -215,7 +221,14 @@ static void get_env_conf(void)
 	    if(global_switches[i].type == T_INT)
 		* ((int *)global_switches[i].address) = (int) strtol(s,0,0);
 	    if(global_switches[i].type == T_UINT)
-		* ((int *)global_switches[i].address) = (unsigned int) strtoul(s,0,0);
+		* ((unsigned int *)global_switches[i].address) =
+			(unsigned int) strtoul(s,0,0);
+	    if(global_switches[i].type == T_UINT8)
+		* ((uint8_t *)global_switches[i].address) =
+			(uint8_t) strtou8(s,0,0);
+	    if(global_switches[i].type == T_UINT16)
+		* ((uint16_t *)global_switches[i].address) =
+			(uint16_t) strtou8(s,0,0);
 	    else if (global_switches[i].type == T_STRING)
 		* ((char **)global_switches[i].address) = s;
 	}
@@ -301,22 +314,24 @@ static char *get_string(void)
     return str;
 }
 
-static unsigned int get_unumber(void)
+static unsigned long get_unumber(unsigned long max)
 {
     char *last;
-    unsigned int n;
+    unsigned long n;
 
     skip_junk(1);
     last = pos;
-    n=(unsigned int) strtoul(pos, &pos, 0);
+    n=strtoul(pos, &pos, 0);
     if(last == pos)
 	syntax("numeral expected", 0);
+    if(n > max)
+	syntax("number too big", 0);
     pos++;
     token_nr++;
     return n;
 }
 
-static unsigned int get_number(void)
+static int get_number(void)
 {
     char *last;
     int n;
@@ -334,9 +349,9 @@ static unsigned int get_number(void)
 /* purge all entries pertaining to a given drive from the table */
 static void purge(char drive, int fn)
 {
-    int i,j;
+    unsigned int i, j;
 
-    drive = toupper(drive);
+    drive = ch_toupper(drive);
     for(j=0, i=0; i < cur_devs; i++) {
 	if(devices[i].drive != drive ||
 	   devices[i].file_nr == fn)
@@ -366,7 +381,7 @@ static void init_drive(void)
 /* prepends a device to the table */
 static void prepend(void)
 {
-    int i;
+    unsigned int i;
 
     grow();
     for(i=cur_devs; i>0; i--)
@@ -428,9 +443,15 @@ static int set_var(struct switches_l *switches, int nr,
 	if(match_token(switches[i].name)) {
 	    expect_char('=');
 	    if(switches[i].type == T_UINT)
-		* ((int *)((long)switches[i].address+base_address)) =
-		    get_unumber();
-	    if(switches[i].type == T_INT)
+		* ((unsigned int *)((long)switches[i].address+base_address)) =
+		    (unsigned int) get_unumber(UINT_MAX);
+	    else if(switches[i].type == T_UINT8)
+		* ((uint8_t *)((long)switches[i].address+base_address)) =
+		    (uint8_t) get_unumber(UINT8_MAX);
+	    else if(switches[i].type == T_UINT16)
+		* ((uint16_t *)((long)switches[i].address+base_address)) =
+		    (uint16_t) get_unumber(UINT16_MAX);
+	    else if(switches[i].type == T_INT)
 		* ((int *)((long)switches[i].address+base_address)) =
 		    get_number();
 	    else if (switches[i].type == T_STRING)
@@ -541,12 +562,27 @@ void set_cmd_line_image(char *img) {
   }
 }
 
+static uint16_t tou16(int in, const char *comment) {
+    if(in > UINT16_MAX) {
+	fprintf(stderr, "Number of %s %d too big\n", comment, in);
+	exit(1);
+    }
+    if(in < 0) {
+	fprintf(stderr, "Number of %s %d negative\n", comment, in);
+	exit(1);
+    }
+    return (uint16_t) in;
+       
+}
+
 static void parse_old_device_line(char drive)
 {
     char name[MAXPATHLEN];
     int items;
     long offset;
 
+    int heads, sectors;
+    
     /* finish any old drive */
     finish_drive_clause();
 
@@ -557,8 +593,11 @@ static void parse_old_device_line(char drive)
     append();
     items = sscanf(token,"%c %s %i %i %i %i %li",
 		   &devices[cur_dev].drive,name,&devices[cur_dev].fat_bits,
-		   &devices[cur_dev].tracks,&devices[cur_dev].heads,
-		   &devices[cur_dev].sectors, &offset);
+		   &devices[cur_dev].tracks,&heads,
+		   &sectors, &offset);
+    devices[cur_dev].heads = tou16(heads, "heads");
+    devices[cur_dev].sectors = tou16(sectors, "sectors");
+    
     devices[cur_dev].offset = (off_t) offset;
     switch(items){
 	case 2:
@@ -579,19 +618,19 @@ static void parse_old_device_line(char drive)
 	case 4:
 	case 5:
 	    syntax("bad number of parameters", 1);
-	    exit(1);
     }
     if(!devices[cur_dev].tracks){
 	devices[cur_dev].sectors = 0;
 	devices[cur_dev].heads = 0;
     }
 	
-    devices[cur_dev].drive = toupper(devices[cur_dev].drive);
+    devices[cur_dev].drive = ch_toupper(devices[cur_dev].drive);
     maintain_default_drive(devices[cur_dev].drive);
     if (!(devices[cur_dev].name = strdup(name))) {
 	printOom();
 	exit(1);
     }
+    devices[cur_dev].misc_flags |= MFORMAT_ONLY_FLAG;
     finish_drive_clause();
     pos=0;
 }
@@ -627,7 +666,7 @@ static int parse_one(int privilege)
 	memset((char*)(devices+cur_dev), 0, sizeof(*devices));
 	trusted = privilege;
 	flag_mask = 0;
-	devices[cur_dev].drive = toupper(token[0]);
+	devices[cur_dev].drive = ch_toupper(token[0]);
 	maintain_default_drive(devices[cur_dev].drive);
 	expect_char(':');
 	return 1;
@@ -653,7 +692,7 @@ static int parse_one(int privilege)
 static int parse(const char *name, int privilege)
 {
     if(fp) {
-	fprintf(stderr, "File descriptor already set (%p)!\n", fp);
+	fprintf(stderr, "File descriptor already set!\n");
 	exit(1);
     }
     fp = fopen(name, "r");
@@ -728,6 +767,7 @@ void read_config(void)
 	mtools_fat_compatibility=1;
 }
 
+void mtoolstest(int argc, char **argv, int type  UNUSEDP) NORETURN;
 void mtoolstest(int argc, char **argv, int type  UNUSEDP)
 {
     /* testing purposes only */
@@ -735,7 +775,7 @@ void mtoolstest(int argc, char **argv, int type  UNUSEDP)
     char drive='\0';
 
     if(argc > 1 && argv[1][0] && argv[1][1] == ':') {
-	drive = toupper(argv[1][0]);
+	drive = ch_toupper(argv[1][0]);
     }
 
     for (dev=devices; dev->name; dev++) {
@@ -804,3 +844,9 @@ void mtoolstest(int argc, char **argv, int type  UNUSEDP)
 
     exit(0);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 4
+ * End:
+ */

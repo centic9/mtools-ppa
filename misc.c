@@ -156,12 +156,44 @@ void print_sector(const char *message, unsigned char *data, int size)
 	}
 }
 
+#if (SIZEOF_TIME_T > SIZEOF_LONG) && defined (HAVE_STRTOLL)
+# define STRTOTIME strtoll
+#else
+# define STRTOTIME strtol
+#endif
 
 time_t getTimeNow(time_t *now)
 {
 	static int haveTime = 0;
 	static time_t sharedNow;
 
+	if(!haveTime) {
+		const char *source_date_epoch = getenv("SOURCE_DATE_EPOCH");
+		if (source_date_epoch) {
+			char *endptr;
+			errno = 0;
+			time_t epoch =
+				STRTOTIME(source_date_epoch, &endptr, 10);
+
+			if (endptr == source_date_epoch)
+				fprintf(stderr,
+					"SOURCE_DATE_EPOCH \"%s\" invalid\n",
+					source_date_epoch);
+			else if (errno != 0)
+				fprintf(stderr,
+					"SOURCE_DATE_EPOCH: strtoll: %s: %s\n",
+					strerror(errno), source_date_epoch);
+			else if (*endptr != '\0')
+				fprintf(stderr,
+					"SOURCE_DATE_EPOCH has trailing garbage \"%s\"\n",
+					endptr);
+			else {
+				sharedNow = epoch;
+				haveTime = 1;
+			}
+		}
+	}
+	
 	if(!haveTime) {
 		time(&sharedNow);
 		haveTime = 1;
@@ -210,7 +242,7 @@ void myfree(void *ptr)
 {
 	int *size = ((int *) ptr)-1;
 	total -= *size;
-	fprintf(stderr, "freeing %d bytes at %p total alloced=%d\n",
+	fprintf(stderr, "freeing %d bytes at %p total allocated=%d\n",
 		*size, ptr, total);
 	free(size);
 }

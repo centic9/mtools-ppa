@@ -66,7 +66,7 @@
 #define ZIP(x)	 ZIPJAZ(x,96, 64, 32, 0)
 #define RZIP(x)	 ZIPJAZ(x,96, 64, 32, SCSI_FLAG|PRIV_FLAG)
 
-#define REMOTE    {"$DISPLAY", 'X', 0,0, 0,0, 0,0,0L, DEF_ARG0(FLOPPYD_FLAG)}
+#define REMOTE    {"$DISPLAY", 'X', 0,0, 0,0, 0,0,0L, DEF_ARG0(FLOPPYD_FLAG),0,0}
 
 
 
@@ -576,7 +576,7 @@ struct device devices[] = {
 
 #ifdef OS_linux
 
-const char *error_msg[22]={
+static const char *error_msg[22]={
 "Missing Data Address Mark",
 "Bad cylinder",
 "Scan not satisfied",
@@ -730,12 +730,12 @@ int analyze_one_reply(RawRequest_t *raw_cmd, int *bytes, int do_print)
 
 #define predefined_devices
 struct device devices[] = {
-	{"/dev/fd0", 'A', 0, 0, 80,2, 18,0, MDEF_ARG},
-	{"/dev/fd1", 'B', 0, 0, 0,0, 0,0, FDEF_ARG},
+	{"/dev/fd0", 'A', 0, 0, 80,2, 18,0, MDEF_ARG, 0, 0},
+	{"/dev/fd1", 'B', 0, 0, 0,0, 0,0, FDEF_ARG, 0, 0},
 	/* we assume that the Zip or Jaz drive is the second on the SCSI bus */
-	{"/dev/sdb4",'J', GENHD },
-	{"/dev/sdb4",'Z', GENHD },
-	/*	{"/dev/sda4",'D', GENHD },*/
+	{"/dev/sdb4",'J', GENHD, 0, 0 },
+	{"/dev/sdb4",'Z', GENHD, 0, 0 },
+	/*	{"/dev/sda4",'D', GENHD, 0, 0 },*/
 	REMOTE
 };
 
@@ -764,7 +764,7 @@ static __inline__ void set_2m(struct floppy_struct *floppy, int value)
 		value = FD_2M;
 	else
 		value = 0;
-	floppy->rate = (floppy->rate & ~FD_2M) | value;       
+	floppy->rate = (floppy->rate & ~FD_2M) | value;
 }
 #define SET_2M set_2m
 
@@ -772,7 +772,7 @@ static __inline__ void set_ssize(struct floppy_struct *floppy, int value)
 {
 	value = (( (value & 7) + 6 ) % 8) << 3;
 
-	floppy->rate = (floppy->rate & ~0x38) | value;	
+	floppy->rate = (floppy->rate & ~0x38) | value;
 }
 
 #define SET_SSIZE set_ssize
@@ -1099,11 +1099,11 @@ int init_geom(int fd, struct device *dev, struct device *orig_dev,
 #endif
 
 #ifdef predefined_devices
-const int nr_const_devices = sizeof(const_devices) / sizeof(*const_devices);
+const unsigned int nr_const_devices = sizeof(const_devices) / sizeof(*const_devices);
 #else
 struct device devices[]={
 	{"/dev/fd0", 'A', 0, O_EXCL, 0,0, 0,0, MDEF_ARG},
 	/* to shut up Ultrix's native compiler, we can't make this empty :( */
 };
-const int nr_const_devices = 0;
+const unsigned int nr_const_devices = 0;
 #endif

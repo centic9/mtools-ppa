@@ -47,6 +47,8 @@ static __inline__ int convert_to_shortname(doscp_t *cp, ClashHandling_t *ch,
 	/* Then do conversion to dn */
 	ch->name_converter(cp, un, 0, &mangled, dn);
 	dn->sentinel = '\0';
+	if (dn->base[0] == '\xE5')
+		dn->base[0] = '\x05';
 	return mangled;
 }
 
@@ -78,9 +80,6 @@ static __inline__ int ask_rename(doscp_t *cp, ClashHandling_t *ch,
 	if(!opentty(0))
 		return 0;
 
-#define maxsize (isprimary ?  MAX_VNAMELEN+1 : 11+1)
-#define name (isprimary ? argname : shortname)
-
 	mangled = 0;
 	do {
 		char tname[4*MAX_VNAMELEN+1];
@@ -97,8 +96,6 @@ static __inline__ int ask_rename(doscp_t *cp, ClashHandling_t *ch,
 						       ch, tname, shortname);
 	} while (mangled & 1);
 	return 1;
-#undef maxsize
-#undef name
 }
 
 /**
@@ -159,7 +156,8 @@ static __inline__ clash_action ask_namematch(doscp_t *cp,
 	}
 
 	if (!isprimary)
-		name = unix_normalize(cp, name_buffer, dosname);
+		name = unix_normalize(cp, name_buffer,
+				      dosname, sizeof(*dosname));
 	else
 		name = longname;
 
@@ -369,7 +367,8 @@ static __inline__ clash_action get_slots(Stream_t *Dir,
 		reason = RESERVED;
 		ch->use_longname = 1;
 		isprimary = 0;
-	} else if(contains_illegals(dosname->base,short_illegals,11)) {
+	} else if(!ch->is_label &&
+		  contains_illegals(dosname->base,short_illegals,11)) {
 		reason = ILLEGALS;
 		ch->use_longname = 1;
 		isprimary = 0;
@@ -669,6 +668,7 @@ void init_clash_handling(ClashHandling_t *ch)
 	ch->namematch_default[1] = NAMEMATCH_NONE;
 	ch->name_converter = dos_name; /* changed by mlabel */
 	ch->source = -2;
+	ch->is_label = 0;
 }
 
 int handle_clash_options(ClashHandling_t *ch, char c)
@@ -678,7 +678,7 @@ int handle_clash_options(ClashHandling_t *ch, char c)
 		isprimary = 0;
 	else
 		isprimary = 1;
-	c = tolower(c);
+	c = ch_tolower(c);
 	switch(c) {
 		case 'o':
 			/* Overwrite if primary name matches */

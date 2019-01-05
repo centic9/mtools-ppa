@@ -25,7 +25,7 @@
 #include "mainloop.h"
 
 typedef struct Arg_t {
-	char add;
+	unsigned char add;
 	unsigned char remove;
 	struct MainParam_t mp;
 	int recursive;
@@ -159,7 +159,7 @@ static int letterToCode(int letter)
 	}
 }
 
-
+void mattrib(int argc, char **argv, int type UNUSEDP) NORETURN;
 void mattrib(int argc, char **argv, int type UNUSEDP)
 {
 	Arg_t arg;

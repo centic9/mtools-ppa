@@ -20,8 +20,6 @@
  */
 
 
-#define LOWERCASE
-
 #include "sysincludes.h"
 #include "msdos.h"
 #include "mtools.h"
@@ -51,7 +49,7 @@ typedef struct Arg_t {
  * directory structure or NULL on error.
  */
 static int renameit(dos_name_t *dosname,
-		    char *longname,
+		    char *longname UNUSEDP,
 		    void *arg0,
 		    direntry_t *targetEntry)
 {
@@ -79,7 +77,7 @@ static int renameit(dos_name_t *dosname,
 			initializeDirentry(&subEntry, arg->mp.File);
 
 			switch(vfat_lookup(&subEntry, "..", 2, ACCEPT_DIR,
-					   NULL, NULL)) {
+					   NULL, 0, NULL, 0)) {
 			    case -1:
 				fprintf(stderr,
 					" Directory has no parent entry\n");
@@ -227,12 +225,13 @@ static void usage(int ret)
 	exit(ret);
 }
 
+void mmove(int argc, char **argv, int oldsyntax) NORETURN;
 void mmove(int argc, char **argv, int oldsyntax)
 {
 	Arg_t arg;
 	int c;
-	char shortname[13];
-	char longname[VBUFSIZE];
+	char shortname[12*4+1];
+	char longname[4*MAX_VNAMELEN+1];
 	char def_drive;
 	int i;
 
@@ -280,8 +279,8 @@ void mmove(int argc, char **argv, int oldsyntax)
 	for(i=optind; i<argc; i++)
 		if(argv[i][0] && argv[i][1] == ':' ){
 			if(!def_drive)
-				def_drive = toupper(argv[i][0]);
-			else if(def_drive != toupper(argv[i][0])){
+				def_drive = ch_toupper(argv[i][0]);
+			else if(def_drive != ch_toupper(argv[i][0])){
 				fprintf(stderr,
 					"Cannot move files across different drives\n");
 				exit(1);
@@ -313,10 +312,12 @@ void mmove(int argc, char **argv, int oldsyntax)
 	}
 
 
-	arg.mp.longname = longname;
+	arg.mp.longname.data = longname;
+	arg.mp.longname.len = sizeof(longname);
 	longname[0]='\0';
 
-	arg.mp.shortname = shortname;
+	arg.mp.shortname.data = shortname;
+	arg.mp.shortname.len = sizeof(shortname);
 	shortname[0]='\0';
 
 	exit(main_loop(&arg.mp, argv + optind, argc - optind - 1));
