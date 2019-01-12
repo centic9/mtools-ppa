@@ -1,1 +1,5 @@
 0001-Correct-grammatical-errors-in-upstream-documentation.patch
+01-607426-support-zip-files-in-uz.patch
+02-837044-initialize-direntry.patch
+03-837044-corrupted-fat-entries-when-mcopy-copies-directory.patch
+13.xz-support.patch
