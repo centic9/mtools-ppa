@@ -1,3 +1,10 @@
+mtools (4.0.23-1ubuntu0~ppa1) bionic; urgency=medium
+
+  * Update to latest version from debian
+  * Support for xz was merged upstream
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sat, 12 Jan 2019 12:47:28 +0100
+
 mtools (4.0.23-1) unstable; urgency=medium
 
   * Salvage package. (Closes: #916127)
