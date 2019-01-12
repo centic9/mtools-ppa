@@ -20,8 +20,6 @@
  */
 
 
-#define LOWERCASE
-
 #include "sysincludes.h"
 #include "msdos.h"
 #include "mtools.h"
@@ -59,7 +57,7 @@ typedef struct CreateArg_t {
  * directory structure or NULL on error.
  */
 static int makeit(dos_name_t *dosname,
-		  char *longname,
+		  char *longname UNUSEDP,
 		  void *arg0,
 		  direntry_t *targetEntry)
 {
@@ -137,7 +135,7 @@ Stream_t *createDir(Stream_t *Dir, const char *filename, ClashHandling_t *ch,
 		return arg.NewDir;
 }
 
-static int createDirCallback(direntry_t *entry, MainParam_t *mp)
+static int createDirCallback(direntry_t *entry UNUSEDP, MainParam_t *mp)
 {
 	Stream_t *ret;
 	time_t now;
@@ -153,7 +151,8 @@ static int createDirCallback(direntry_t *entry, MainParam_t *mp)
 	
 }
 
-void mmd(int argc, char **argv, int type)
+void mmd(int argc, char **argv, int type UNUSEDP) NORETURN;
+void mmd(int argc, char **argv, int type UNUSEDP)
 {
 	Arg_t arg;
 	int c;
@@ -173,7 +172,7 @@ void mmd(int argc, char **argv, int type)
 			case '?':
 				usage(1);
 			case 'o':
-				handle_clash_options(&arg.ch, c);
+				handle_clash_options(&arg.ch, (char) c);
 				break;
 			case 'D':
 				if(handle_clash_options(&arg.ch, *optarg))
@@ -183,7 +182,6 @@ void mmd(int argc, char **argv, int type)
 				usage(0);
 			default:
 				usage(1);
-				break;
 		}
 	}
 

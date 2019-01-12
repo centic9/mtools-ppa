@@ -46,7 +46,7 @@ typedef struct File_t {
 	/* Relative position of previous cluster */
 	unsigned int PreviousRelCluNr;
 	direntry_t direntry;
-	int hint;
+	size_t hint;
 	struct dirCache_t *dcp;
 
 	unsigned int loopDetectRel;
@@ -54,7 +54,7 @@ typedef struct File_t {
 } File_t;
 
 static Class_t FileClass;
-T_HashTable *filehash;
+static T_HashTable *filehash;
 
 static File_t *getUnbufferedFile(Stream_t *Stream)
 {
@@ -82,7 +82,7 @@ direntry_t *getDirentry(Stream_t *Stream)
 static int recalcPreallocSize(File_t *This)
 {
 	size_t currentClusters, neededClusters;
-	int clus_size;
+	unsigned int clus_size;
 	int neededPrealloc;
 	Fs_t *Fs = This->Fs;
 	int r;
@@ -146,7 +146,7 @@ static unsigned int _countBlocks(Fs_t *This, unsigned int block)
 		block = fatDecode(This, block);
 		rel++;
 		if(_loopDetect(&oldrel, rel, &oldabs, block) < 0)
-			block = -1;
+			block = 1;
 	}
 	return blocks;
 }
@@ -175,7 +175,7 @@ void printFat(Stream_t *Stream)
 {
 	File_t *This = getUnbufferedFile(Stream);
 	unsigned long n;
-	int rel;
+	unsigned int rel;
 	unsigned long begin, end;
 	int first;
 
@@ -244,14 +244,14 @@ void printFatWithOffset(Stream_t *Stream, off_t offset) {
 static int normal_map(File_t *This, off_t where, size_t *len, int mode,
 						   mt_off_t *res)
 {
-	int offset;
+	unsigned int offset;
 	size_t end;
 	int NrClu; /* number of clusters to read */
 	unsigned int RelCluNr;
 	unsigned int CurCluNr;
 	unsigned int NewCluNr;
 	unsigned int AbsCluNr;
-	int clus_size;
+	unsigned int clus_size;
 	Fs_t *Fs = This->Fs;
 
 	*res = 0;
@@ -364,7 +364,7 @@ static int root_map(File_t *This, off_t where, size_t *len, int mode UNUSEDP,
 		return -2;
 	}
 
-	maximize(*len, Fs->dir_len * Fs->sector_size - where);
+	sizemaximize(*len, Fs->dir_len * Fs->sector_size - where);
         if (*len == 0)
             return 0;
 	
@@ -549,7 +549,8 @@ static Class_t FileClass = {
 	0, /* get_geom */
 	get_file_data,
 	pre_allocate_file,
-	get_dosConvert_pass_through
+	get_dosConvert_pass_through,
+	0 /* discard */
 };
 
 static unsigned int getAbsCluNr(File_t *This)
@@ -561,14 +562,14 @@ static unsigned int getAbsCluNr(File_t *This)
 	return 1;
 }
 
-static unsigned int func1(void *Stream)
+static size_t func1(void *Stream)
 {
 	DeclareThis(File_t);
 
 	return getAbsCluNr(This) ^ (long) This->Fs;
 }
 
-static unsigned int func2(void *Stream)
+static size_t func2(void *Stream)
 {
 	DeclareThis(File_t);
 

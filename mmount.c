@@ -32,7 +32,8 @@
 #include "mainloop.h"
 #include "fs.h"
 
-void mmount(int argc, char **argv, int type)
+void mmount(int argc, char **argv, int type UNUSEDP) NORETURN;
+void mmount(int argc, char **argv, int type UNUSEDP)
 {
 	char drive;
 	int pid;
@@ -47,7 +48,7 @@ void mmount(int argc, char **argv, int type)
 		fprintf(stderr,"Usage: %s -V drive:\n", argv[0]);
 		exit(1);
 	}
-	drive = toupper(argv[1][0]);
+	drive = ch_toupper(argv[1][0]);
 	Stream= find_device(drive, O_RDONLY, &dev, &boot, name, &media, 0, NULL);
 	if(!Stream)
 		exit(1);

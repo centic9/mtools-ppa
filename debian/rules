@@ -34,6 +34,7 @@ install: build
 	dh_prep
 	dh_installdirs
 	$(MAKE) install prefix=$$( pwd )/debian/tmp/usr
+	[ -d debian/mtools/etc/ ] || mkdir -p debian/mtools/etc
 	install -m 644 debian/mtools.conf debian/mtools/etc/
 	dh_movefiles
 
@@ -48,7 +49,6 @@ mtools: build install
 	dh_installexamples -pmtools mtools.conf
 	dh_installman
 	dh_installinfo -pmtools mtools.info
-	dh_undocumented -pmtools mcheck.1 mcomp.1 mxtar.1
 	dh_installchangelogs
 	dh_strip
 	dh_link -pmtools /usr/share/man/man5/mtools.5 /usr/share/man/man5/mtools.conf.5

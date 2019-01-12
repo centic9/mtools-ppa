@@ -1,3 +1,51 @@
+v4_0_23
+	- Address lots of compiler warnings (assignments between different types)
+	- Network speedup fixes for floppyd (TCP_CORK)
+	- Typo fixes
+	- Explicitly pass available target buffer size for character
+	set conversions
+v4_0_22
+	- Fixed -f flag for mformat (size is KBytes, rather than sectors)
+	- Fixed toupper/tolower usage (unsigned char rather than plain signed)
+v4_0_21
+	- Fixed compilation for MingW
+	- After MingW compilation, make sure executable has .exe extension
+	- Addressed compiler warnings
+	- Fixed length handling in character set conversion (Unicode file names)
+	- Fixed matching of character range, when containing Unicode
+	characters (mdir "c:test[α-ω].exe")
+	- Fixed initialization of my_scsi_cmd constructor
+v4_0_20
+	- initialize directory entries to 0
+	- bad message "Too few sectors" replaced with "Too many sectors"
+	- apostrophe in mlabel no longer causes generation of long entry
+	- option to fake system date for file creation using the
+	SOURCE_DATE_EPOCH environment variables
+
+	- can now be compiled with "clang" compiler
+	- fallback function for strndup, for those platforms that don't have it
+	- fixed a number of -Wextra warnings
+
+	- new compressed archive formats for uz/lz
+
+	- allow to specify number of reserved sectors for FAT32.
+	- file/device locking with timeout (rather than immediate failure)
+	- fixed support for BPB-less legacy formats.
+	- removed check that disk must be an integer number of tracks.
+
+	- removed .eh/.oh macros from manual pages
+v4_0_19
+	- Fix for short file names starting with character 0xE5
+	(by remapping it to 0x5)
+	- mpartition: Partition types closer to what Microsoft uses
+	- mformat: figure out LBA geometry as last resort if geometry
+	is neither specified in config and/or commandline, nor can be
+	queried from the device
+	- mformat: use same default cluster size by size as Microsoft
+	for FAT32
+	- additional sanity checks
+	- document how cluster size is picked in mformat.c man page
+	- document how partition types are picked in mpartition.c man page
 v4_0_18	
 	Fix for names of iconv encodings on AIX
 	Fix mt_size_t on NetBSD
@@ -31,7 +79,7 @@ v4_0_16
 	Fixed typo in initialization of FAT32 info sector
 v4_0_15
 	Added missing -i option to mshortname
-	Splitted .deb package into mtools and floppyd in order to
+	Split .deb package into mtools and floppyd in order to
 	match Ubuntu
 v4_0_14
 	New mshortname command
@@ -128,7 +176,7 @@ v20070305
 v20060626
 	Merged Redhat/Fedora patches
 v20060531
-	#ifdef linux-dependant code in mformat.c
+	#ifdef linux-dependent code in mformat.c
 v20060525
 	Fix gcc4 warnings
 	Fix reading of boot sector (block size)
@@ -168,7 +216,7 @@ v20040228
 v20030718
 	Fix rootskip and rate of XDF disks
 v20030705
-	Fix inverted IS_MFORMAT_ONLY conditon in plain_io.c
+	Fix inverted IS_MFORMAT_ONLY condition in plain_io.c
 v20030609
 	Moved putc after variable description (anybody knows about a -W
 	flag so that gcc warns about these?)
@@ -222,7 +270,7 @@ v20021102
 v20020125
 	Fixes for cygwin
 	Fixes in buffer.c for oddly sized image files
-	Mformat.c fixes to avoid makeing images which would not be
+	Mformat.c fixes to avoid making images which would not be
 	readable in windows.
 v20010908
 	Warn for invalid partition numbers
@@ -479,7 +527,7 @@ v19971215
 	Jacked up performance, and corrected signal handling bugs.  Also
 	corrected various "Disk full bugs"
 v19971212
-	Fixed "Bad address" errors which occured when running mdu on empty
+	Fixed "Bad address" errors which occurred when running mdu on empty
 	files.  When copying recursively, do not barf if a directory
 	already exist at the target.  Mcopy operates silently by default.
 v19971212
@@ -508,7 +556,7 @@ v19971129
 	Pre-3.9.  Redid the mainloop logic, and got rid of lots of cruft
 	in subdir.c and parse.c.  It is now possible to put wildcards in
 	the directory part of the filename.  Design also became simpler,
-	making it easyer to maintain this part in the future.
+	making it easier to maintain this part in the future.
 	Added a -u flag to mzip to temporarily unprotect a disk
 	Added a test to mzip to prevent manipulation of mounted disks
 	Added support for partitioned devices in mmount
@@ -548,7 +596,7 @@ v19970812
 	Guard against corrupted "next free block" pointer in a FAT32
 	InfoBlock
 v19970715
-	Use root priviliges during scsi_init
+	Use root privileges during scsi_init
 v19970714
 	Fixed close-on-exec bug.
 v19970714
@@ -623,11 +671,11 @@ v19970426
 v19970423
 	Prefer termios.h on Ultrix
 v19970422
-	Renamed missing_functions to missFuncs in order to accomodate
+	Renamed missing_functions to missFuncs in order to accommodate
 	operating systems with file name size limits.
 v19970420
 	Autoextend size for images that are too small.  Moved BSD
-	dependant #ifdef's after the inclusion of sys/param.h, as it
+	dependent #ifdef's after the inclusion of sys/param.h, as it
 	is there where BSD is defined (sigh!)
 v19970419
 	Insist on the fact that mzip's -f flag only makes sense if
@@ -836,7 +884,7 @@ v19961211
 v19961210
 	Added warning about running mtools with root privs.
 v19961209
-	Fixed unitialized variable in fat.c and added example for Sun
+	Fixed uninitialized variable in fat.c and added example for Sun
 	mtools.conf
 v19961209
 	Fixed comment in scripts/tgz
@@ -853,7 +901,7 @@ v19961202
 	Test first for tzset in autoconfigure (Solaris)
 v19961202
 	Segment fault due to change of buffer size fixed
-	E-mail adress fixed
+	E-mail address fixed
 v19961117
 	Lots of portability fixes.
 v19961012
@@ -893,7 +941,7 @@ v19960609
 	Beginning of ED and 5 1/4 HD XDF support (doesn't work yet for
 	ED)
 v19960528
-	Make vold and "raw" floppy drive accesible simultaneously on
+	Make vold and "raw" floppy drive accessible simultaneously on
 	Solaris by calling one A: and the other B:
 	Add missing mbadblock LINK in Makefile.in
 v19960527
@@ -937,7 +985,7 @@ v19960429
 v19960427
 	more spelling fixes.
 v19960426
-	Speling fixes
+	Spelling fixes
 v19960424
 	Mmount arg parsing bug fix
 v19960422
@@ -983,7 +1031,7 @@ v19951124
 	<rant>
 	Folks, please don't use quoted-printable. It sometimes changes
 	the CONTENT of your messages. Even the MIME RFC's acknowledge this.
-	Case in point: �400 gets transformed into =A3400, which looks
+	Case in point: £400 gets transformed into =A3400, which looks
 	like 3400 pounds to a person unaware of this MIME "feature".
 	</rant>
 v19951123

@@ -476,7 +476,12 @@ static dirCacheEntry_t *vfat_lookup_loop_common(doscp_t *cp,
 	if (direntry->dir.attr & 0x8){
 		/* Read entry as a label */
 		wchar_t *ptr = newfile;
-		ptr += dos_to_wchar(cp, direntry->dir.name, ptr, 8);
+		if (direntry->dir.name[0] == '\x05') {
+			ptr += dos_to_wchar(cp, "\xE5", ptr, 1);
+			ptr += dos_to_wchar(cp, direntry->dir.name+1, ptr, 7);
+		} else {
+			ptr += dos_to_wchar(cp, direntry->dir.name, ptr, 8);
+		}
 		ptr += dos_to_wchar(cp, direntry->dir.ext, ptr, 3);
 		*ptr = '\0';
 	} else
@@ -542,10 +547,12 @@ static result_t checkNameForMatch(struct direntry_t *direntry,
 			return RES_END;
 		case DCET_USED:
 			break;
+#ifdef DEBUG
 		default:
 			fprintf(stderr, "Unexpected entry type %d\n",
 				dce->type);
 			return RES_ERROR;
+#endif
 	}
 
 	direntry->dir = dce->dir;
@@ -569,7 +576,7 @@ static result_t checkNameForMatch(struct direntry_t *direntry,
 	if(IS_DIR(direntry) && !(flags & ACCEPT_DIR)) {
 		if(!(flags & (ACCEPT_LABEL|MATCH_ANY|NO_MSG))) {
 			char tmp[4*13+1];
-			wchar_to_native(dce->shortName,tmp,13);
+			WCHAR_TO_NATIVE(dce->shortName,tmp,13);
 			fprintf(stderr, "Skipping \"%s\", is a directory\n",
 				tmp);
 		}
@@ -580,7 +587,7 @@ static result_t checkNameForMatch(struct direntry_t *direntry,
 	   !(flags & ACCEPT_PLAIN)) {
 		if(!(flags & (ACCEPT_LABEL|MATCH_ANY|NO_MSG))) {
 			char tmp[4*13+1];
-			wchar_to_native(dce->shortName,tmp,13);
+			WCHAR_TO_NATIVE(dce->shortName,tmp,13);
 			fprintf(stderr,
 				"Skipping \"%s\", is not a directory\n",
 				tmp);
@@ -599,7 +606,8 @@ static result_t checkNameForMatch(struct direntry_t *direntry,
  */
 
 int vfat_lookup(direntry_t *direntry, const char *filename, int length,
-		int flags, char *shortname, char *longname)
+		int flags, char *shortname, size_t shortname_size,
+		char *longname, size_t longname_size)
 {
 	dirCacheEntry_t *dce;
 	result_t result;
@@ -642,13 +650,14 @@ int vfat_lookup(direntry_t *direntry, const char *filename, int length,
 	if(result == RES_MATCH){
 		if(longname){
 			if(dce->longName)
-				wchar_to_native(dce->longName,
-						longname, MAX_VNAMELEN);
+				wchar_to_native(dce->longName, longname,
+						MAX_VNAMELEN, longname_size);
 			else
 				*longname ='\0';
 		}
 		if(shortname)
-			wchar_to_native(dce->shortName, shortname, 12);
+			wchar_to_native(dce->shortName, shortname,
+					12, shortname_size);
 		direntry->beginSlot = dce->beginSlot;
 		direntry->endSlot = dce->endSlot-1;
 		return 0; /* file found */
@@ -797,7 +806,7 @@ int lookupForInsert(Stream_t *Dir,
 					/* long match is a reason for
 					 * immediate stop */
 					direntry->beginSlot = dce->beginSlot;
-					direntry->endSlot = dce->endSlot-1;
+					direntry->endSlot = dce->endSlot - 1;
 					return 1;
 				}
 

@@ -35,7 +35,7 @@
 
 /***********************************************************************/
 /*                                                                     */
-/* OS dependancies which cannot be covered by the autoconfigure script */
+/* OS dependencies which cannot be covered by the autoconfigure script */
 /*                                                                     */
 /***********************************************************************/
 
@@ -93,7 +93,7 @@ typedef void *caddr_t;
 
 /***********************************************************************/
 /*                                                                     */
-/* Compiler dependancies                                               */
+/* Compiler dependencies                                               */
 /*                                                                     */
 /***********************************************************************/
 
@@ -105,18 +105,29 @@ typedef void *caddr_t;
 /* gcc 2.6.3 doesn't have "unused" */		/* mool */
 #  define UNUSED(x) x __attribute__ ((unused));x
 #  define UNUSEDP __attribute__ ((unused))
-# else
-#  define UNUSED(x) x
-#  define UNUSEDP /* */
 # endif
 # define NORETURN __attribute__ ((noreturn))
-#else
+# if __GNUC__ >= 8
+#  define NONULLTERM __attribute__ ((nonstring))
+# endif
+#endif
+
+#ifndef UNUSED
 # define UNUSED(x) x
-#  define UNUSEDP /* */
+# define UNUSEDP /* */
+#endif
+
+#ifndef PACKED
 # define PACKED /* */
+#endif
+
+#ifndef NORETURN
 # define NORETURN /* */
 #endif
 
+#ifndef NONULLTERM
+# define NONULLTERM /* */
+#endif
 
 /***********************************************************************/
 /*                                                                     */
@@ -134,6 +145,14 @@ typedef void *caddr_t;
 
 
 #include <sys/types.h>
+
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
+
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
+#endif
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
@@ -258,8 +277,6 @@ extern int errno;
 
 #ifndef OS_mingw32msvc
 #include <pwd.h>
-#else
-typedef unsigned int uid_t;
 #endif
 
 
@@ -277,6 +294,10 @@ typedef unsigned int uid_t;
 
 #ifdef HAVE_MALLOC_H
 # include <malloc.h>
+#endif
+
+#ifdef HAVE_IO_H
+# include <io.h>
 #endif
 
 #ifdef HAVE_SIGNAL_H
@@ -335,6 +356,10 @@ typedef unsigned int uid_t;
 
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+
+#ifdef HAVE_NETINET_TCP_H
+#include <netinet/tcp.h>
 #endif
 
 #ifdef HAVE_ARPA_INET_H
@@ -400,6 +425,9 @@ typedef unsigned int uid_t;
 extern char *strdup(const char *str);
 #endif /* HAVE_STRDUP */
 
+#ifndef HAVE_STRNDUP
+extern char *strndup(const char *s, size_t n);
+#endif /* HAVE_STRDUP */
 
 #ifndef HAVE_MEMCPY
 extern char *memcpy(char *s1, const char *s2, size_t n);

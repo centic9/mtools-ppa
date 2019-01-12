@@ -18,18 +18,16 @@
  * Do filename expansion with the shell.
  */
 
-#define EXPAND_BUF	2048
-
 #include "sysincludes.h"
 #include "mtools.h"
 
 #ifndef OS_mingw32msvc
-int safePopenOut(const char **command, char *output, int len)
+ssize_t safePopenOut(const char **command, char *output, size_t len)
 {
 	int pipefd[2];
 	pid_t pid;
 	int status;
-	int last;
+	ssize_t last;
 
 	if(pipe(pipefd)) {
 		return -2;
@@ -67,7 +65,7 @@ int safePopenOut(const char **command, char *output, int len)
 const char *expand(const char *input, char *ans)
 {
 #ifndef OS_mingw32msvc
-	int last;
+	ssize_t last;
 	char buf[256];
 	const char *command[] = { "/bin/sh", "sh", "-c", 0, 0 };
 

@@ -51,7 +51,7 @@ typedef struct SimpleFile_t {
     int size_limited;
 #endif
     int scsi_sector_size;
-    void *extra_data; /* extra system dependant information for scsi */
+    void *extra_data; /* extra system dependent information for scsi */
     int swap; /* do the word swapping */
 } SimpleFile_t;
 
@@ -150,7 +150,7 @@ static int file_write(Stream_t *Stream, char *buf, mt_off_t where, size_t len)
 	}
 }
 
-static int file_flush(Stream_t *Stream)
+static int file_flush(Stream_t *Stream UNUSEDP)
 {
 #if 0
 	DeclareThis(SimpleFile_t);
@@ -223,7 +223,7 @@ static int file_geom(Stream_t *Stream, struct device *dev,
 		}
 
 		if (boot->boot.descr >= 0xf0 &&
-		    labelBlock->dos4 == 0x29 &&
+		    has_BPB4 &&
 		    strncmp( boot->boot.banner,"2M", 2 ) == 0 &&
 		    BootP < 512 && Infp0 < 512 && InfpX < 512 && InfTm < 512 &&
 		    BootP >= InfTm + 2 && InfTm >= InfpX && InfpX >= Infp0 && 
@@ -236,17 +236,9 @@ static int file_geom(Stream_t *Stream, struct device *dev,
 				dev->ssize |= 0x80; /* is set */
 			}
 		}
-	} else if (media >= 0xf8){
-		media &= 3;
-		dev->heads = old_dos[media].heads;
-		dev->tracks = old_dos[media].tracks;
-		dev->sectors = old_dos[media].sectors;
-		dev->ssize = 0x80;
-		dev->use_2m = ~1;
-	} else {
-		fprintf(stderr,"Unknown media type\n");
-		exit(1);
-	}
+	} else
+		if(setDeviceFromOldDos(media, dev) < 0)
+			exit(1);
 
 	sectors = dev->sectors;
 	dev->sectors = dev->sectors * WORD(secsiz) / 512;
@@ -283,13 +275,15 @@ static int file_data(Stream_t *Stream, time_t *date, mt_size_t *size,
 
 static int file_discard(Stream_t *Stream)
 {
+#ifdef BLKFLSBUF
 	int ret;
 	DeclareThis(SimpleFile_t);
-#ifdef BLKFLSBUF
 	ret= ioctl(This->fd, BLKFLSBUF);
 	if(ret < 0)
 		perror("BLKFLSBUF");
 	return ret;
+#else
+	return 0;
 #endif
 }
 
@@ -309,8 +303,6 @@ static int file_discard(Stream_t *Stream)
    happy if we just have access to the device, so making mtools sgid to a
    group called, say, "ziprw" which has rw permission on /dev/rsd5c, is fine.
  */
-
-#define MAXBLKSPERCMD 255
 
 static void scsi_init(SimpleFile_t *This)
 {
@@ -394,7 +386,7 @@ static int scsi_io(Stream_t *Stream, char *buf,
 	if (firstblock > 0x1fffff || nsect > 0xff) {
 		/* I suspect that the ZIP drive also understands Group 1
 		 * commands. If that is indeed true, we may chose Group 1
-		 * more agressively in the future */
+		 * more aggressively in the future */
 
 		cdb[0] |= SCSI_GROUP1;
 		clen=10; /* SCSI Group 1 cmd */
@@ -676,7 +668,7 @@ APIRET rc;
 		} else {
 			*maxSize = max_off_t_seek;
 		}
-		if(This->offset > *maxSize) {
+		if(This->offset > (mt_off_t) *maxSize) {
 			close(This->fd);
 			Free(This);
 			if(errmsg)
@@ -705,7 +697,7 @@ APIRET rc;
 	This->swap = DO_SWAP( dev );
 
 	if(!(mode2 & NO_OFFSET) &&
-	   dev && (dev->partition > 4 || dev->partition < 0))
+	   dev && (dev->partition > 4))
 	    fprintf(stderr, 
 		    "Invalid partition %d (must be between 0 and 4), ignoring it\n", 
 		    dev->partition);

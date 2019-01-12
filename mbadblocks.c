@@ -62,7 +62,7 @@ static void mark(Fs_t *Fs, long offset, unsigned int badClus) {
 
 static char *in_buf;
 static char *pat_buf;
-static int in_len;
+static size_t in_len;
 
 
 static void progress(unsigned int i, unsigned int total) {
@@ -85,14 +85,14 @@ static int scan(Fs_t *Fs, Stream_t *dev,
 	pos = sectorsToBytes((Stream_t*)Fs, start);
 	if(doWrite) {
 		ret = force_write(dev, buffer, pos, in_len);
-		if(ret < in_len )
+		if(ret < (off_t) in_len )
 			bad = 1;
 	} else {
 		ret = force_read(dev, in_buf, pos, in_len);
-		if(ret < in_len )
+		if(ret < (off_t) in_len )
 			bad = 1;
 		else if(buffer) {
-			int i;
+			size_t i;
 			for(i=0; i<in_len; i++)
 				if(in_buf[i] != buffer[i]) {
 					bad = 1;
@@ -109,6 +109,7 @@ static int scan(Fs_t *Fs, Stream_t *dev,
 	return 0;
 }
 
+void mbadblocks(int argc, char **argv, int type UNUSEDP) NORETURN;
 void mbadblocks(int argc, char **argv, int type UNUSEDP)
 {
 	unsigned int i;
@@ -119,7 +120,7 @@ void mbadblocks(int argc, char **argv, int type UNUSEDP)
 	Stream_t *Dir;
 	int ret;
 	char *filename = NULL;
-	char c;
+	int c;
 	unsigned int badClus;
 	int sectorMode=0;
 	int writeMode=0;
@@ -139,10 +140,10 @@ void mbadblocks(int argc, char **argv, int type UNUSEDP)
 			sectorMode = 1;
 			break;
 		case 'S':
-			startSector = atol(optarg); 
+			startSector = atoui(optarg); 
 			break;
 		case 'E':
-			endSector = atol(optarg); 
+			endSector = atoui(optarg); 
 			break;
 		case 'w':
 			writeMode = 1;
@@ -182,7 +183,7 @@ void mbadblocks(int argc, char **argv, int type UNUSEDP)
 			ret = 1;
 			goto exit_0;
 		}
-		srandom(time(NULL));
+		init_random();
 		for(i=0; i < in_len * N_PATTERN; i++) {
 			pat_buf[i] = random();
 		}
@@ -221,7 +222,7 @@ void mbadblocks(int argc, char **argv, int type UNUSEDP)
 		}
 		while(fgets(line, sizeof(line), f)) {
 			char *ptr = line + strspn(line, " \t");
-			long offset = strtoul(ptr, 0, 0);
+			long offset = strtol(ptr, 0, 0);
 			if(sectorMode)
 				offset = (offset-Fs->clus_start)/Fs->cluster_size + 2;
 			if(offset < 2) {
