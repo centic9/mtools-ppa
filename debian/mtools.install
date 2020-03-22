@@ -1,0 +1,5 @@
+debian/mtools.conf /etc
+debian/old-changelog /usr/share/doc/mtools
+mtools.conf usr/share/doc/mtools/examples
+mtools.info usr/share/info
+usr/bin/[!f]*
