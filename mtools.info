@@ -1,6 +1,6 @@
-This is mtools.info, produced by makeinfo version 6.3 from mtools.texi.
+This is mtools.info, produced by makeinfo version 6.5 from mtools.texi.
 
-This manual is for Mtools (version 4.0.23, December 2018), which is a
+This manual is for Mtools (version 4.0.24, March 2020), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -25,6 +25,18 @@ Mtools doc
 
 This is mtools' documentation.
 
+* Menu:
+
+* Location::
+* Common features::
+* Configuration::
+* Commands::
+* Compiling mtools::
+* Porting mtools::
+* Command Index::
+* Variable Index::
+* Concept Index::
+
 Introduction
 ************
 
@@ -41,7 +53,7 @@ preliminary mounting or initialization (assuming the default
 '/etc/mtools.conf' works on your machine).  With mtools, one can change
 floppies too without unmounting and mounting.
 
-   This manual is for Mtools (version 4.0.23, December 2018), which is a
+   This manual is for Mtools (version 4.0.24, March 2020), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -75,10 +87,10 @@ File: mtools.info,  Node: Location,  Next: Common features,  Prev: Top,  Up: Top
 *********************
 
 Mtools can be found at the following places (and their mirrors):
-     http://ftp.gnu.org/gnu/mtools/mtools-4.0.23.tar.gz
-     http://mtools.linux.lu/mtools-4.0.23.tar.gz
-     ftp://www.tux.org/pub/knaff/mtools/mtools-4.0.23.tar.gz
-     ftp://ibiblio.unc.edu/pub/Linux/utils/disk-management/mtools-4.0.23.tar.gz
+     http://ftp.gnu.org/gnu/mtools/mtools-4.0.24.tar.gz
+     http://mtools.linux.lu/mtools-4.0.24.tar.gz
+     ftp://www.tux.org/pub/knaff/mtools/mtools-4.0.24.tar.gz
+     ftp://ibiblio.unc.edu/pub/Linux/utils/disk-management/mtools-4.0.24.tar.gz
 
    Before reporting a bug, make sure that it has not yet been fixed in
 the Alpha patches which can be found at:
@@ -342,15 +354,15 @@ LongFileName, and not as Longfilename.  However, if you then try to add
 LongFilename to the same directory, it is refused, because case is
 ignored for clash checks.
 
-   The VFAT file system allows to store the case of a filename in the
-attribute byte, if all letters of the filename are the same case, and if
-all letters of the extension are the same case too.  Mtools uses this
-information when displaying the files, and also to generate the Unix
-filename when mcopying to a Unix directory.  This may have unexpected
-results when applied to files written using an pre-7.0 version of DOS:
-Indeed, the old style filenames map to all upper case.  This is
-different from the behavior of the old version of mtools which used to
-generate lower case Unix filenames.
+   The VFAT file system allows you to store the case of a filename in
+the attribute byte, if all letters of the filename are the same case,
+and if all letters of the extension are the same case too.  Mtools uses
+this information when displaying the files, and also to generate the
+Unix filename when mcopying to a Unix directory.  This may have
+unexpected results when applied to files written using an pre-7.0
+version of DOS: Indeed, the old style filenames map to all upper case.
+This is different from the behavior of the old version of mtools which
+used to generate lower case Unix filenames.
 
 
 File: mtools.info,  Node: high capacity formats,  Next: exit codes,  Prev: case sensitivity,  Up: Common features
@@ -358,8 +370,8 @@ File: mtools.info,  Node: high capacity formats,  Next: exit codes,  Prev: case 
 2.7 high capacity formats
 =========================
 
-Mtools supports a number of formats which allow to store more data on
-disk as usual.  Due to different operating system abilities, these
+Mtools supports a number of formats which allow storage of more data on
+disk than usual.  Due to different operating system abilities, these
 formats are not supported on all operating systems.  Mtools recognizes
 these formats transparently where supported.
 
@@ -416,7 +428,7 @@ using _fewer_, but bigger sectors.  For example, 1 sector of 4K only
 takes up header space once, whereas 8 sectors of 512 bytes have also 8
 headers, for the same amount of useful data.
 
-   This method allows to store up to 1992K on a 3 1/2 HD disk.
+   This method permits storage of up to 1992K on a 3 1/2 HD disk.
 
    Mtools supports these formats only on Linux.
 
@@ -430,9 +442,9 @@ The 2m format was originally invented by Ciriaco Garcia de Celis.  It
 also uses bigger sectors than usual in order to fit more data on the
 disk.  However, it uses the standard format (18 sectors of 512 bytes
 each) on the first cylinder, in order to make these disks easier to
-handle by DOS. Indeed this method allows to have a standard sized boot
-sector, which contains a description of how the rest of the disk should
-be read.
+handle by DOS. Indeed this method allows you to have a standard sized
+boot sector, which contains a description of how the rest of the disk
+should be read.
 
    However, the drawback of this is that the first cylinder can hold
 less data than the others.  Unfortunately, DOS can only handle disks
@@ -509,6 +521,15 @@ File: mtools.info,  Node: Configuration,  Next: Commands,  Prev: Common features
 3 How to configure mtools for your environment
 **********************************************
 
+* Menu:
+
+* configuration file location::
+* default values::
+* global variables::
+* per drive variables::
+* parsing order::
+* old style configuration::
+
 3.1 Description
 ===============
 
@@ -542,6 +563,10 @@ File: mtools.info,  Node: configuration file location,  Next: general syntax,  P
 
    On some systems, the system-wide configuration file is called
 '/etc/default/mtools.conf' instead.
+
+* Menu:
+
+* general syntax::
 
 
 File: mtools.info,  Node: general syntax,  Next: default values,  Prev: configuration file location,  Up: Configuration
@@ -1870,8 +1895,8 @@ File: mtools.info,  Node: mmount,  Next: mmove,  Prev: mmd,  Up: Commands
 ===========
 
 The 'mmount' command is used to mount an MS-DOS disk.  It is only
-available on Linux, as it is only useful if the OS kernel allows to
-configure the disk geometry.  Its syntax is:
+available on Linux, as it is only useful if the OS kernel allows
+configuration of the disk geometry.  Its syntax is:
 
    'mmount' MSDOSDRIVE [MOUNTARGS]
 
@@ -2335,7 +2360,7 @@ that I can include them into the next release.  For purely local file, I
 recommend that you use the '/etc/mtools.conf' and '~/.mtoolsrc'
 configuration files.
 
-   However, the devices files also allows to supply geometry setting
+   However, the devices files also allows you to supply geometry setting
 routines.  These are necessary if you want to access high capacity
 disks.
 
@@ -2405,7 +2430,7 @@ Variable index
 * filter:                                miscellaneous flags.  (line 78)
 * heads:                                 geometry description. (line 63)
 * mformat_only:                          miscellaneous flags.  (line 74)
-* MTOOLSRC:                              Configuration.        (line  9)
+* MTOOLSRC:                              Configuration.        (line 18)
 * MTOOLS_DOTTED_DIR:                     global variables.     (line  6)
 * MTOOLS_FAT_COMPATIBILITY:              global variables.     (line  6)
 * MTOOLS_LOCK_TIMEOUT:                   global variables.     (line  6)
@@ -2460,7 +2485,7 @@ Concept index
 * Configuration file syntax:             general syntax.       (line  6)
 * Configuration file, old syntax:        old style configuration.
                                                                (line  6)
-* Configuration files:                   Configuration.        (line  9)
+* Configuration files:                   Configuration.        (line 18)
 * Configuration of disk geometry:        geometry description. (line  6)
 * Copying an entire disk image:          mcat.                 (line  9)
 * Copying MS-DOS files:                  mcopy.                (line  6)
@@ -2681,71 +2706,71 @@ Concept index
 
 
 Tag Table:
-Node: Top872
-Node: Location2960
-Node: Common features4349
-Node: arguments5113
-Node: drive letters6774
-Node: directory8128
-Node: long names8574
-Node: name clashes11120
-Node: case sensitivity13404
-Node: high capacity formats14638
-Node: more sectors15756
-Node: bigger sectors16811
-Node: 2m17537
-Node: XDF18719
-Node: exit codes20062
-Node: bugs20700
-Node: Configuration21233
-Node: configuration file location22370
-Node: general syntax22794
-Node: default values23625
-Node: global variables24153
-Node: per drive variables26346
-Node: general information27181
-Node: location information27623
-Node: geometry description29152
-Node: open flags33013
-Node: miscellaneous variables33613
-Node: miscellaneous flags35689
-Node: multiple descriptions39319
-Node: parsing order40993
-Node: old style configuration42024
-Node: Commands42723
-Node: floppyd44645
-Node: floppyd_installtest49438
-Node: mattrib50069
-Node: mbadblocks51862
-Node: mcat53156
-Node: mcd53970
-Node: mclasserase54831
-Node: mcopy55507
-Node: mdel58521
-Node: mdeltree58860
-Node: mdir59279
-Node: mdu60555
-Node: mformat61061
-Node: mkmanifest69572
-Node: minfo71546
-Node: mlabel72116
-Node: mmd73269
-Node: mmount73618
-Node: mmove74217
-Node: mpartition75024
-Node: mrd80537
-Node: mren80895
-Node: mshortname81644
-Node: mshowfat81974
-Node: mtoolstest82383
-Node: mtype82955
-Node: mzip83806
-Ref: mzip-Footnote-185831
-Ref: mzip-Footnote-285912
-Node: Compiling mtools86199
-Node: Porting mtools87298
-Node: Command Index93202
-Node: Variable Index93330
-Node: Concept Index95153
+Node: Top869
+Node: Location3123
+Node: Common features4512
+Node: arguments5276
+Node: drive letters6937
+Node: directory8291
+Node: long names8737
+Node: name clashes11283
+Node: case sensitivity13567
+Node: high capacity formats14804
+Node: more sectors15926
+Node: bigger sectors16981
+Node: 2m17710
+Node: XDF18896
+Node: exit codes20239
+Node: bugs20877
+Node: Configuration21410
+Node: configuration file location22699
+Node: general syntax23152
+Node: default values23983
+Node: global variables24511
+Node: per drive variables26704
+Node: general information27539
+Node: location information27981
+Node: geometry description29510
+Node: open flags33371
+Node: miscellaneous variables33971
+Node: miscellaneous flags36047
+Node: multiple descriptions39677
+Node: parsing order41351
+Node: old style configuration42382
+Node: Commands43081
+Node: floppyd45003
+Node: floppyd_installtest49796
+Node: mattrib50427
+Node: mbadblocks52220
+Node: mcat53514
+Node: mcd54328
+Node: mclasserase55189
+Node: mcopy55865
+Node: mdel58879
+Node: mdeltree59218
+Node: mdir59637
+Node: mdu60913
+Node: mformat61419
+Node: mkmanifest69930
+Node: minfo71904
+Node: mlabel72474
+Node: mmd73627
+Node: mmount73976
+Node: mmove74579
+Node: mpartition75386
+Node: mrd80899
+Node: mren81257
+Node: mshortname82006
+Node: mshowfat82336
+Node: mtoolstest82745
+Node: mtype83317
+Node: mzip84168
+Ref: mzip-Footnote-186193
+Ref: mzip-Footnote-286274
+Node: Compiling mtools86561
+Node: Porting mtools87660
+Node: Command Index93568
+Node: Variable Index93696
+Node: Concept Index95519
 
 End Tag Table

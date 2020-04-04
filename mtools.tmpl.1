@@ -1,5 +1,5 @@
 '\" t
-.TH mtools 1 "10Dec18" mtools-4.0.23
+.TH mtools 1 "22Mar20" mtools-4.0.24
 .SH Name
 mtools - utilities to access DOS disks in Unix.
 '\" t
@@ -36,10 +36,10 @@ Mtools can be found at the following places (and their mirrors):
 .nf
 .ft 3
 .in +0.3i
-http://ftp.gnu.org/gnu/mtools/mtools-4.0.23.tar.gz
-http://mtools.linux.lu/mtools-4.0.23.tar.gz
-ftp://www.tux.org/pub/knaff/mtools/mtools-4.0.23.tar.gz
-ftp://ibiblio.unc.edu/pub/Linux/utils/disk-management/mtools-4.0.23.tar.gz
+http://ftp.gnu.org/gnu/mtools/mtools-4.0.24.tar.gz
+http://mtools.linux.lu/mtools-4.0.24.tar.gz
+ftp://www.tux.org/pub/knaff/mtools/mtools-4.0.24.tar.gz
+ftp://ibiblio.unc.edu/pub/Linux/utils/disk-management/mtools-4.0.24.tar.gz
 .fi
 .in -0.3i
 .ft R
@@ -362,7 +362,7 @@ and not as Longfilename. However, if you then try to add LongFilename to
 the same directory, it is refused, because case is ignored for clash
 checks.
 .PP
-The VFAT file system allows to store the case of a filename in the
+The VFAT file system allows you to store the case of a filename in the
 attribute byte, if all letters of the filename are the same case, and if
 all letters of the extension are the same case too. Mtools uses this
 information when displaying the files, and also to generate the Unix
@@ -374,8 +374,8 @@ lower case Unix filenames.
 .PP
 .SS high\ capacity\ formats
 .PP
-Mtools supports a number of formats which allow to store more data on
-disk as usual. Due to different operating system abilities, these
+Mtools supports a number of formats which allow storage of more data on
+disk than usual. Due to different operating system abilities, these
 formats are not supported on all operating systems. Mtools recognizes
 these formats transparently where supported.
 .PP
@@ -426,7 +426,7 @@ many data bytes are in the sector. Thus, we save some space by using
 up header space once, whereas 8 sectors of 512 bytes have also 8
 headers, for the same amount of useful data.
 .PP
-This method allows to store up to 1992K on a 3 1/2 HD disk.
+This method permits storage of up to 1992K on a 3 1/2 HD disk.
 .PP
 Mtools supports these formats only on Linux.
 .PP
@@ -436,7 +436,7 @@ The 2m format was originally invented by Ciriaco Garcia de Celis. It
 also uses bigger sectors than usual in order to fit more data on the
 disk.  However, it uses the standard format (18 sectors of 512 bytes
 each) on the first cylinder, in order to make these disks easier to
-handle by DOS. Indeed this method allows to have a standard sized
+handle by DOS. Indeed this method allows you to have a standard sized
 boot sector, which contains a description of how the rest of the disk
 should be read.
 .PP
