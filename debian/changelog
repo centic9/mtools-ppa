@@ -1,3 +1,22 @@
+mtools (4.0.26-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Bump Standards-Version to 4.5.1.
+
+ -- Chris Lamb <lamby@debian.org>  Wed, 02 Dec 2020 09:56:28 +0000
+
+mtools (4.0.25-1) unstable; urgency=medium
+
+  [ Chris Lamb ]
+  * New upstream release.
+    - Parsing config file now works correctly with Turkish locale.
+      (Closes: #972387)
+
+  [ Debian Janitor ]
+  * Fix day-of-week for a previous changelog entry (3.9.8-10).
+
+ -- Chris Lamb <lamby@debian.org>  Sun, 25 Oct 2020 10:39:36 +0000
+
 mtools (4.0.24-1) unstable; urgency=medium
 
   * New upstream release.
@@ -362,7 +381,7 @@ mtools (3.9.8-10) unstable; urgency=low
   * Fixed problem with parse_range(). Patch from Moritz Barsnick
     <barsnick@gmx.net>.
 
- -- Luis Bustamante <luferbu@fluidsignal.com>  Fri, 17 Jun 2002 15:59:21 -0500
+ -- Luis Bustamante <luferbu@fluidsignal.com>  Mon, 17 Jun 2002 15:59:21 -0500
 
 mtools (3.9.8-9) unstable; urgency=low
 

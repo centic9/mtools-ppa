@@ -262,11 +262,14 @@ extern int batchmode;
 
 char get_default_drive(void);
 void set_cmd_line_image(char *img);
+void check_number_parse_errno(char c, const char *optarg, char *endptr);
 void read_config(void);
 off_t str_to_offset(char *str);
 unsigned int strtoui(const char *nptr, char **endptr, int base);
 unsigned int atoui(const char *nptr);
+#ifndef HAVE_STRTOI
 int strtoi(const char *nptr, char **endptr, int base);
+#endif
 unsigned long atoul(const char *nptr);
 uint8_t strtou8(const char *nptr, char **endptr, int base);
 uint8_t atou8(const char *str);
