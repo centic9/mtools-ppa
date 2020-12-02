@@ -18,7 +18,7 @@
  *
  * written by:
  *
- * Alain L. Knaff
+ * Alain L. Knaff			
  * alain@knaff.lu
  *
  */
@@ -27,13 +27,13 @@
 #include "msdos.h"
 #include "stream.h"
 
-static ssize_t force_io(Stream_t *Stream,
-			char *buf, mt_off_t start, size_t len,
-			ssize_t (*io)(Stream_t *, char *, mt_off_t, size_t))
+static int force_io(Stream_t *Stream,
+		    char *buf, mt_off_t start, size_t len,
+		    int (*io)(Stream_t *, char *, mt_off_t, size_t))
 {
-	ssize_t ret;
+	int ret;
 	int done=0;
-
+	
 	while(len){
 		ret = io(Stream, buf, start, len);
 		if ( ret <= 0 ){
@@ -42,21 +42,21 @@ static ssize_t force_io(Stream_t *Stream,
 			else
 				return ret;
 		}
-		start += (size_t) ret;
+		start += ret;
 		done += ret;
-		len -= (size_t) ret;
+		len -= ret;
 		buf += ret;
 	}
 	return done;
 }
 
-ssize_t force_write(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
+int force_write(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
 {
 	return force_io(Stream, buf, start, len,
-			Stream->Class->write);
+					Stream->Class->write);
 }
 
-ssize_t force_read(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
+int force_read(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
 {
 	return force_io(Stream, buf, start, len,
 					Stream->Class->read);

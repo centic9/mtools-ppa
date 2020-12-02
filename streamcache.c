@@ -54,17 +54,17 @@ static void init_streamcache(void)
 	atexit(finish_sc);
 }
 
-Stream_t *open_root_dir(char drive, int flags, int *isRop)
+Stream_t *open_root_dir(unsigned char drive, int flags, int *isRop)
 {
 	Stream_t *Fs;
 
 	init_streamcache();
 
-	drive = (char)toupper(drive);
-
+	drive = toupper(drive);
+	
 	/* open the drive */
-	if(fss[(unsigned char)drive])
-		Fs = fss[(unsigned char)drive];
+	if(fss[drive])
+		Fs = fss[drive];
 	else {
 		Fs = fs_init(drive, flags, isRop);
 		if (!Fs){
@@ -72,7 +72,7 @@ Stream_t *open_root_dir(char drive, int flags, int *isRop)
 			return NULL;
 		}
 
-		fss[(unsigned char)drive] = Fs;
+		fss[drive] = Fs;
 	}
 
 	return OpenRoot(Fs);

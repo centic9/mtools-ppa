@@ -23,11 +23,11 @@
 
 struct xdf_info {
   unsigned int FatSize;
-  uint16_t RootDirSize;
+  unsigned int RootDirSize;
   unsigned int BadSectors;
 };
 
-Stream_t *XdfOpen(struct device *dev, const char *name,
+Stream_t *XdfOpen(struct device *dev, char *name,
 		  int mode, char *errmsg, struct xdf_info *info);
 
 #endif

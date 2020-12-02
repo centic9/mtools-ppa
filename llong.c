@@ -24,7 +24,6 @@
 #if 1
 const mt_off_t max_off_t_31 = MAX_OFF_T_B(31); /* Floppyd */
 static const mt_off_t max_off_t_32 = MAX_OFF_T_B(32); /* Directory */
-static const mt_size_t max_size_t_32 = MAX_SIZE_T_B(32);
 const mt_off_t max_off_t_41 = MAX_OFF_T_B(41); /* SCSI */
 const mt_off_t max_off_t_seek = MAX_OFF_T_B(SEEK_BITS); /* SCSI */
 #else
@@ -37,58 +36,16 @@ int fileTooBig(mt_off_t off) {
 	return (off & ~max_off_t_32) != 0;
 }
 
-int fileSizeTooBig(mt_size_t siz) {
-	return (siz & ~max_size_t_32) != 0;
-}
-
-/* truncMtOffToOff */
 off_t truncBytes32(mt_off_t off)
-{
- 	if (fileTooBig(off)) {
- 		fprintf(stderr, "Internal error, offset too big\n");
-		exit(1);
-	}
-	return (off_t) off;
-}
-
-uint32_t truncMtOffTo32u(mt_off_t off)
 {
 	if (fileTooBig(off)) {
 		fprintf(stderr, "Internal error, offset too big\n");
 		exit(1);
 	}
-	return (uint32_t) off;
+	return (off_t) off;
 }
 
-uint32_t truncSizeTo32u(size_t siz)
-{
-	if (fileSizeTooBig(siz)) {
-		fprintf(stderr, "Internal error, size too big\n");
-		exit(1);
-	}
-	return (uint32_t) siz;
-}
-
-ssize_t truncOffToSsize(off_t off)
-{
-	if (off > SSIZE_MAX) {
-		fprintf(stderr, "Internal error, offset out of range\n");
-		exit(1);
-	}
-	return (ssize_t) off;
-}
-
-size_t truncOffToSize(off_t off)
-{
-	if (off > (off_t)SIZE_MAX || off < 0) {
-		fprintf(stderr, "Internal error, offset out of range\n");
-		exit(1);
-	}
-	return (size_t) off;
-}
-
-
-mt_off_t sectorsToBytes(Stream_t *Stream, uint32_t off)
+mt_off_t sectorsToBytes(Stream_t *Stream, off_t off)
 {
 	DeclareThis(Fs_t);
 	return (mt_off_t) off << This->sectorShift;
@@ -118,7 +75,7 @@ int mt_lseek(int fd, mt_off_t where, int whence)
 	if(llseek(fd, where, whence) >= 0)
 		return 0;
 	else
-		return -1;
+		return -1;		
 #else
 	if (lseek(fd, (off_t) where, whence) >= 0)
 		return 0;
@@ -127,12 +84,12 @@ int mt_lseek(int fd, mt_off_t where, int whence)
 #endif
 }
 
-unsigned int log_2(unsigned int size)
+unsigned int log_2(int size)
 {
 	unsigned int i;
 
 	for(i=0; i<24; i++) {
-		if(1u << i == size)
+		if(1 << i == size)
 			return i;
 	}
 	return 24;

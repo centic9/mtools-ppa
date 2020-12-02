@@ -31,19 +31,19 @@ struct dos_name_t {
   char sentinel;
 };
 
-size_t dos_to_wchar(doscp_t *fromDos, const char *dos, wchar_t *wchar, size_t len);
+int dos_to_wchar(doscp_t *fromDos, const char *dos, wchar_t *wchar, size_t len);
 void wchar_to_dos(doscp_t *toDos, wchar_t *wchar, char *dos, size_t len, int *mangled);
 
-doscp_t *cp_open(unsigned int codepage);
+doscp_t *cp_open(int codepage);
 void cp_close(doscp_t *cp);
 
-size_t wchar_to_native(const wchar_t *wchar, char *native,
-		       size_t len, size_t out_len);
+int wchar_to_native(const wchar_t *wchar, char *native,
+		    size_t len, size_t out_len);
 
 #define WCHAR_TO_NATIVE(wchar,native,len) \
 	wchar_to_native((wchar),(native),(len),sizeof(native))
 
-size_t native_to_wchar(const char *native, wchar_t *wchar, size_t len,
-		       const char *end, int *mangled);
+int native_to_wchar(const char *native, wchar_t *wchar, size_t len,
+		    const char *end, int *mangled);
 
 #endif
