@@ -15,11 +15,12 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdarg.h>
 #include "sysincludes.h"
 #include "mtools.h"
 
 static FILE *tty=NULL;
-static int notty=0;
+static int notty=0;	
 static int ttyfd=-1;
 #ifdef USE_RAWTERM
 int	mtools_raw_tty = 1;
@@ -94,7 +95,7 @@ static void tty_time_out(int dummy UNUSEDP)
 	int exit_code;
 	signal(SIGALRM, SIG_IGN);
 	if(tty && need_tty_reset)
-		restore_tty (&in_orig);
+		restore_tty (&in_orig);	
 #ifdef future
 	if (fail_on_timeout)
 		exit_code=SHFAIL;
@@ -117,7 +118,7 @@ static void tty_time_out(int dummy UNUSEDP)
 }
 
 static void cleanup_tty(void)
-{
+{ 
 	if(tty && need_tty_reset) {
 		restore_tty (&in_orig);
 		setup_signal();
@@ -142,7 +143,7 @@ static void set_raw_tty(int mode)
 
 		setup_signal();
 		signal (SIGALRM, tty_time_out);
-
+	
 		/* Change STDIN settings to raw */
 
 		gtty (STDIN, &in_raw);
@@ -150,9 +151,9 @@ static void set_raw_tty(int mode)
 #ifdef USE_SGTTY
 			in_raw.sg_flags |= CBREAK;
 #else
-			in_raw.c_lflag &= ~0u ^ ICANON;
+			in_raw.c_lflag &= ~ICANON;
 			in_raw.c_cc[VMIN]=1;
-			in_raw.c_cc[VTIME]=0;
+			in_raw.c_cc[VTIME]=0;			
 #endif
 			stty (STDIN, &in_raw);
 		} else {
@@ -169,7 +170,7 @@ static void set_raw_tty(int mode)
 }
 #endif
 
-FILE *opentty(int mode UNUSEDP)
+FILE *opentty(int mode)
 {
 	if(notty)
 		return NULL;
@@ -209,12 +210,7 @@ int ask_confirmation(const char *format, ...)
 		fflush(stderr);
 		fflush(opentty(-1));
 		if (mtools_raw_tty) {
-			int c = fgetc(opentty(1));
-			if(c < 0)
-				/* Treat end-of-file or error as no */
-				ans[0] = 'n';
-			else
-				ans[0] = (char) c;
+			ans[0] = fgetc(opentty(1));
 			fputs("\n", stderr);
 		} else {
 			if(fgets(ans,9, opentty(0)) == NULL)

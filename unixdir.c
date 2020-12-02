@@ -19,6 +19,7 @@
 #include "msdos.h"
 #include "stream.h"
 #include "mtools.h"
+#include "fsP.h"
 #include "file.h"
 #include "htable.h"
 #include "mainloop.h"
@@ -40,15 +41,15 @@ typedef struct Dir_t {
 
 /*#define FCHDIR_MODE*/
 
-static int get_dir_data(Stream_t *Stream, time_t *date, mt_off_t *size,
-			int *type, unsigned int *address)
+static int get_dir_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+			int *type, int *address)
 {
 	DeclareThis(Dir_t);
 
 	if(date)
 		*date = This->statbuf.st_mtime;
 	if(size)
-		*size = This->statbuf.st_size;
+		*size = (mt_size_t) This->statbuf.st_size;
 	if(type)
 		*type = 1;
 	if(address)
@@ -65,7 +66,7 @@ static int dir_free(Stream_t *Stream)
 	return 0;
 }
 
-static Class_t DirClass = {
+static Class_t DirClass = { 
 	0, /* read */
 	0, /* write */
 	0, /* flush */
@@ -81,8 +82,8 @@ static Class_t DirClass = {
 #define FCHDIR_MODE
 #endif
 
-int unix_dir_loop(Stream_t *Stream, MainParam_t *mp);
-int unix_loop(Stream_t *Stream, MainParam_t *mp, char *arg,
+int unix_dir_loop(Stream_t *Stream, MainParam_t *mp); 
+int unix_loop(Stream_t *Stream, MainParam_t *mp, char *arg, 
 	      int follow_dir_link);
 
 int unix_dir_loop(Stream_t *Stream, MainParam_t *mp)
@@ -108,7 +109,7 @@ int unix_dir_loop(Stream_t *Stream, MainParam_t *mp)
 		if(isSpecial(entry->d_name))
 			continue;
 #ifndef FCHDIR_MODE
-		newName = malloc(strlen(This->pathname) + 1 +
+		newName = malloc(strlen(This->pathname) + 1 + 
 				 strlen(entry->d_name) + 1);
 		if(!newName) {
 			ret = ERROR_ONE;
@@ -138,7 +139,7 @@ Stream_t *OpenDir(const char *filename)
 	Dir_t *This;
 
 	This = New(Dir_t);
-
+	
 	This->Class = &DirClass;
 	This->Next = 0;
 	This->refs = 1;

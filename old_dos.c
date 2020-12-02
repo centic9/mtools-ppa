@@ -1,5 +1,5 @@
 #include "sysincludes.h"
-#include "old_dos.h"
+#include "mtools.h"
 
 static struct OldDos_t old_dos[]={
 {   40,  9,  1, 4, 1, 2, 0xfc }, /*  180 KB */

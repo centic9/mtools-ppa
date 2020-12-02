@@ -50,7 +50,7 @@ int fat_free(Stream_t *Dir, unsigned int fat)
 
 int fatFreeWithDir(Stream_t *Dir, struct directory *dir)
 {
-	uint32_t first;
+	unsigned int first;
 
 	if((!strncmp(dir->name,".      ",8) ||
 	    !strncmp(dir->name,"..     ",8)) &&
@@ -61,7 +61,7 @@ int fatFreeWithDir(Stream_t *Dir, struct directory *dir)
 
 	first = START(dir);
   	if(fat32RootCluster(Dir))
-		first |= (uint32_t) STARTHI(dir) << 16;
+		first |= STARTHI(dir) << 16;
 	return fat_free(Dir, first);
 }
 
@@ -69,3 +69,4 @@ int fatFreeWithDirentry(direntry_t *entry)
 {
 	return fatFreeWithDir(entry->Dir, &entry->dir);
 }
+    

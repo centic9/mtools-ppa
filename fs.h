@@ -29,15 +29,15 @@ typedef struct FsPublic_t {
 
 	int serialized;
 	unsigned long serial_number;
-	uint8_t cluster_size;
-	uint16_t sector_size;
+	unsigned int cluster_size;
+	unsigned int sector_size;
 } FsPublic_t;
 
 Stream_t *fs_init(char drive, int mode, int *isRop);
 int fat_free(Stream_t *Dir, unsigned int fat);
 int fatFreeWithDir(Stream_t *Dir, struct directory *dir);
 int fat_error(Stream_t *Dir);
-uint32_t fat32RootCluster(Stream_t *Dir);
+int fat32RootCluster(Stream_t *Dir);
 char getDrive(Stream_t *Stream);
 
 #endif

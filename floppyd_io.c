@@ -30,7 +30,10 @@
 #include "mtools.h"
 #include "msdos.h"
 #include "scsi.h"
+#include "partition.h"
 #include "floppyd_io.h"
+
+#ifdef USE_FLOPPYD
 
 /* ######################################################################## */
 
@@ -70,8 +73,7 @@ typedef struct RemoteFile_t {
 static unsigned int authenticate_to_floppyd(RemoteFile_t *floppyd,
 					    int sock, char *display)
 {
-	size_t cookielen;
-	uint16_t filelen;
+	size_t filelen;
 	ssize_t newlen;
 	Byte buf[16];
 	const char *command[] = { "xauth", "xauth", "extract", "-", 0, 0 };
@@ -81,15 +83,15 @@ static unsigned int authenticate_to_floppyd(RemoteFile_t *floppyd,
 
 	command[4] = display;
 
-	cookielen=strlen(display);
-	cookielen += 100;
+	filelen=strlen(display);
+	filelen += 100;
 
-	xcookie = (char *) safe_malloc(cookielen+4);
-	newlen = safePopenOut(command, xcookie+4, cookielen);
-	if(newlen < 1 || newlen > UINT16_MAX)
+	xcookie = (char *) safe_malloc(filelen+4);
+	newlen = safePopenOut(command, xcookie+4, filelen);
+	if(newlen < 1)
 		return AUTH_AUTHFAILED;
-	filelen = (uint16_t) newlen;
-
+	filelen = (size_t) newlen;
+	
 	/* Version negotiation */
 	dword2byte(4,buf);
 	dword2byte(floppyd->version,buf+4);
@@ -120,12 +122,12 @@ static unsigned int authenticate_to_floppyd(RemoteFile_t *floppyd,
 	}
 
 	errcode = read_dword(sock);
-
+	
 	return errcode;
 }
 
 
-static ssize_t floppyd_reader(int fd, char* buffer, uint32_t len)
+static int floppyd_reader(int fd, char* buffer, size_t len) 
 {
 	Dword errcode;
 	Dword gotlen;
@@ -164,17 +166,16 @@ static ssize_t floppyd_reader(int fd, char* buffer, uint32_t len)
 			l = (size_t) ret;
 		}
 	} else {
-		errno = (int) errcode;
+		errno = errcode;
 	}
-	return (ssize_t) gotlen;
+	return gotlen;
 }
 
-static ssize_t floppyd_writer(int fd, char* buffer, uint32_t len)
+static int floppyd_writer(int fd, char* buffer, size_t len) 
 {
-	int errcode;
-	int32_t gotlen;
+	Dword errcode;
+	Dword gotlen;
 	Byte buf[16];
-	ssize_t ret;
 
 	dword2byte(1, buf);
 	buf[4] = OP_WRITE;
@@ -183,18 +184,17 @@ static ssize_t floppyd_writer(int fd, char* buffer, uint32_t len)
 	cork(fd, 1);
 	if(write(fd, buf, 9) < 9)
 		return AUTH_IO_ERROR;
-	ret = write(fd, buffer, len);
-	if(ret == -1 || (size_t) ret < len)
+	if(write(fd, buffer, len) < len)
 		return AUTH_IO_ERROR;
 	cork(fd, 0);
-
+	
 	if (read_dword(fd) != 8) {
 		errno = EIO;
 		return -1;
 	}
 
-	gotlen = read_sdword(fd);
-	errcode = read_sdword(fd);
+	gotlen = read_dword(fd);
+	errcode = read_dword(fd);
 
 	errno = errcode;
 	if(errno != 0 && gotlen == 0) {
@@ -206,72 +206,70 @@ static ssize_t floppyd_writer(int fd, char* buffer, uint32_t len)
 	return gotlen;
 }
 
-static int floppyd_lseek(int fd, int32_t offset, int whence)
+static int floppyd_lseek(int fd, mt_off_t offset, int whence) 
 {
-	int errcode;
-	int gotlen;
+	Dword errcode;
+	Dword gotlen;
 	Byte buf[32];
-
+	
 	dword2byte(1, buf);
 	buf[4] = OP_SEEK;
-
+	
 	dword2byte(8, buf+5);
-	sdword2byte(offset, buf+9);
-	sdword2byte(whence, buf+13);
-
+	dword2byte(truncBytes32(offset), buf+9);
+	dword2byte(whence, buf+13);
+	
 	if(write(fd, buf, 17) < 17)
 		return AUTH_IO_ERROR;
-
+       
 	if (read_dword(fd) != 8) {
 		errno = EIO;
 		return -1;
 	}
 
-	gotlen = read_sdword(fd);
-	errcode = read_sdword(fd);
+	gotlen = read_dword(fd);
+	errcode = read_dword(fd);
 
 	errno = errcode;
-
+	
 	return gotlen;
 }
 
-#if SIZEOF_OFF_T >= 8
-static mt_off_t floppyd_lseek64(int fd, mt_off_t offset, int whence)
+static mt_off_t floppyd_lseek64(int fd, mt_off_t offset, int whence) 
 {
-	int errcode;
-	struct SQwordRet gotlen;
+	Dword errcode;
+	Qword gotlen;
 	Byte buf[32];
-
+	
 	dword2byte(1, buf);
 	buf[4] = OP_SEEK64;
-
+	
 	dword2byte(12, buf+5);
-	qword2byte((uint32_t)offset, buf+9);
-	sdword2byte(whence, buf+17);
-
+	qword2byte(offset, buf+9);
+	dword2byte(whence, buf+17);
+	
 	if(write(fd, buf, 21) < 21)
 		return AUTH_IO_ERROR;
-
+       
 	if (read_dword(fd) != 12) {
 		errno = EIO;
 		return -1;
 	}
 
-	gotlen = read_sqword(fd);
-	errcode = read_sdword(fd);
+	gotlen = read_qword(fd);
+	errcode = read_dword(fd);
 
 	errno = errcode;
-
-	return gotlen.v;
+	
+	return gotlen;
 }
-#endif
 
-static int floppyd_open(RemoteFile_t *This, int mode)
+static int floppyd_open(RemoteFile_t *This, int mode) 
 {
-	int errcode;
-	int gotlen;
+	Dword errcode;
+	Dword gotlen;
 	Byte buf[16];
-
+	
 	if(! (This->capabilities & FLOPPYD_CAP_EXPLICIT_OPEN) ) {
 		/* floppyd has no "explicit seek" capabilities */
 		return 0;
@@ -283,78 +281,68 @@ static int floppyd_open(RemoteFile_t *This, int mode)
 	else
 		buf[4] = OP_OPRW;
 	dword2byte(4, buf+5);
-	sdword2byte(This->drive, buf+9);
+	dword2byte(This->drive, buf+9);
 
 	if(write(This->fd, buf, 13) < 13)
 		return AUTH_IO_ERROR;
-
+       
 	if (read_dword(This->fd) != 8) {
 		errno = EIO;
 		return -1;
 	}
 
-	gotlen = read_sdword(This->fd);
-	errcode = read_sdword(This->fd);
+	gotlen = read_dword(This->fd);
+	errcode = read_dword(This->fd);
 
 	errno = errcode;
-
+	
 	return gotlen;
 }
 
 
 /* ######################################################################## */
 
-typedef ssize_t (*iofn) (int, char *, uint32_t);
+typedef int (*iofn) (int, char *, size_t);
 
-static ssize_t floppyd_io(Stream_t *Stream, char *buf, mt_off_t where,
-			  size_t len, iofn io)
+static int floppyd_io(Stream_t *Stream, char *buf, mt_off_t where, size_t len,
+		      iofn io)
 {
 	DeclareThis(RemoteFile_t);
-	ssize_t ret;
+	int ret;
 
 	where += This->offset;
 
 	if (where != This->lastwhere ){
-#if SIZEOF_OFF_T >= 8
 		if(This->capabilities & FLOPPYD_CAP_LARGE_SEEK) {
 			if(floppyd_lseek64( This->fd, where, SEEK_SET) < 0 ){
 				perror("floppyd_lseek64");
-				This->lastwhere = -1;
+				This->lastwhere = (mt_off_t) -1;
 				return -1;
 			}
-		} else
-#endif
-			{
-			if(where > INT32_MAX  || where < INT32_MIN) {
-				fprintf(stderr, "Seek position out of range\n");
-				return -1;
-			}
-			if(floppyd_lseek(This->fd, (int32_t) where, SEEK_SET) < 0 ){
+		} else {
+			if(floppyd_lseek( This->fd, where, SEEK_SET) < 0 ){
 				perror("floppyd_lseek");
-				This->lastwhere = -1;
+				This->lastwhere = (mt_off_t) -1;
 				return -1;
 			}
 		}
 	}
-	ret = io(This->fd, buf,
-		 (len > INT32_MAX) ? (uint32_t)INT32_MAX+1 : (uint32_t) len);
+	ret = io(This->fd, buf, len);
 	if ( ret == -1 ){
 		perror("floppyd_io");
-		This->lastwhere = -1;
+		This->lastwhere = (mt_off_t) -1;
 		return -1;
 	}
 	This->lastwhere = where + ret;
 	return ret;
 }
 
-static ssize_t floppyd_read(Stream_t *Stream, char *buf,
-			    mt_off_t where, size_t len)
-{
+static int floppyd_read(Stream_t *Stream, char *buf, mt_off_t where, size_t len)
+{	
 	return floppyd_io(Stream, buf, where, len, floppyd_reader);
 }
 
-static ssize_t floppyd_write(Stream_t *Stream, char *buf,
-			     mt_off_t where, size_t len)
+static int floppyd_write(Stream_t *Stream, char *buf, mt_off_t where, size_t len)
 {
 	return floppyd_io(Stream, buf, where, len, floppyd_writer);
 }
@@ -386,8 +374,8 @@ static int floppyd_flush(Stream_t *Stream)
 static int floppyd_free(Stream_t *Stream)
 {
 	Byte buf[16];
-	int gotlen;
-	int errcode;
+	unsigned int gotlen;
+	unsigned int errcode;
 	DeclareThis(RemoteFile_t);
 
 	if (This->fd > 2) {
@@ -400,10 +388,10 @@ static int floppyd_free(Stream_t *Stream)
 		    errno = EIO;
 		    return -1;
 		}
-
-		gotlen = read_sdword(This->fd);
-		errcode = read_sdword(This->fd);
-
+		
+		gotlen = read_dword(This->fd);
+		errcode = read_dword(This->fd);
+		
 		errno = errcode;
 
 		close(This->fd);
@@ -413,10 +401,38 @@ static int floppyd_free(Stream_t *Stream)
 	}
 }
 
+static int floppyd_geom(Stream_t *Stream, struct device *dev, 
+			struct device *orig_dev UNUSEDP,
+			int media, union bootsector *boot)
+{
+	size_t tot_sectors;
+	unsigned int sect_per_track;
+	DeclareThis(RemoteFile_t);
+
+	dev->ssize = 2; /* allow for init_geom to change it */
+	dev->use_2m = 0x80; /* disable 2m mode to begin */
+
+	if(media == 0xf0 || media >= 0x100){		
+		dev->heads = WORD(nheads);
+		dev->sectors = WORD(nsect);
+		tot_sectors = DWORD(bigsect);
+		SET_INT(tot_sectors, WORD(psect));
+		sect_per_track = dev->heads * dev->sectors;
+		tot_sectors += sect_per_track - 1; /* round size up */
+		dev->tracks = tot_sectors / sect_per_track;
+
+	} else
+		if(setDeviceFromOldDos(media, dev) < 0)
+			exit(1);
+
+	This->size = (mt_off_t) 512 * dev->sectors * dev->tracks * dev->heads;
+
+	return 0;
+}
 
 
-static int floppyd_data(Stream_t *Stream, time_t *date, mt_off_t *size,
-			int *type, uint32_t *address)
+static int floppyd_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+		     int *type, int *address)
 {
 	DeclareThis(RemoteFile_t);
 
@@ -425,7 +441,7 @@ static int floppyd_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 		*date = 0;
 	if(size)
 		/* the size derived from the geometry */
-		*size = This->size;
+		*size = (mt_size_t) This->size;
 	if(type)
 		*type = 0; /* not a directory */
 	if(address)
@@ -436,11 +452,11 @@ static int floppyd_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 /* ######################################################################## */
 
 static Class_t FloppydFileClass = {
-	floppyd_read,
+	floppyd_read, 
 	floppyd_write,
 	floppyd_flush,
 	floppyd_free,
-	set_geom_noop,
+	floppyd_geom,
 	floppyd_data,
 	0, /* pre_allocate */
 	0, /* get_dosConvert */
@@ -462,8 +478,8 @@ static int get_host_and_port_and_drive(const char* name, char** hostname,
 	p2 = p;
 	if (*p) p++;
 	*p2 = 0;
-
-	*port = FLOPPYD_DEFAULT_PORT;
+	
+	*port = FLOPPYD_DEFAULT_PORT;	
 	if(*p >= '0' && *p <= '9')
 	  *port = strtou16(p, &p, 0);
 	if(*p == '/')
@@ -501,18 +517,18 @@ static in_addr_t getipaddress(char *ipaddr)
 
 	if (((ip = inet_addr(ipaddr)) == INADDR_NONE) &&
 	    (strcmp(ipaddr, "255.255.255.255") != 0)) {
-
+		
 		if ((host = gethostbyname(ipaddr)) != NULL) {
 			memcpy(&ip, host->h_addr, sizeof(ip));
 		}
-
+		
 		endhostent();
 	}
-
+	
 #ifdef DEBUG
 	fprintf(stderr, "IP lookup %s -> 0x%08lx\n", ipaddr, ip);
 #endif
-
+	  
 	return (ip);
 }
 
@@ -521,25 +537,25 @@ static in_addr_t getipaddress(char *ipaddr)
  *  */
 static int connect_to_server(in_addr_t ip, uint16_t port)
 {
-
+	
 	struct sockaddr_in      addr;
 	int                     sock;
-
+	
 	/*
 	 * Allocate a socket.
 	 */
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		return (-1);
 	}
-
+	
 	/*
 	 * Set the address to connect to.
 	 */
-
+	
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	addr.sin_addr.s_addr = ip;
-
+	
         /*
 	 * Connect our socket to the above address.
 	 */
@@ -552,25 +568,25 @@ static int connect_to_server(in_addr_t ip, uint16_t port)
 	 */
 	{
 		int             on = 1;
-		setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE,
+		setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, 
 			   (char *)&on, sizeof(on));
 	}
-
+	
 	return (sock);
 }
 
-static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
+static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name, 
 			    char *errmsg);
 
-Stream_t *FloppydOpen(struct device *dev,
-		      const char *name, int mode, char *errmsg,
-		      mt_off_t *maxSize)
+Stream_t *FloppydOpen(struct device *dev, 
+		      char *name, int mode, char *errmsg,
+		      mt_size_t *maxSize)
 {
 	RemoteFile_t *This;
 
 	if (!dev ||  !(dev->misc_flags & FLOPPYD_FLAG))
 		return NULL;
-
+	
 	This = New(RemoteFile_t);
 	if (!This){
 		printOom();
@@ -598,31 +614,31 @@ Stream_t *FloppydOpen(struct device *dev,
 	}
 
 	if(maxSize) {
-		*maxSize =
-			((This->capabilities & FLOPPYD_CAP_LARGE_SEEK) ?
-			 max_off_t_seek : max_off_t_31);
+		*maxSize = 
+			(This->capabilities & FLOPPYD_CAP_LARGE_SEEK) ?
+			max_off_t_seek : max_off_t_31;
 	}
 	return (Stream_t *) This;
 }
 
-static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
-			    char *errmsg)
+static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name, 
+			    char *errmsg) 
 {
 	char* hostname;
 	char* display;
 	uint16_t port;
-	int rval = get_host_and_port_and_drive(name, &hostname, &display,
+	int rval = get_host_and_port_and_drive(name, &hostname, &display, 
 					       &port, &floppyd->drive);
 	int sock;
 	unsigned int reply;
-
+	
 	if (!rval) return -1;
 
 	floppyd->version = FLOPPYD_PROTOCOL_VERSION;
 	floppyd->capabilities = 0;
 	while(1) {
 		sock = connect_to_server(getipaddress(hostname), port);
-
+		
 		if (sock == -1) {
 #ifdef HAVE_SNPRINTF
 			snprintf(errmsg, 200,
@@ -635,7 +651,7 @@ static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
 #endif
 			return -1;
 		}
-
+		
 		reply = authenticate_to_floppyd(floppyd, sock, display);
 		if(floppyd->version == FLOPPYD_PROTOCOL_VERSION_OLD)
 			break;
@@ -648,7 +664,7 @@ static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
 	}
 
 	if (reply != 0) {
-		fprintf(stderr,
+		fprintf(stderr, 
 			"Permission denied, authentication failed!\n"
 			"%s\n", AuthErrors[reply]);
 		return -1;
@@ -659,3 +675,4 @@ static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
 
 	return sock;
 }
+#endif
