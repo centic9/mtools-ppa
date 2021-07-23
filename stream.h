@@ -33,14 +33,13 @@ typedef struct Stream_t {
 doscp_t *get_dosConvert_pass_through(Stream_t *Stream);
 
 typedef struct Class_t {
-	int (*read)(Stream_t *, char *, mt_off_t, size_t);
-	int (*write)(Stream_t *, char *, mt_off_t, size_t);
+	ssize_t (*read)(Stream_t *, char *, mt_off_t, size_t);
+	ssize_t (*write)(Stream_t *, char *, mt_off_t, size_t);
 	int (*flush)(Stream_t *);
 	int (*freeFunc)(Stream_t *);
-	int (*set_geom)(Stream_t *, device_t *, device_t *, int media,
-					union bootsector *);
-	int (*get_data)(Stream_t *, time_t *, mt_size_t *, int *, int *);
-	int (*pre_allocate)(Stream_t *, mt_size_t);
+	int (*set_geom)(Stream_t *, device_t *, device_t *);
+	int (*get_data)(Stream_t *, time_t *, mt_size_t *, int *, uint32_t *);
+	int (*pre_allocate)(Stream_t *, mt_off_t);
 
 	doscp_t *(*get_dosConvert)(Stream_t *);
 
@@ -53,8 +52,8 @@ typedef struct Class_t {
 #define WRITES(stream, buf, address, size) \
 ((stream)->Class->write)( (stream), (char *) (buf), (address), (size) )
 
-#define SET_GEOM(stream, dev, orig_dev, media, boot) \
-(stream)->Class->set_geom( (stream), (dev), (orig_dev), (media), (boot) )
+#define SET_GEOM(stream, dev, orig_dev) \
+(stream)->Class->set_geom( (stream), (dev), (orig_dev))
 
 #define GET_DATA(stream, date, size, type, address) \
 (stream)->Class->get_data( (stream), (date), (size), (type), (address) )
@@ -84,24 +83,32 @@ copy_stream( (stream) )
 
 #define DeclareThis(x) x *This = (x *) Stream
 
-int force_write(Stream_t *Stream, char *buf, mt_off_t start, size_t len);
-int force_read(Stream_t *Stream, char *buf, mt_off_t start, size_t len);
+ssize_t force_write(Stream_t *Stream, char *buf, mt_off_t start, size_t len);
+ssize_t force_read(Stream_t *Stream, char *buf, mt_off_t start, size_t len);
+
+int set_geom_pass_through(Stream_t *Stream, device_t *dev, device_t *orig_dev);
+
+int set_geom_noop(Stream_t *Stream, device_t *dev, device_t *orig_dev);
 
 int get_data_pass_through(Stream_t *Stream, time_t *date, mt_size_t *size,
-						  int *type, int *address);
+			  int *type, uint32_t *address);
 
-int read_pass_through(Stream_t *Stream, char *buf, mt_off_t start, size_t len);
-int write_pass_through(Stream_t *Stream, char *buf, mt_off_t start, size_t len);
+ssize_t read_pass_through(Stream_t *Stream, char *buf,
+			  mt_off_t start, size_t len);
+ssize_t write_pass_through(Stream_t *Stream, char *buf,
+			   mt_off_t start, size_t len);
 
-mt_off_t sectorsToBytes(Stream_t *This, off_t off);
+mt_off_t sectorsToBytes(Stream_t *This, uint32_t off);
 
-mt_size_t getfree(Stream_t *Stream);
+mt_off_t getfree(Stream_t *Stream);
 int getfreeMinBytes(Stream_t *Stream, mt_size_t ref);
 
 Stream_t *find_device(char drive, int mode, struct device *out_dev,
 		      union bootsector *boot,
 		      char *name, int *media, mt_size_t *maxSize,
 		      int *isRop);
+
+int adjust_tot_sectors(struct device *dev, mt_off_t offset, char *errmsg);
 
 #endif
 
