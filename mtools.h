@@ -24,7 +24,7 @@ typedef struct dos_name_t dos_name_t;
 #define MAXPATHLEN 1024
 #include <signal.h>
 extern int lockf(int, int, off_t);  /* SCO has no proper include file for lockf */
-#endif 
+#endif
 
 #define SCSI_FLAG		0x001u
 #define PRIV_FLAG		0x002u
@@ -74,7 +74,16 @@ typedef struct device {
 	int file_nr;		/* used during parsing */
 	unsigned int blocksize;	/* size of disk block in bytes */
 
-	int codepage;		/* codepage for shortname encoding */
+	unsigned int codepage;		/* codepage for shortname encoding */
+
+	const char *data_map;
+
+	uint32_t tot_sectors;	/* Amount of total sectors, more
+				 * precise than tracks (in case of
+				 * partitions which may take up parts
+				 * of a track) */
+
+	uint32_t sector_size; /* Non-default sector size */
 
 	const char *cfg_filename; /* used for debugging purposes */
 } device_t;
@@ -83,8 +92,8 @@ struct OldDos_t {
 	unsigned int tracks;
 	uint16_t sectors;
 	uint16_t  heads;
-	
-	unsigned int dir_len;
+
+	uint16_t dir_len;
 	unsigned int cluster_size;
 	unsigned int fat_len;
 
@@ -120,29 +129,23 @@ extern const char *short_illegals, *long_illegals;
   } \
 } while(0)
 
-#define smaximize(target, max) do {		\
-  if(max < 0) { \
-    if(target > 0) \
-      target = 0; \
-  } else if(target > max) { \
-    target = max; \
-  } \
-} while(0)
-
 #define sizemaximize(target, max) do {		\
   if(max < 0) { \
     if(target > 0) \
       target = 0; \
   } else if(target > (size_t) max) {		\
-    target = max; \
+	  target = (size_t) max;			\
   } \
 } while(0)
 
 #define minimize(target, min) do { \
   if(target < min) \
     target = min; \
-} while(0) 
+} while(0)
 
+#ifdef OS_linux
+int get_sector_size(int fd);
+#endif
 int init_geom(int fd, struct device *dev, struct device *orig_dev,
 	      struct MT_STAT *statbuf);
 
@@ -151,7 +154,7 @@ int readwrite_sectors(int fd, /* file descriptor */
 		      int rate,
 		      int seektrack,
 		      int track, int head, int sector, int size, /* address */
-		      char *data, 
+		      char *data,
 		      int bytes,
 		      int direction,
 		      int retries);
@@ -163,14 +166,14 @@ char *unix_normalize (doscp_t *cp, char *ans, struct dos_name_t *dn,
 void dos_name(doscp_t *cp, const char *filename, int verbose, int *mangled,
 	      struct dos_name_t *);
 struct directory *mk_entry(const dos_name_t *filename, unsigned char attr,
-			   unsigned int fat, size_t size, time_t date,
+			   unsigned int fat, uint32_t size, time_t date,
 			   struct directory *ndir);
 
 struct directory *mk_entry_from_base(const char *base, unsigned char attr,
-				     unsigned int fat, size_t size, time_t date,
+				     unsigned int fat, uint32_t size, time_t date,
 				     struct directory *ndir);
 
-int copyfile(Stream_t *Source, Stream_t *Target);
+ssize_t copyfile(Stream_t *Source, Stream_t *Target);
 int getfreeMinClusters(Stream_t *Stream, size_t ref);
 
 FILE *opentty(int mode);
@@ -182,7 +185,7 @@ int dir_grow(Stream_t *Dir, int size);
 int match(const wchar_t *, const wchar_t *, wchar_t *, int,  int);
 
 wchar_t *unix_name(doscp_t *fromDos,
-		   const char *base, const char *ext, char Case,
+		   const char *base, const char *ext, uint8_t Case,
 		   wchar_t *answer);
 void *safe_malloc(size_t size);
 Stream_t *open_filter(Stream_t *Next,int convertCharset);
@@ -204,11 +207,7 @@ void restore_interrupts(saved_sig_state *ss);
 #define SET_INT(target, source) \
 if(source)target=source
 
-
-UNUSED(static __inline__ int compare (long ref, long testee))
-{
-	return (ref && ref != testee);
-}
+#define compare(ref,testee) ((ref) && (ref) != (testee))
 
 UNUSED(static __inline__ char ch_toupper(char ch))
 {
@@ -235,13 +234,17 @@ UNUSED(static __inline__ void init_random(void))
 	srandom((unsigned int)time (0));
 }
 
+UNUSED(static __inline__ size_t ptrdiff (const char *end, const char *begin))
+{
+	return (size_t) (end-begin);
+}
 
 Stream_t *GetFs(Stream_t *Fs);
 
-void label_name_uc(doscp_t *cp, const char *filename, int verbose, 
+void label_name_uc(doscp_t *cp, const char *filename, int verbose,
 		   int *mangled, dos_name_t *ans);
 
-void label_name_pc(doscp_t *cp, const char *filename, int verbose, 
+void label_name_pc(doscp_t *cp, const char *filename, int verbose,
 		   int *mangled, dos_name_t *ans);
 
 /* environmental variables */
@@ -264,6 +267,8 @@ char get_default_drive(void);
 void set_cmd_line_image(char *img);
 void check_number_parse_errno(char c, const char *optarg, char *endptr);
 void read_config(void);
+off_t str_to_offset_with_end(const char *str, char **endp);
+size_t str_to_size_with_end(const char *str, char **endp);
 off_t str_to_offset(char *str);
 unsigned int strtoui(const char *nptr, char **endptr, int base);
 unsigned int atoui(const char *nptr);
@@ -330,7 +335,7 @@ char *getVoldName(struct device *dev, char *name);
 
 
 Stream_t *OpenDir(const char *filename);
-/* int unix_dir_loop(Stream_t *Stream, MainParam_t *mp); 
+/* int unix_dir_loop(Stream_t *Stream, MainParam_t *mp);
 int unix_loop(MainParam_t *mp, char *arg); */
 
 struct dirCache_t **getDirCacheP(Stream_t *Stream);
