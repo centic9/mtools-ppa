@@ -39,11 +39,13 @@ typedef struct Filter_t {
 
 /* read filter filters out messy dos' bizarre end of lines and final 0x1a's */
 
-static int read_filter(Stream_t *Stream, char *buf, mt_off_t iwhere, size_t len)
+static ssize_t read_filter(Stream_t *Stream, char *buf,
+			   mt_off_t iwhere, size_t len)
 {
 	DeclareThis(Filter_t);
-	int i,j,ret;
-	unsigned char newchar;
+	int i,j;
+	ssize_t ret;
+	char newchar;
 
 	off_t where = truncBytes32(iwhere);
 
@@ -56,7 +58,7 @@ static int read_filter(Stream_t *Stream, char *buf, mt_off_t iwhere, size_t len)
 		exit(1);
 	}
 	This->rw = F_READ;
-	
+
 	ret = READS(This->Next, buf, (mt_off_t) This->dospos, len);
 	if ( ret < 0 )
 		return ret;
@@ -79,15 +81,16 @@ static int read_filter(Stream_t *Stream, char *buf, mt_off_t iwhere, size_t len)
 	return j;
 }
 
-static int write_filter(Stream_t *Stream, char *buf, mt_off_t iwhere,
-						size_t len)
+static ssize_t write_filter(Stream_t *Stream, char *buf, mt_off_t iwhere,
+			    size_t len)
 {
 	DeclareThis(Filter_t);
-	unsigned int i,j;
-	int ret;
+	unsigned int i;
+	size_t j;
+	ssize_t ret;
 	char buffer[1025];
-	unsigned char newchar;
-	
+	char newchar;
+
 	off_t where = truncBytes32(iwhere);
 
 	if(This->unixpos == -1)
@@ -97,7 +100,7 @@ static int write_filter(Stream_t *Stream, char *buf, mt_off_t iwhere,
 		fprintf(stderr,"Bad offset\n");
 		exit(1);
 	}
-	
+
 	if (This->rw == F_READ){
 		fprintf(stderr,"Change of transfer direction!\n");
 		exit(1);
@@ -128,7 +131,7 @@ static int write_filter(Stream_t *Stream, char *buf, mt_off_t iwhere,
 		This->unixpos = -1;
 		return -1;
 	}
-	return j;
+	return (ssize_t)j;
 }
 
 static int free_filter(Stream_t *Stream)
@@ -138,7 +141,7 @@ static int free_filter(Stream_t *Stream)
 
 	/* write end of file */
 	if (This->rw == F_WRITE)
-		return force_write(This->Next, &buffer, (mt_off_t) This->dospos, 1);
+		return force_write(This->Next, &buffer, (mt_off_t) This->dospos, 1) < 0;
 	else
 		return 0;
 }

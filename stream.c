@@ -54,8 +54,7 @@ int free_stream(Stream_t **Stream)
 		if((*Stream)->Next)
 			ret |= free_stream(&(*Stream)->Next);
 		Free(*Stream);
-	} else if ( (*Stream)->Next )
-		ret |= flush_stream((*Stream)->Next);		
+	}
 	*Stream = NULL;
 	return ret;
 }
@@ -64,19 +63,32 @@ int free_stream(Stream_t **Stream)
 #define GET_DATA(stream, date, size, type, address) \
 (stream)->Class->get_data( (stream), (date), (size), (type), (address) )
 
+int set_geom_pass_through(Stream_t *Stream, device_t *dev, device_t *orig_dev)
+{
+	return SET_GEOM(Stream->Next, dev, orig_dev);
+}
+
+int set_geom_noop(Stream_t *Stream UNUSEDP,
+		  device_t *dev UNUSEDP,
+		  device_t *orig_dev UNUSEDP)
+{
+	return 0;
+}
 
 int get_data_pass_through(Stream_t *Stream, time_t *date, mt_size_t *size,
-			  int *type, int *address)
+			  int *type, uint32_t *address)
 {
        return GET_DATA(Stream->Next, date, size, type, address);
 }
 
-int read_pass_through(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
+ssize_t read_pass_through(Stream_t *Stream, char *buf,
+			  mt_off_t start, size_t len)
 {
 	return READS(Stream->Next, buf, start, len);
 }
 
-int write_pass_through(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
+ssize_t write_pass_through(Stream_t *Stream, char *buf,
+			   mt_off_t start, size_t len)
 {
 	return WRITES(Stream->Next, buf, start, len);
 }
@@ -84,4 +96,24 @@ int write_pass_through(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
 doscp_t *get_dosConvert_pass_through(Stream_t *Stream)
 {
 	return GET_DOSCONVERT(Stream->Next);
+}
+
+/*
+ * Adjust number of total sectors by given offset in bytes
+ */
+int adjust_tot_sectors(struct device *dev, mt_off_t offset, char *errmsg)
+{
+	if(!dev->tot_sectors)
+		/* tot_sectors not set, do nothing */
+		return 0;
+
+	mt_off_t offs_sectors = offset /
+		(dev->sector_size ? dev->sector_size : 512);
+	if(offs_sectors > 0 && dev->tot_sectors < offs_sectors) {
+		if(errmsg)
+			sprintf(errmsg,"init: Offset bigger than base image");
+		return -1;
+	}
+	dev->tot_sectors -= offs_sectors;
+	return 0;
 }
