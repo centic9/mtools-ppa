@@ -69,6 +69,9 @@
 /* Define to 1 if you have the <libc.h> header file. */
 #undef HAVE_LIBC_H
 
+/* Define to 1 if you have the `iconv' library (-liconv). */
+#undef HAVE_LIBICONV
+
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
 
@@ -216,6 +219,9 @@
 /* Define to 1 if you have the `strncasecmp' function. */
 #undef HAVE_STRNCASECMP
 
+/* Define to 1 if you have the `strncasecmp_l' function. */
+#undef HAVE_STRNCASECMP_L
+
 /* Define to 1 if you have the `strndup' function. */
 #undef HAVE_STRNDUP
 
@@ -231,11 +237,17 @@
 /* Define to 1 if you have the `strspn' function. */
 #undef HAVE_STRSPN
 
+/* Define to 1 if you have the `strtoi' function. */
+#undef HAVE_STRTOI
+
 /* Define to 1 if you have the `strtol' function. */
 #undef HAVE_STRTOL
 
 /* Define to 1 if you have the `strtoll' function. */
 #undef HAVE_STRTOLL
+
+/* Define to 1 if you have the `strtoui' function. */
+#undef HAVE_STRTOUI
 
 /* Define to 1 if you have the `strtoul' function. */
 #undef HAVE_STRTOUL
@@ -291,6 +303,9 @@
 /* Define to 1 if you have the <termio.h> header file. */
 #undef HAVE_TERMIO_H
 
+/* Define to 1 if you have the `toupper_l' function. */
+#undef HAVE_TOUPPER_L
+
 /* Define to 1 if you have the `tzset' function. */
 #undef HAVE_TZSET
 
@@ -323,6 +338,9 @@
 
 /* Define to 1 if you have the <wctype.h> header file. */
 #undef HAVE_WCTYPE_H
+
+/* Define to 1 if you have the <xlocale.h> header file. */
+#undef HAVE_XLOCALE_H
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT

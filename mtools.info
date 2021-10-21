@@ -1,6 +1,6 @@
 This is mtools.info, produced by makeinfo version 6.5 from mtools.texi.
 
-This manual is for Mtools (version 4.0.24, March 2020), which is a
+This manual is for Mtools (version 4.0.26, November 2020), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -53,7 +53,7 @@ preliminary mounting or initialization (assuming the default
 '/etc/mtools.conf' works on your machine).  With mtools, one can change
 floppies too without unmounting and mounting.
 
-   This manual is for Mtools (version 4.0.24, March 2020), which is a
+   This manual is for Mtools (version 4.0.26, November 2020), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -87,29 +87,19 @@ File: mtools.info,  Node: Location,  Next: Common features,  Prev: Top,  Up: Top
 *********************
 
 Mtools can be found at the following places (and their mirrors):
-     http://ftp.gnu.org/gnu/mtools/mtools-4.0.24.tar.gz
-     http://mtools.linux.lu/mtools-4.0.24.tar.gz
-     ftp://www.tux.org/pub/knaff/mtools/mtools-4.0.24.tar.gz
-     ftp://ibiblio.unc.edu/pub/Linux/utils/disk-management/mtools-4.0.24.tar.gz
-
-   Before reporting a bug, make sure that it has not yet been fixed in
-the Alpha patches which can be found at:
-     http://ftp.gnu.org/gnu/mtools/
-     http://mtools.linux.lu/
-     ftp://www.tux.org/pub/knaff/mtools
+     http://ftp.gnu.org/gnu/mtools/mtools-4.0.26.tar.gz
 
    These patches are named 'mtools-'VERSION'-'DDMM'.taz', where version
 stands for the base version, DD for the day and MM for the month.  Due
 to a lack of space, I usually leave only the most recent patch.
 
-   There is an mtools mailing list at mtools @ tux.org .  Please send
-all bug reports to this list.  You may subscribe to the list by sending
-a message with 'subscribe mtools @ tux.org' in its body to majordomo @
-tux.org .  (N.B. Please remove the spaces around the "@" both times.  I
-left them there in order to fool spambots.)  Announcements of new mtools
-versions will also be sent to the list, in addition to the Linux
-announce newsgroups.  The mailing list is archived at
-http://lists.gnu.org/pipermail/info-mtools/
+   There is an mtools mailing list at info-mtools @ gnu.org .  Please
+send all bug reports to this list.  You may subscribe to the list at
+https://lists.gnu.org/mailman/listinfo/info-mtools.  (N.B. Please remove
+the spaces around the "@".  I left them there in order to fool
+spambots.)  Announcements of new mtools versions will also be sent to
+the list, in addition to the Linux announce newsgroups.  The mailing
+list is archived at http://lists.gnu.org/pipermail/info-mtools/
 
 
 File: mtools.info,  Node: Common features,  Next: Configuration,  Prev: Location,  Up: Top
@@ -378,8 +368,7 @@ these formats transparently where supported.
    In order to format these disks, you need to use an operating system
 specific tool.  For Linux, suitable floppy tools can be found in the
 'fdutils' package at the following locations~:
-     ftp://www.tux.org/pub/knaff/fdutils/.
-     ftp://ibiblio.unc.edu/pub/Linux/utils/disk-management/fdutils-*
+     http://www.fdutils.linux.lu/.
 
    See the manual pages included in that package for further detail: Use
 'superformat' to format all formats except XDF, and use 'xdfcopy' to
@@ -1251,7 +1240,7 @@ operator) or remove attribute flags (with the ''-'' operator).
      command line, only the attribute is printed, and not the filename.
      This option is convenient for scripts
 'p'
-     Replay mode.  Outputs a series of mformat commands that will
+     Replay mode.  Outputs a series of 'mformat' commands that will
      reproduce the current situation, starting from a situation as left
      by untarring the MS-DOS file system.  Commands are only output for
      attribute settings that differ from the default (archive bit set
@@ -1430,9 +1419,9 @@ depending on its position on the command line.
      No confirmation when overwriting Unix files.  'ASCII' doesn't warn
      the user when overwriting an existing Unix file.  If the target
      file already exists, and the '-n' option is not in effect, 'mcopy'
-     asks whether to overwrite the file or to rename the new file (*note
-     name clashes::) for details).  In order to switch off confirmation
-     for DOS files, use '-o'.
+     asks whether to overwrite the file or to rename the new file (see
+     *note name clashes::) for details).  In order to switch off
+     confirmation for DOS files, use '-o'.
 'm'
      Preserve the file modification time.
 'v'
@@ -1911,8 +1900,8 @@ File: mtools.info,  Node: mmove,  Next: mpartition,  Prev: mmount,  Up: Commands
 4.19 Mmove
 ==========
 
-The 'mmove' command is used to moves or renames an existing MS-DOS file
-or subdirectory.
+The 'mmove' command is used to move or rename an existing MS-DOS file or
+subdirectory.
      'mmove' ['-v'] ['-D' CLASH_OPTION] SOURCEFILE TARGETFILE
      'mmove' ['-v']  ['-D' CLASH_OPTION] SOURCEFILE [ SOURCEFILES... ] TARGETDIRECTORY
    'Mmove' moves or renames an existing MS-DOS file or subdirectory.
@@ -1979,12 +1968,12 @@ This command only works on drives whose partition variable is set.
      cylinders of the whole drive.
 'b BEGIN'
      The starting offset of the partition, expressed in sectors.  If
-     begin is not given, mpartition lets the partition begin at the
+     begin is not given, 'mpartition' lets the partition begin at the
      start of the disk (partition number 1), or immediately after the
      end of the previous partition.
 'l LENGTH'
      The size (length) of the partition, expressed in sectors.  If end
-     is not given, mpartition figures out the size from the number of
+     is not given, 'mpartition' figures out the size from the number of
      sectors, heads and cylinders.  If these are not given either, it
      gives the partition the biggest possible size, considering disk
      size and start of the next partition.
@@ -1995,7 +1984,7 @@ partition table:
      Usually, before writing back any changes to the partition,
      mpartition performs certain consistency checks, such as checking
      for overlaps and proper alignment of the partitions.  If any of
-     these checks fails, the partition table is not changes.  The '-f'
+     these checks fails, the partition table is not changed.  The '-f'
      allows you to override these safeguards.
 
    The following options are available for all operations:
@@ -2003,7 +1992,7 @@ partition table:
      Together with '-p' prints the partition table as it is now (no
      change operation), or as it is after it is modified.
 'vv'
-     If the verbosity flag is given twice, mpartition will print out a
+     If the verbosity flag is given twice, 'mpartition' will print out a
      hexdump of the partition table when reading it from and writing it
      to the device.
 
@@ -2018,9 +2007,9 @@ Mpartition proceeds as follows to pick a type for the partition:
 
    - FAT32 partitions are assigned type 0x0C ("'Win95 FAT32, LBA'")
 
-   - For all others, if the partition fits entirely within the 65536
-     sector of the disk, assign 0x01 ("'DOS FAT12, CHS'") for FAT12
-     partition and 0x04 ("'DOS FAT16, CHS'") for FAT16 partitions
+   - For all others, if the partition fits entirely within the first
+     65536 sectors of the disk, assign 0x01 ("'DOS FAT12, CHS'") for
+     FAT12 partition and 0x04 ("'DOS FAT16, CHS'") for FAT16 partitions
 
    - If not covered by the above, assign 0x06 ("'DOS BIG FAT16 CHS'") if
      partition fits entirely within the first 1024 cylinders (CHS mode)
@@ -2706,71 +2695,71 @@ Concept index
 
 
 Tag Table:
-Node: Top869
-Node: Location3123
-Node: Common features4512
-Node: arguments5276
-Node: drive letters6937
-Node: directory8291
-Node: long names8737
-Node: name clashes11283
-Node: case sensitivity13567
-Node: high capacity formats14804
-Node: more sectors15926
-Node: bigger sectors16981
-Node: 2m17710
-Node: XDF18896
-Node: exit codes20239
-Node: bugs20877
-Node: Configuration21410
-Node: configuration file location22699
-Node: general syntax23152
-Node: default values23983
-Node: global variables24511
-Node: per drive variables26704
-Node: general information27539
-Node: location information27981
-Node: geometry description29510
-Node: open flags33371
-Node: miscellaneous variables33971
-Node: miscellaneous flags36047
-Node: multiple descriptions39677
-Node: parsing order41351
-Node: old style configuration42382
-Node: Commands43081
-Node: floppyd45003
-Node: floppyd_installtest49796
-Node: mattrib50427
-Node: mbadblocks52220
-Node: mcat53514
-Node: mcd54328
-Node: mclasserase55189
-Node: mcopy55865
-Node: mdel58879
-Node: mdeltree59218
-Node: mdir59637
-Node: mdu60913
-Node: mformat61419
-Node: mkmanifest69930
-Node: minfo71904
-Node: mlabel72474
-Node: mmd73627
-Node: mmount73976
-Node: mmove74579
-Node: mpartition75386
-Node: mrd80899
-Node: mren81257
-Node: mshortname82006
-Node: mshowfat82336
-Node: mtoolstest82745
-Node: mtype83317
-Node: mzip84168
-Ref: mzip-Footnote-186193
-Ref: mzip-Footnote-286274
-Node: Compiling mtools86561
-Node: Porting mtools87660
-Node: Command Index93568
-Node: Variable Index93696
-Node: Concept Index95519
+Node: Top872
+Node: Location3129
+Node: Common features4067
+Node: arguments4831
+Node: drive letters6492
+Node: directory7846
+Node: long names8292
+Node: name clashes10838
+Node: case sensitivity13122
+Node: high capacity formats14359
+Node: more sectors15404
+Node: bigger sectors16459
+Node: 2m17188
+Node: XDF18374
+Node: exit codes19717
+Node: bugs20355
+Node: Configuration20888
+Node: configuration file location22177
+Node: general syntax22630
+Node: default values23461
+Node: global variables23989
+Node: per drive variables26182
+Node: general information27017
+Node: location information27459
+Node: geometry description28988
+Node: open flags32849
+Node: miscellaneous variables33449
+Node: miscellaneous flags35525
+Node: multiple descriptions39155
+Node: parsing order40829
+Node: old style configuration41860
+Node: Commands42559
+Node: floppyd44481
+Node: floppyd_installtest49274
+Node: mattrib49905
+Node: mbadblocks51700
+Node: mcat52994
+Node: mcd53808
+Node: mclasserase54669
+Node: mcopy55345
+Node: mdel58363
+Node: mdeltree58702
+Node: mdir59121
+Node: mdu60397
+Node: mformat60903
+Node: mkmanifest69414
+Node: minfo71388
+Node: mlabel71958
+Node: mmd73111
+Node: mmount73460
+Node: mmove74063
+Node: mpartition74868
+Node: mrd80394
+Node: mren80752
+Node: mshortname81501
+Node: mshowfat81831
+Node: mtoolstest82240
+Node: mtype82812
+Node: mzip83663
+Ref: mzip-Footnote-185688
+Ref: mzip-Footnote-285769
+Node: Compiling mtools86056
+Node: Porting mtools87155
+Node: Command Index93063
+Node: Variable Index93191
+Node: Concept Index95014
 
 End Tag Table
