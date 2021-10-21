@@ -1,3 +1,9 @@
+mtools (4.0.35-0ubuntu0~ppa1) focal; urgency=medium
+
+  * Update to 4.0.35
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Thu, 21 Oct 2021 21:34:10 +0200
+
 mtools (4.0.33-1+really4.0.32-1) unstable; urgency=medium
 
   * Revert to version 4.0.32-1 due to regressions on ARM* systems affecting the
