@@ -107,7 +107,6 @@ static int _unix_write(MainParam_t *mp, int needfilter, const char *unixFile)
 	Stream_t *File=mp->File;
 	Stream_t *Target, *Source;
 	struct MT_STAT stbuf;
-	ssize_t ret;
 	char errmsg[80];
 
 	File->Class->get_data(File, &mtime, 0, 0, 0);
@@ -164,7 +163,7 @@ static int _unix_write(MainParam_t *mp, int needfilter, const char *unixFile)
 	if ((Target = SimpleFileOpen(0, 0, unixFile,
 				     O_WRONLY | O_CREAT | O_TRUNC,
 				     errmsg, 0, 0, 0))) {
-		ret = 0;
+		mt_off_t ret = 0;
 		if(needfilter && arg->textmode){
 			Source = open_filter(COPY(File),arg->convertCharset);
 			if (!Source)
@@ -288,10 +287,10 @@ static int writeit(struct dos_name_t *dosname,
 	Stream_t *Target;
 	time_t now;
 	int type;
-	ssize_t ret;
+	mt_off_t ret;
 	uint32_t fat;
 	time_t date;
-	mt_size_t filesize, newsize;
+	mt_off_t filesize, newsize;
 	Arg_t *arg = (Arg_t *) arg0;
 
 
@@ -302,7 +301,7 @@ static int writeit(struct dos_name_t *dosname,
 		return -1;
 	}
 
-	if(fileSizeTooBig(filesize)) {
+	if(fileTooBig(filesize)) {
 		fprintf(stderr, "File \"%s\" too big\n", longname);
 		return 1;
 	}

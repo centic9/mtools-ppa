@@ -19,7 +19,6 @@
 #include "msdos.h"
 #include "stream.h"
 #include "mtools.h"
-#include "fsP.h"
 #include "file.h"
 #include "htable.h"
 #include "mainloop.h"
@@ -41,7 +40,7 @@ typedef struct Dir_t {
 
 /*#define FCHDIR_MODE*/
 
-static int get_dir_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+static int get_dir_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 			int *type, unsigned int *address)
 {
 	DeclareThis(Dir_t);
@@ -49,7 +48,7 @@ static int get_dir_data(Stream_t *Stream, time_t *date, mt_size_t *size,
 	if(date)
 		*date = This->statbuf.st_mtime;
 	if(size)
-		*size = (mt_size_t) This->statbuf.st_size;
+		*size = This->statbuf.st_size;
 	if(type)
 		*type = 1;
 	if(address)

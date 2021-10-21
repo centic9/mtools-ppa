@@ -24,12 +24,19 @@
 #include "msdos.h"
 #include "stream.h"
 #include "mtools.h"
+#include "device.h"
+#include "old_dos.h"
 #include "fsP.h"
 #include "buffer.h"
 #include "file_name.h"
 #include "open_image.h"
 
 #define FULL_CYL
+
+mt_off_t sectorsToBytes(Fs_t *This, uint32_t off)
+{
+	return (mt_off_t) off << This->sectorShift;
+}
 
 /*
  * Read the boot sector.  We glean the disk parameters from this sector.
@@ -97,7 +104,7 @@ static int get_media_type(Stream_t *St, union bootsector *boot)
 		char temp[512];
 		/* old DOS disk. Media descriptor in the first FAT byte */
 		/* we assume 512-byte sectors here */
-		if (force_read(St,temp,(mt_off_t) 512,512) == 512)
+		if (force_read(St,temp,512,512) == 512)
 			media = (unsigned char) temp[0];
 		else
 			media = 0;
@@ -208,7 +215,7 @@ static void boot_to_geom(struct device *dev, int media,
 static Stream_t *try_device(struct device *dev,
 			    int mode, struct device *out_dev,
 			    union bootsector *boot,
-			    char *name, int *media, mt_size_t *maxSize,
+			    char *name, int *media, mt_off_t *maxSize,
 			    int *isRop, int try_writable,
 			    char *errmsg)
 {
@@ -358,7 +365,7 @@ int calc_num_clus(Fs_t *Fs, uint32_t tot_sectors)
  */
 Stream_t *find_device(char drive, int mode, struct device *out_dev,
 		      union bootsector *boot,
-		      char *name, int *media, mt_size_t *maxSize,
+		      char *name, int *media, mt_off_t *maxSize,
 		      int *isRop)
 {
 	char errmsg[200];
@@ -483,8 +490,9 @@ Stream_t *fs_init(char drive, int mode, int *isRop)
 	char name[EXPAND_BUF];
 	unsigned int cylinder_size;
 	struct device dev;
-	mt_size_t maxSize;
-
+	mt_off_t maxSize;
+	char errmsg[81];
+	
 	union bootsector boot;
 
 	Fs_t *This;
@@ -519,9 +527,10 @@ Stream_t *fs_init(char drive, int mode, int *isRop)
 		return NULL;
 	}
 
-	if (tot_sectors >= (maxSize >> This->sectorShift)) {
-		fprintf(stderr, "Big disks not supported on this architecture\n");
-		exit(1);
+	if (check_if_sectors_fit(tot_sectors, maxSize,
+				 This->sector_size, errmsg) < 0) {
+		fprintf(stderr, "%s", errmsg);
+		return NULL;
 	}
 
 	/* full cylinder buffering */

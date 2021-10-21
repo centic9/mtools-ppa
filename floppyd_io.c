@@ -32,8 +32,6 @@
 #include "scsi.h"
 #include "floppyd_io.h"
 
-#ifdef USE_FLOPPYD
-
 /* ######################################################################## */
 
 
@@ -56,7 +54,7 @@ typedef struct RemoteFile_t {
 	int fd;
 	mt_off_t offset;
 	mt_off_t lastwhere;
-	mt_size_t size;
+	mt_off_t size;
 	unsigned int version;
 	unsigned int capabilities;
 	int drive;
@@ -237,6 +235,7 @@ static int floppyd_lseek(int fd, int32_t offset, int whence)
 	return gotlen;
 }
 
+#if SIZEOF_OFF_T >= 8
 static mt_off_t floppyd_lseek64(int fd, mt_off_t offset, int whence)
 {
 	int errcode;
@@ -265,6 +264,7 @@ static mt_off_t floppyd_lseek64(int fd, mt_off_t offset, int whence)
 
 	return gotlen.v;
 }
+#endif
 
 static int floppyd_open(RemoteFile_t *This, int mode)
 {
@@ -315,20 +315,23 @@ static ssize_t floppyd_io(Stream_t *Stream, char *buf, mt_off_t where,
 	where += This->offset;
 
 	if (where != This->lastwhere ){
+#if SIZEOF_OFF_T >= 8
 		if(This->capabilities & FLOPPYD_CAP_LARGE_SEEK) {
 			if(floppyd_lseek64( This->fd, where, SEEK_SET) < 0 ){
 				perror("floppyd_lseek64");
-				This->lastwhere = (mt_off_t) -1;
+				This->lastwhere = -1;
 				return -1;
 			}
-		} else {
+		} else
+#endif
+			{
 			if(where > INT32_MAX  || where < INT32_MIN) {
 				fprintf(stderr, "Seek position out of range\n");
 				return -1;
 			}
 			if(floppyd_lseek(This->fd, (int32_t) where, SEEK_SET) < 0 ){
 				perror("floppyd_lseek");
-				This->lastwhere = (mt_off_t) -1;
+				This->lastwhere = -1;
 				return -1;
 			}
 		}
@@ -337,10 +340,10 @@ static ssize_t floppyd_io(Stream_t *Stream, char *buf, mt_off_t where,
 		 (len > INT32_MAX) ? (uint32_t)INT32_MAX+1 : (uint32_t) len);
 	if ( ret == -1 ){
 		perror("floppyd_io");
-		This->lastwhere = (mt_off_t) -1;
+		This->lastwhere = -1;
 		return -1;
 	}
-	This->lastwhere = where + (mt_off_t) ret;
+	This->lastwhere = where + ret;
 	return ret;
 }
 
@@ -412,7 +415,7 @@ static int floppyd_free(Stream_t *Stream)
 
 
 
-static int floppyd_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+static int floppyd_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 			int *type, uint32_t *address)
 {
 	DeclareThis(RemoteFile_t);
@@ -561,7 +564,7 @@ static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
 
 Stream_t *FloppydOpen(struct device *dev,
 		      const char *name, int mode, char *errmsg,
-		      mt_size_t *maxSize)
+		      mt_off_t *maxSize)
 {
 	RemoteFile_t *This;
 
@@ -595,7 +598,7 @@ Stream_t *FloppydOpen(struct device *dev,
 	}
 
 	if(maxSize) {
-		*maxSize = (mt_size_t)
+		*maxSize =
 			((This->capabilities & FLOPPYD_CAP_LARGE_SEEK) ?
 			 max_off_t_seek : max_off_t_31);
 	}
@@ -656,4 +659,3 @@ static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
 
 	return sock;
 }
-#endif

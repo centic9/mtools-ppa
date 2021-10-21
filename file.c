@@ -357,6 +357,9 @@ static int normal_map(File_t *This, uint32_t where, uint32_t *len, int mode,
 	if(batchmode &&
 	   mode == MT_WRITE &&
 	   end >= This->FileSize) {
+		/* In batch mode, when writing at end of file, "pad"
+		 * to nearest cluster boundary so that we don't have
+		 * to read that data back from disk. */
 		*len += ROUND_UP(end, clus_size) - end;
 	}
 
@@ -366,9 +369,9 @@ static int normal_map(File_t *This, uint32_t where, uint32_t *len, int mode,
 		exit(1);
 	}
 
-	*res = sectorsToBytes((Stream_t*)Fs,
+	*res = sectorsToBytes(Fs,
 			      (This->PreviousAbsCluNr-2) * Fs->cluster_size +
-			      Fs->clus_start) + offset;
+			      Fs->clus_start) + to_mt_off_t(offset);
 	return 1;
 }
 
@@ -378,7 +381,7 @@ static int root_map(File_t *This, uint32_t where, uint32_t *len,
 {
 	Fs_t *Fs = This->Fs;
 
-	if(Fs->dir_len * Fs->sector_size + 0u < (size_t) where) {
+	if(Fs->dir_len * Fs->sector_size < where) {
 		*len = 0;
 		errno = ENOSPC;
 		return -2;
@@ -388,7 +391,8 @@ static int root_map(File_t *This, uint32_t where, uint32_t *len,
         if (*len == 0)
             return 0;
 
-	*res = sectorsToBytes((Stream_t*)Fs, Fs->dir_start) + where;
+	*res = sectorsToBytes(Fs, Fs->dir_start) +
+		to_mt_off_t(where);
 	return 1;
 }
 
@@ -420,13 +424,14 @@ static ssize_t write_file(Stream_t *Stream, char *buf,
 	uint32_t bytesWritten;
 	Stream_t *Disk = This->Fs->Next;
 	uint32_t where = truncMtOffTo32u(iwhere);
+	uint32_t maxLen = UINT32_MAX-where;
 	uint32_t len;
 	int err;
 
-	if(iwhere+(mt_off_t)ilen > UINT32_MAX) {
-		ilen=(size_t) (UINT32_MAX-iwhere);
-	}
-	len = truncSizeTo32u(ilen);
+	if(ilen > maxLen) {
+		len = maxLen;
+	} else
+		len = (uint32_t) ilen;
 	requestedLen = len;
 	err = This->map(This, where, &len, MT_WRITE, &pos);
 	if( err <= 0)
@@ -439,13 +444,17 @@ static ssize_t write_file(Stream_t *Stream, char *buf,
 		/* Error occured */
 		return ret;
 	if((uint32_t)ret > requestedLen)
+		/* More data than requested may be written to lower
+		 * levels if batch mode is active, in order to "pad"
+		 * the last cluster of a file, so that we don't have
+		 * to read that back from disk */
 		bytesWritten = requestedLen;
 	else
-		bytesWritten = requestedLen;
+		bytesWritten = (uint32_t)ret;
 	if (where + bytesWritten > This->FileSize )
 		This->FileSize = where + bytesWritten;
 	recalcPreallocSize(This);
-	return ret;
+	return (ssize_t)bytesWritten;
 }
 
 
@@ -513,7 +522,7 @@ static __inline__ time_t conv_stamp(struct directory *dir)
 }
 
 
-static int get_file_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+static int get_file_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 			 int *type, uint32_t *address)
 {
 	DeclareThis(File_t);
@@ -521,7 +530,7 @@ static int get_file_data(Stream_t *Stream, time_t *date, mt_size_t *size,
 	if(date)
 		*date = conv_stamp(& This->direntry.dir);
 	if(size)
-		*size = (mt_size_t) This->FileSize;
+		*size = to_mt_off_t(This->FileSize);
 	if(type)
 		*type = This->direntry.dir.attr & ATTR_DIR;
 	if(address)
