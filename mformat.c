@@ -24,6 +24,8 @@
 #include "msdos.h"
 #include "mtools.h"
 #include "mainloop.h"
+#include "device.h"
+#include "old_dos.h"
 #include "fsP.h"
 #include "file.h"
 #include "plain_io.h"
@@ -43,21 +45,6 @@
 #include "linux/fs.h"
 
 #endif
-
-/**
- * Narrow down quantity of sectors to 32bit quantity, and bail out if
- * it doesn't fit in 32 bits
- */
-static uint32_t mt_off_t_to_sectors(mt_off_t raw_sect) {
-	/* Number of sectors must fit into 32bit value */
-	if (raw_sect > UINT32_MAX) {
-		fprintf(stderr, "Too many sectors for FAT %08x%08x\n",
-			(uint32_t)(raw_sect>>32), (uint32_t)raw_sect);
-		exit(1);
-	}
-	return (uint32_t) raw_sect;
-}
-
 
 static uint16_t init_geometry_boot(union bootsector *boot, struct device *dev,
 				   uint8_t sectors0,
@@ -216,7 +203,7 @@ static __inline__ void format_root(Fs_t *Fs, char *label, union bootsector *boot
 	} else
 		dirlen = Fs->dir_len;
 	for (i = 0; i < dirlen; i++)
-		WRITES(RootDir, buf, sectorsToBytes((Stream_t*)Fs, i),
+		WRITES(RootDir, buf, sectorsToBytes(Fs, i),
 			   Fs->sector_size);
 
 	ch.ignore_entry = 1;
@@ -413,7 +400,7 @@ static void fat32_specific_init(Fs_t *Fs) {
  *
  * Return values
  *  -2 Too few sectors to contain even the header (reserved sectors, minimal
- *     FAT and root directory)
+ *     FAT and root directory), or other internal error
  *  -1 This cluster size leads to too few clusters for the FAT size.
  *     Caller should either reduce cluster size or FAT size, and try again
  *   0 Everything fits
@@ -452,6 +439,7 @@ static int try_cluster_size(Fs_t *Fs,
 #ifdef HAVE_ASSERT_H
 		assert(false && "Bad number of FAT bits");
 #endif
+		return -2;
 	}
 
 	if(getenv("MTOOLS_DEBUG_FAT")) {
@@ -928,7 +916,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 	unsigned int argtracks;
 	uint16_t argheads, argsectors;
 	uint32_t tot_sectors=0;
-	size_t blocksize;
+	uint32_t blocksize;
 
 	char drive, name[EXPAND_BUF];
 
@@ -944,7 +932,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 	uint8_t mediaDesc=0;
 	bool haveMediaDesc=false;
 
-	mt_size_t maxSize;
+	mt_off_t maxSize;
 
 	int Atari = 0; /* should we add an Atari-style serial number ? */
 
@@ -1115,7 +1103,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 				break;
 
 			case 'c':
-				Fs->cluster_size = atoui(optarg);
+				Fs->cluster_size = atou8(optarg);
 				break;
 
 			case 'r':
@@ -1246,8 +1234,8 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 		if (!Fs->Direct)
 			continue;
 
-		if(!tot_sectors)
-			tot_sectors = used_dev.tot_sectors;
+		if(tot_sectors)
+			used_dev.tot_sectors = tot_sectors;
 
 		setFsSectorSize(Fs, &used_dev, msize);
 
@@ -1259,13 +1247,15 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 		if(blocksize > MAX_SECTOR)
 			blocksize = MAX_SECTOR;
 
-		if((mt_size_t) tot_sectors * blocksize > maxSize) {
-			snprintf(errmsg, sizeof(errmsg)-1,
-				 "Requested size too large\n");
+		if(chs_to_totsectors(&used_dev, errmsg) < 0 ||
+		   check_if_sectors_fit(dev->tot_sectors, maxSize, blocksize,
+					errmsg) < 0) {
 			FREE(&Fs->Direct);
 			continue;
 		}
 
+		if(!tot_sectors)
+			tot_sectors = used_dev.tot_sectors;
 
 		/* do a "test" read */
 		if (!create &&
@@ -1293,17 +1283,6 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 		exit(1);
 	}
 
-	/* calculate the total number of sectors */
-	if(tot_sectors == 0 &&
-	   used_dev.heads && used_dev.sectors && used_dev.tracks) {
-		uint32_t sect_per_track = used_dev.heads*used_dev.sectors;
-		mt_off_t rtot_sectors =
-			used_dev.tracks*(mt_off_t)sect_per_track;
-		if(rtot_sectors > used_dev.hidden%sect_per_track)
-			rtot_sectors -= used_dev.hidden%sect_per_track;
-		tot_sectors = mt_off_t_to_sectors(rtot_sectors);
-	}
-
 	if(tot_sectors == 0) {
 		fprintf(stderr, "Number of sectors not known\n");
 		exit(1);
@@ -1312,7 +1291,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 	/* create the image file if needed */
 	if (create) {
 		WRITES(Fs->Direct, &boot.characters,
-		       sectorsToBytes((Stream_t*)Fs, tot_sectors-1),
+		       sectorsToBytes(Fs, tot_sectors-1),
 		       Fs->sector_size);
 	}
 
@@ -1486,16 +1465,14 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 #endif
 
 	format_root(Fs, label, &boot);
-	if(WRITES((Stream_t *)Fs, boot.characters,
-		  (mt_off_t) 0, Fs->sector_size) < 0) {
+	if(WRITES((Stream_t *)Fs, boot.characters, 0, Fs->sector_size) < 0) {
 		fprintf(stderr, "Error writing boot sector\n");
 		exit(1);
 	}
 
 	if(Fs->fat_bits == 32 && WORD_S(ext.fat32.backupBoot) != MAX16) {
 		if(WRITES((Stream_t *)Fs, boot.characters,
-			  sectorsToBytes((Stream_t*)Fs,
-					 WORD_S(ext.fat32.backupBoot)),
+			  sectorsToBytes(Fs, WORD_S(ext.fat32.backupBoot)),
 			  Fs->sector_size) < 0) {
 			fprintf(stderr, "Error writing backup boot sector\n");
 			exit(1);

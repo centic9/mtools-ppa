@@ -1,6 +1,6 @@
 This is mtools.info, produced by makeinfo version 6.5 from mtools.texi.
 
-This manual is for Mtools (version 4.0.32, July 2021), which is a
+This manual is for Mtools (version 4.0.35, August 2021), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -53,7 +53,7 @@ preliminary mounting or initialization (assuming the default
 '/etc/mtools.conf' works on your machine).  With mtools, one can change
 floppies too without unmounting and mounting.
 
-   This manual is for Mtools (version 4.0.32, July 2021), which is a
+   This manual is for Mtools (version 4.0.35, August 2021), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -87,7 +87,7 @@ File: mtools.info,  Node: Location,  Next: Common features,  Prev: Top,  Up: Top
 *********************
 
 Mtools can be found at the following places (and their mirrors):
-     http://ftp.gnu.org/gnu/mtools/mtools-4.0.32.tar.gz
+     http://ftp.gnu.org/gnu/mtools/mtools-4.0.35.tar.gz
 
    These patches are named 'mtools-'VERSION'-'DDMM'.taz', where version
 stands for the base version, DD for the day and MM for the month.  Due
@@ -2723,71 +2723,71 @@ Concept index
 
 
 Tag Table:
-Node: Top868
-Node: Location3121
-Node: Common features4059
-Node: arguments4823
-Node: drive letters6484
-Node: directory7838
-Node: long names8284
-Node: name clashes10830
-Node: case sensitivity13114
-Node: high capacity formats14351
-Node: more sectors15396
-Node: bigger sectors16451
-Node: 2m17180
-Node: XDF18366
-Node: exit codes19709
-Node: bugs20347
-Node: Configuration20880
-Node: configuration file location22169
-Node: general syntax22622
-Node: default values23453
-Node: global variables23981
-Node: per drive variables26174
-Node: general information27009
-Node: location information27451
-Node: geometry description28980
-Node: open flags32841
-Node: miscellaneous variables33441
-Node: miscellaneous flags37031
-Node: multiple descriptions40661
-Node: parsing order42335
-Node: old style configuration43366
-Node: Commands44065
-Node: floppyd45987
-Node: floppyd_installtest50780
-Node: mattrib51411
-Node: mbadblocks53206
-Node: mcat54500
-Node: mcd55314
-Node: mclasserase56175
-Node: mcopy56851
-Node: mdel59869
-Node: mdeltree60208
-Node: mdir60627
-Node: mdu61903
-Node: mformat62409
-Node: mkmanifest70920
-Node: minfo72894
-Node: mlabel73464
-Node: mmd74617
-Node: mmount74966
-Node: mmove75569
-Node: mpartition76374
-Node: mrd81900
-Node: mren82258
-Node: mshortname83007
-Node: mshowfat83337
-Node: mtoolstest83746
-Node: mtype84318
-Node: mzip85169
-Ref: mzip-Footnote-187194
-Ref: mzip-Footnote-287275
-Node: Compiling mtools87562
-Node: Porting mtools88661
-Node: Command Index94569
-Node: Variable Index94697
-Node: Concept Index96520
+Node: Top870
+Node: Location3125
+Node: Common features4063
+Node: arguments4827
+Node: drive letters6488
+Node: directory7842
+Node: long names8288
+Node: name clashes10834
+Node: case sensitivity13118
+Node: high capacity formats14355
+Node: more sectors15400
+Node: bigger sectors16455
+Node: 2m17184
+Node: XDF18370
+Node: exit codes19713
+Node: bugs20351
+Node: Configuration20884
+Node: configuration file location22173
+Node: general syntax22626
+Node: default values23457
+Node: global variables23985
+Node: per drive variables26178
+Node: general information27013
+Node: location information27455
+Node: geometry description28984
+Node: open flags32845
+Node: miscellaneous variables33445
+Node: miscellaneous flags37035
+Node: multiple descriptions40665
+Node: parsing order42339
+Node: old style configuration43370
+Node: Commands44069
+Node: floppyd45991
+Node: floppyd_installtest50784
+Node: mattrib51415
+Node: mbadblocks53210
+Node: mcat54504
+Node: mcd55318
+Node: mclasserase56179
+Node: mcopy56855
+Node: mdel59873
+Node: mdeltree60212
+Node: mdir60631
+Node: mdu61907
+Node: mformat62413
+Node: mkmanifest70924
+Node: minfo72898
+Node: mlabel73468
+Node: mmd74621
+Node: mmount74970
+Node: mmove75573
+Node: mpartition76378
+Node: mrd81904
+Node: mren82262
+Node: mshortname83011
+Node: mshowfat83341
+Node: mtoolstest83750
+Node: mtype84322
+Node: mzip85173
+Ref: mzip-Footnote-187198
+Ref: mzip-Footnote-287279
+Node: Compiling mtools87566
+Node: Porting mtools88665
+Node: Command Index94573
+Node: Variable Index94701
+Node: Concept Index96524
 
 End Tag Table

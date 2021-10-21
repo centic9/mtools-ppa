@@ -45,7 +45,7 @@ typedef struct ScsiDevice_t {
 	int privileged;
 
 	uint32_t scsi_sector_size;
-	mt_size_t device_size;
+	mt_off_t device_size;
 	uint32_t tot_sectors;
 	void *extra_data; /* extra system dependent information for scsi.
 			     On some platforms, filled in by scsi_open, and to
@@ -102,7 +102,7 @@ static int scsi_init(ScsiDevice_t *This)
 
 
 /**
- * Overflow-safe conversion of bytes to cluster
+ * Overflow-safe conversion of bytes to sectors
  */
 static uint32_t bytesToSectors(size_t bytes, uint32_t sector_size) {
 	size_t sectors = bytes / sector_size;
@@ -125,9 +125,9 @@ static ssize_t scsi_io(Stream_t *Stream, char *buf,
 	unsigned char cdb[10];
 	DeclareThis(ScsiDevice_t);
 
-	firstblock=truncMtOffTo32u(where/This->scsi_sector_size);
+	firstblock=truncMtOffTo32u(where/(mt_off_t)This->scsi_sector_size);
 	/* 512,1024,2048,... bytes/sector supported */
-	offset=where % This->scsi_sector_size;
+	offset=(smt_off_t) where % This->scsi_sector_size;
 	nsect=bytesToSectors(offset+len, This->scsi_sector_size);
 #if defined(OS_sun) && defined(OS_i386)
 	if (This->scsi_sector_size>512)
@@ -226,11 +226,10 @@ static ssize_t scsi_io(Stream_t *Stream, char *buf,
 	printf("zip: read or write OK\n");
 #endif
 	if (offset>0)
-		memmove(buf,buf+offset,
-			truncOffToSize(nsect*This->scsi_sector_size-offset));
+		memmove(buf,buf+offset,	nsect*This->scsi_sector_size-offset);
 	if (len==256) return 256;
 	else if (len==512) return 512;
-	else return truncOffToSsize(nsect*This->scsi_sector_size-offset);
+	else return (ssize_t)(nsect*This->scsi_sector_size-offset);
 }
 
 static ssize_t scsi_read(Stream_t *Stream, char *buf, mt_off_t where, size_t len)
@@ -250,7 +249,7 @@ static ssize_t scsi_write(Stream_t *Stream, char *buf,
 	return scsi_io(Stream, buf, where, len, SCSI_IO_WRITE);
 }
 
-static int scsi_get_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+static int scsi_get_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 			 int *type, uint32_t *address)
 {
 	DeclareThis(ScsiDevice_t);
@@ -279,7 +278,7 @@ static Class_t ScsiDeviceClass = {
 Stream_t *OpenScsi(struct device *dev,
 		   const char *name, int mode, char *errmsg,
 		   int mode2, int locked, int lockMode,
-		   mt_size_t *maxSize)
+		   mt_off_t *maxSize)
 {
 	int ret;
 	ScsiDevice_t *This;
@@ -336,7 +335,7 @@ Stream_t *OpenScsi(struct device *dev,
 	This->Buffer = 0;
 
 	if(maxSize)
-		*maxSize = MAX_SIZE_T_B(31+log_2(This->scsi_sector_size));
+		*maxSize = MAX_OFF_T_B(31+log_2(This->scsi_sector_size));
 	This->Class = &ScsiDeviceClass;
 	if(This->privileged)
 		reclaim_privs();

@@ -41,7 +41,7 @@ typedef struct FatMap_t {
 static __inline__ ssize_t readSector(Fs_t *This, char *buf, unsigned int off,
 				     size_t size)
 {
-	return READS(This->Next, buf, sectorsToBytes((Stream_t *)This, off),
+	return READS(This->Next, buf, sectorsToBytes(This, off),
 		     size << This->sectorShift);
 }
 
@@ -49,7 +49,7 @@ static __inline__ ssize_t readSector(Fs_t *This, char *buf, unsigned int off,
 static __inline__ ssize_t forceReadSector(Fs_t *This, char *buf,
 					  unsigned int off, size_t size)
 {
-	return force_read(This->Next, buf, sectorsToBytes((Stream_t *)This, off),
+	return force_read(This->Next, buf, sectorsToBytes(This, off),
 					  size << This->sectorShift);
 }
 
@@ -57,7 +57,7 @@ static __inline__ ssize_t forceReadSector(Fs_t *This, char *buf,
 static __inline__ ssize_t forceWriteSector(Fs_t *This, char *buf, unsigned int off,
 					   size_t size)
 {
-	return force_write(This->Next, buf, sectorsToBytes((Stream_t*)This, off),
+	return force_write(This->Next, buf, sectorsToBytes(This, off),
 					   size << This->sectorShift);
 }
 
@@ -909,15 +909,15 @@ mt_off_t getfree(Stream_t *Dir)
 		}
 		This->freeSpace = total;
 	}
-	return (mt_off_t) sectorsToBytes((Stream_t*)This,
-					  This->freeSpace * This->cluster_size);
+	return sectorsToBytes(This,
+			      This->freeSpace * This->cluster_size);
 }
 
 
 /*
  * Ensure that there is a minimum of total sectors free
  */
-int getfreeMinClusters(Stream_t *Dir, size_t size)
+int getfreeMinClusters(Stream_t *Dir, uint32_t size)
 {
 	Stream_t *Stream = GetFs(Dir);
 	DeclareThis(Fs_t);
@@ -976,20 +976,20 @@ int getfreeMinClusters(Stream_t *Dir, size_t size)
 }
 
 
-int getfreeMinBytes(Stream_t *Dir, mt_size_t size)
+int getfreeMinBytes(Stream_t *Dir, mt_off_t size)
 {
 	Stream_t *Stream = GetFs(Dir);
 	DeclareThis(Fs_t);
-	mt_size_t size2;
+	mt_off_t size2;
 
 	size2 = size  / (This->sector_size * This->cluster_size);
 	if(size % (This->sector_size * This->cluster_size))
 		size2++;
-	if(size2 > UINT32_MAX) {
+	if((smt_off_t)size2 > UINT32_MAX) {
 		fprintf(stderr, "Requested size too big\n");
 		exit(1);
 	}
-	return getfreeMinClusters(Dir, (size_t) size2);
+	return getfreeMinClusters(Dir, (uint32_t) size2);
 }
 
 

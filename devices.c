@@ -386,6 +386,7 @@ struct device devices[] = {
 
 
 
+#ifdef HAVE_SYS_FDIO_H
 /*
  * Ofer Licht <ofer@stat.Berkeley.EDU>, May 14, 1997.
  */
@@ -421,7 +422,7 @@ static inline int get_parameters(int fd, struct generic_floppy_struct *floppy)
 #define FD_SET_SECTSIZE(floppy,v) { floppy.fdchar.fdc_sec_size = v; }
 
 static inline int set_parameters(int fd, struct generic_floppy_struct *floppy,
-				 struct MT_STAT *buf)
+				 struct MT_STAT *buf UNUSEDP)
 {
 	if (ioctl(fd, FDIOSCHAR, &(floppy->fdchar)) != 0) {
 		ioctl(fd, FDEJECT, NULL);
@@ -430,7 +431,7 @@ static inline int set_parameters(int fd, struct generic_floppy_struct *floppy,
 	}
 	return 0;
 }
-#define INIT_GENERIC
+#endif
 #endif /* solaris */
 
 #ifdef OS_sunos3
@@ -966,7 +967,7 @@ int init_geom(int fd, struct device *dev, struct device *orig_dev,
 	dev->nheads = gdbuf.params.heads;
 	dev->nsect = gdbuf.params.psectrk;
 	dev->use_2m = 0x80;
-	dev->ssize = 0x82;
+	dev->ssize = 0x02;
 
 	gdbuf.params.pseccyl = gdbuf.params.psectrk * gdbuf.params.heads;
 	gdbuf.params.flags = 1;		/* disk type flag */
@@ -1054,7 +1055,7 @@ struct device devices[] = {
 #endif
 
 #ifndef SSIZE
-#define SSIZE(x) 0x82
+#define SSIZE(x) 0x02
 #endif
 
 #ifndef SET_2M
@@ -1143,7 +1144,7 @@ int init_geom(int fd, struct device *dev, struct device *orig_dev,
 	} else
 		dev->heads = (uint16_t) HEADS(floppy);
 
-	if(compare(dev->tracks, TRACKS(floppy))){
+	if(compare(dev->tracks, (unsigned int) TRACKS(floppy))){
 		TRACKS(floppy) = dev->tracks;
 		change = 1;
 	} else

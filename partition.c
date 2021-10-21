@@ -29,8 +29,9 @@ typedef struct Partition_t {
 	struct Stream_t *Buffer;
 
 	mt_off_t offset; /* Offset, in bytes */
-	uint32_t size; /* size, in sectors */
-
+	mt_off_t size; /* size, in bytes */
+	uint32_t nbSect; /* size, in sectors */
+	
 	uint8_t pos;
 
 	uint8_t sectors;
@@ -135,7 +136,7 @@ static int limit_size(Partition_t *This, mt_off_t start, size_t *len)
 {
 	if(start > This->size)
 		return -1;
-	maximize(*len, (size_t) (This->size - start));
+	limitSizeToOffT(len, This->size - start);
 	return 0;
 }
 
@@ -143,7 +144,8 @@ static ssize_t partition_read(Stream_t *Stream, char *buf,
 			      mt_off_t start, size_t len)
 {
 	DeclareThis(Partition_t);
-	limit_size(This, start, &len);
+	if(limit_size(This, start, &len) < 0)
+		return -1;
 	return READS(This->Next, buf, start+This->offset, len);
 }
 
@@ -151,11 +153,12 @@ static ssize_t partition_write(Stream_t *Stream, char *buf,
 			       mt_off_t start, size_t len)
 {
 	DeclareThis(Partition_t);
-	limit_size(This, start, &len);
+	if(limit_size(This, start, &len) < 0)
+		return -1;
 	return WRITES(This->Next, buf, start+This->offset, len);
 }
 
-static int partition_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+static int partition_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 			  int *type, uint32_t *address)
 {
 	DeclareThis(Partition_t);
@@ -166,7 +169,7 @@ static int partition_data(Stream_t *Stream, time_t *date, mt_size_t *size,
 			return ret;
 	}
 	if(size)
-		*size = (size_t) This->size * 512;
+		*size = This->size * 512;
 	return 0;
 }
 
@@ -177,7 +180,7 @@ static int partition_geom(Stream_t *Stream, struct device *dev,
 	DeclareThis(Partition_t);
 
 	if(!dev->tot_sectors)
-		dev->tot_sectors = This->size;
+		dev->tot_sectors = This->nbSect;
 
 	return 0;
 }
@@ -195,12 +198,12 @@ static Class_t PartitionClass = {
 };
 
 Stream_t *OpenPartition(Stream_t *Next, struct device *dev,
-			char *errmsg, mt_size_t *maxSize) {
+			char *errmsg, mt_off_t *maxSize) {
 	Partition_t *This;
 	int has_activated;
 	unsigned char buf[2048];
 	struct partition *partTable=(struct partition *)(buf+ 0x1ae);
-	size_t partOff;
+	uint32_t partOff;
 	struct partition *partition;
 
 	if(!dev || (dev->partition > 4) || (dev->partition <= 0)) {
@@ -242,13 +245,13 @@ Stream_t *OpenPartition(Stream_t *Next, struct device *dev,
 
 	partOff = BEGIN(partition);
 	if (maxSize) {
-		if (partOff > *maxSize >> 9) {
+		if (partOff > (smt_off_t)(*maxSize >> 9)) {
 			if(errmsg)
 				sprintf(errmsg,"init: Big disks not supported");
 			goto exit_0;
 		}
-		*maxSize -= (mt_size_t) partOff << 9;
-		maximize(*maxSize, (mt_size_t) (PART_SIZE(partition)) << 9);
+		*maxSize -= partOff << 9;
+		maximize(*maxSize, ((mt_off_t)PART_SIZE(partition)) << 9);
 	}
 
 	This->offset = (mt_off_t) partOff << 9;
@@ -271,7 +274,8 @@ Stream_t *OpenPartition(Stream_t *Next, struct device *dev,
 			"mtools_skip_check=1 to your .mtoolsrc "
 			"file to suppress this warning\n");
 	}
-	dev->tot_sectors = This->size = PART_SIZE(partition);
+	dev->tot_sectors = This->nbSect = PART_SIZE(partition);
+	This->size = (mt_off_t) This->nbSect << 9;
 	return (Stream_t *) This;
  exit_0:
 	Free(This);

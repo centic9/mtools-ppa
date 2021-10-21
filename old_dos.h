@@ -1,7 +1,6 @@
-#ifndef MTOOLS_FS_H
-#define MTOOLS_FS_H
-
-/*  Copyright 1996,1997,2001,2002,2007,2009 Alain Knaff.
+#ifndef MTOOLS_OLDDOS_H
+#define MTOOLS_OLDDOS_H
+/*  Copyright 2021 Alain Knaff.
  *  This file is part of mtools.
  *
  *  Mtools is free software: you can redistribute it and/or modify
@@ -18,26 +17,27 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "stream.h"
+#include "device.h"
 
+struct OldDos_t {
+	unsigned int tracks;
+	uint16_t sectors;
+	uint16_t  heads;
 
-typedef struct FsPublic_t {
-	Class_t *Class;
-	int refs;
-	Stream_t *Next;
-	Stream_t *Buffer;
-
-	int serialized;
-	unsigned long serial_number;
+	uint16_t dir_len;
 	uint8_t cluster_size;
-	uint16_t sector_size;
-} FsPublic_t;
+	uint32_t fat_len;
 
-Stream_t *fs_init(char drive, int mode, int *isRop);
-int fat_free(Stream_t *Dir, unsigned int fat);
-int fatFreeWithDir(Stream_t *Dir, struct directory *dir);
-int fat_error(Stream_t *Dir);
-uint32_t fat32RootCluster(Stream_t *Dir);
-char getDrive(Stream_t *Stream);
+	uint8_t media;
+};
+
+extern struct OldDos_t *getOldDosBySize(size_t size);
+extern struct OldDos_t *getOldDosByMedia(int media);
+extern struct OldDos_t *getOldDosByParams(unsigned int tracks,
+					  unsigned int heads,
+					  unsigned int sectors,
+					  unsigned int dir_len,
+					  unsigned int cluster_size);
+int setDeviceFromOldDos(int media, struct device *dev);
 
 #endif
