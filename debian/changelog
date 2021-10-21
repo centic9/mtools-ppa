@@ -4,6 +4,29 @@ mtools (4.0.35-0ubuntu0~ppa1) focal; urgency=medium
 
  -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Thu, 21 Oct 2021 21:34:10 +0200
 
+mtools (4.0.35) stable; urgency=low
+
+  * Fix cluster padding at end of file in batch mode, and add comments
+    about what happens here
+
+ -- Alain Knaff <alain@knaff.lu>  Fri,  6 Aug 2021 20:13:59 +0200
+
+mtools (4.0.34) stable; urgency=low
+
+  *  Fix mcopy -s issue
+
+ -- Alain Knaff <alain@knaff.lu>  Fri, 23 Jul 2021 12:41:11 +0200
+
+mtools (4.0.33) stable; urgency=low
+
+  * Fix support for partitions (broken in 4.0.30)
+  * Portability fixes for Solaris 10 and 11
+  * General simplification of configure script, and largefile handling
+  * Tested and fixed for platforms *without* largefile support
+  * In cases where lseek works with 32-bit offsets, prefer lseek64 over llseek
+  * Fixed floppy sector size handling on platforms that are not Linux
+  * Added support for image files on command line to mcat
+
 mtools (4.0.33-1+really4.0.32-1) unstable; urgency=medium
 
   * Revert to version 4.0.32-1 due to regressions on ARM* systems affecting the
@@ -18,6 +41,33 @@ mtools (4.0.33-1) unstable; urgency=medium
 
  -- Chris Lamb <lamby@debian.org>  Wed, 21 Jul 2021 09:19:56 +0100
 
+ -- Alain Knaff <alain@knaff.lu>  Sat, 17 Jul 2021 18:31:38 +0200
+mtools (4.0.32) stable; urgency=low
+
+  * Simplify algorithm that choses filesystem parameters for format, and align
+    it more closely with what Win7 does
+
+  * Fix mformatting XDF when XDF not explicitly specified on mformat command
+    line
+
+  * easier way to enter sizes on mformat command line (mformat -C -T 1440K)
+
+  * For small sizes, mformat assumes floppy geometries (heads 1 or 2,
+    tracks 40 or 80)
+
+  * Handle attempts to mformat too small filesystems more gracefully
+
+  * Enable minfo to print out additional mformat command line parameters, if
+    the present filesystem uses non-default values for these
+
+  * minfo no longer prints bigsect if smallsect is set
+
+  * for remap filter, error when trying to write non-zero data to unmapped
+    sectors
+
+  * Fix misc compilation warnings occuring when disabling certain features
+    (largefiles, raw-term)
+
 mtools (4.0.32-1) unstable; urgency=medium
 
   * New upstream release.
@@ -30,11 +80,59 @@ mtools (4.0.31-1) unstable; urgency=medium
 
  -- Chris Lamb <lamby@debian.org>  Wed, 23 Jun 2021 08:36:53 +0100
 
+mtools (4.0.31) stable; urgency=low
+
+  * Move Linux-specific block device sizing code into
+    linux-specific section of devices.c
+  * Error messages for all failure cases on fs_init failure
+  * Fix compilation without XDF support (OpenImage signature)
+  * Fix polarity of format_xdf command-line parameter of mformat
+  * In XDF_IO retry enough times to actually succeed, even if
+    FDC was in a bad state before
+  * Remove useless buffer flushing triggered when giving up a
+    reference to a stream node that is still referenced
+    elsewhere.
+  * Clearer error message if neither size nor geometry of drive
+    to be mformatted is known
+  * In mformat, make Fs dynamically allocated rather than
+    on-stack, so as to be able to use utilities supplied by
+    stream.c
+  * Remove duplicate writing of backup boot sector
+  * Allow to infer geometry if only size is specified
+  * Protect against attempt to create zero-sized buffer
+  * Code simplification in mattrib
+  * Remove dead code in mpartition
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 19 Jun 2021 17:22:27 +0200
+
 mtools (4.0.30-1) unstable; urgency=medium
 
   * New upstream release.
 
  -- Chris Lamb <lamby@debian.org>  Sat, 19 Jun 2021 09:02:14 +0100
+
+mtools (4.0.30) stable; urgency=low
+
+  * Fixed XDF floppy disk access
+  * Fixed faulty behavior at end of image in mcat
+  * Device/Image size handling refactoring
+  * allow remap to write to zero-backed sectors (may happen if
+    buffer is flushed, and is not an error in that case)
+  * Raise an error when trying to mcopy multiple source files
+    over a single destination file (rather than directory)
+  * fix handling of "hidden" sectors (is a 2 byte quantity on
+    small disks, not 4 byte as previously assumed)
+  * Modernize partition support. Tuned consistency check to
+    actually check about important issues (such as overlapping
+    partitions) rather than stuff nobody else cares about
+    (alignment on entire cylinder boundaries)
+  * Move various "filter" options (partition, offset, swap,
+    scsi) into separate classes, rather than leaving almost
+    everything in plain_io
+  * Simplify and centralize geometry handling and LBA code
+  * Fix some more more compiler warnings
+
+ -- Alain Knaff <alain@knaff.lu>  Thu, 17 Jun 2021 22:23:39 +0200
 
 mtools (4.0.29-1) unstable; urgency=medium
 
