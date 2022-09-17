@@ -41,24 +41,24 @@ typedef struct FatMap_t {
 static __inline__ ssize_t readSector(Fs_t *This, char *buf, unsigned int off,
 				     size_t size)
 {
-	return READS(This->Next, buf, sectorsToBytes(This, off),
-		     size << This->sectorShift);
+	return PREADS(This->head.Next, buf, sectorsToBytes(This, off),
+		      size << This->sectorShift);
 }
 
 
 static __inline__ ssize_t forceReadSector(Fs_t *This, char *buf,
 					  unsigned int off, size_t size)
 {
-	return force_read(This->Next, buf, sectorsToBytes(This, off),
-					  size << This->sectorShift);
+	return force_pread(This->head.Next, buf, sectorsToBytes(This, off),
+			   size << This->sectorShift);
 }
 
 
 static __inline__ ssize_t forceWriteSector(Fs_t *This, char *buf, unsigned int off,
 					   size_t size)
 {
-	return force_write(This->Next, buf, sectorsToBytes(This, off),
-					   size << This->sectorShift);
+	return force_pwrite(This->head.Next, buf, sectorsToBytes(This, off),
+			    size << This->sectorShift);
 }
 
 
@@ -344,11 +344,12 @@ static unsigned int fat16_decode(Fs_t *Stream, unsigned int num)
 
 static void fat16_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 {
+	unsigned char *address;
 	if(code > UINT16_MAX) {
 		fprintf(stderr, "FAT16 code %x too big\n", code);
 		exit(1);
 	}
-	unsigned char *address = getAddress(Stream, num << 1, FAT_ACCESS_WRITE);
+	address = getAddress(Stream, num << 1, FAT_ACCESS_WRITE);
 	set_word(address, (uint16_t) code);
 }
 
@@ -861,6 +862,18 @@ unsigned int get_next_free_cluster(Fs_t *This, unsigned int last)
  exit_0:
 	fprintf(stderr, "FAT error\n");
 	return 1;
+}
+
+bool getSerialized(Fs_t *Fs) {
+	return Fs->serialized;
+}
+
+unsigned long getSerialNumber(Fs_t *Fs) {
+	return Fs->serial_number;
+}
+
+uint32_t getClusterBytes(Fs_t *Fs) {
+	return Fs->cluster_size * Fs->sector_size;
 }
 
 int fat_error(Stream_t *Dir)

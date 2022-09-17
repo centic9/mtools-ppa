@@ -19,25 +19,19 @@
  */
 #include "stream.h"
 #include "msdos.h"
-#include "fs.h"
 
 typedef enum fatAccessMode_t {
 	FAT_ACCESS_READ,
 	FAT_ACCESS_WRITE
 } fatAccessMode_t;
 
-typedef struct Fs_t {
-	Class_t *Class;
-	int refs;
-	Stream_t *Next;
-	Stream_t *Buffer;
+struct Fs_t {
+	struct Stream_t head;
 
 	int serialized;
 	unsigned long serial_number;
 	uint8_t cluster_size;
 	uint16_t sector_size;
-	/* Beware: anything up to this point is duplicated in
-	   FsPublic_t in fs.h */
 	
 	int fat_error;
 
@@ -45,7 +39,6 @@ typedef struct Fs_t {
 	void (*fat_encode)(struct Fs_t *This, unsigned int num,
 			   unsigned int code);
 
-	Stream_t *Direct;
 	int fat_dirty;
 	uint16_t fat_start;
 	uint32_t fat_len;
@@ -83,7 +76,10 @@ typedef struct Fs_t {
 	unsigned int sectorShift;
 
 	doscp_t *cp;
-} Fs_t;
+};
+
+#include "fs.h"
+
 
 #ifndef abs
 #define abs(x) ((unsigned int)((x)>0?(x):-(x)))

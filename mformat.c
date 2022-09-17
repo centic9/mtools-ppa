@@ -21,7 +21,6 @@
 #define DONT_NEED_WAIT
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "mainloop.h"
 #include "device.h"
@@ -203,8 +202,8 @@ static __inline__ void format_root(Fs_t *Fs, char *label, union bootsector *boot
 	} else
 		dirlen = Fs->dir_len;
 	for (i = 0; i < dirlen; i++)
-		WRITES(RootDir, buf, sectorsToBytes(Fs, i),
-			   Fs->sector_size);
+		PWRITES(RootDir, buf, sectorsToBytes(Fs, i),
+			Fs->sector_size);
 
 	ch.ignore_entry = 1;
 	if(label[0])
@@ -778,9 +777,7 @@ int calc_fs_parameters(struct device *dev, bool fat32,
 void initFsForFormat(Fs_t *Fs)
 {
 	memset(Fs, 0, sizeof(*Fs));
-
-	Fs->Class = &FsClass;
-	Fs->refs = 1;
+	init_head(&Fs->head, &FsClass, NULL);
 
 	Fs->cluster_size = 0;
 	Fs->dir_len = 0;
@@ -819,49 +816,6 @@ static int old_dos_size_to_geom(size_t size,
 		return 0;
 	} else
 		return 1;
-}
-
-static void checkOverflow(uint32_t tot_sectors, int bits) {
-	if(tot_sectors > UINT32_MAX >> bits) {
-		fprintf(stderr, "Too many sectors\n");
-		exit(1);
-	}
-}
-
-static uint32_t parseSize(char *sizeStr) {
-	char *eptr;
-	uint32_t tot_sectors = strtou32(sizeStr, &eptr, 10);
-	if(eptr == optarg) {
-		fprintf(stderr, "Bad size %s\n", sizeStr);
-		exit(1);
-	}
-	switch(toupper(*eptr)) {
-	case 'T':
-		checkOverflow(tot_sectors, 10);
-		tot_sectors *= 1024;
-		/* FALL THROUGH */
-	case 'G':
-		checkOverflow(tot_sectors, 10);
-		tot_sectors *= 1024;
-		/* FALL THROUGH */
-	case 'M':
-		checkOverflow(tot_sectors, 10);
-		tot_sectors *= 1024;
-		/* FALL THROUGH */
-	case 'K':
-		checkOverflow(tot_sectors, 1);
-		tot_sectors *= 2;
-		eptr++;
-		break;
-	case '\0':
-		/* By default, assume sectors */
-		break;
-	}
-	if(*eptr) {
-		fprintf(stderr, "Bad suffix %s\n", eptr);
-		exit(1);
-	}
-	return tot_sectors;
 }
 
 static void usage(int ret) NORETURN;
@@ -1181,10 +1135,9 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 
 	/* check out a drive whose letter and parameters match */
 	sprintf(errmsg, "Drive '%c:' not supported", drive);
-	Fs->Direct = NULL;
 	blocksize = 0;
 	for(dev=devices;dev->drive;dev++) {
-		FREE(&(Fs->Direct));
+		FREE(&(Fs->head.Next));
 		/* drive letter */
 		if (dev->drive != drive)
 			continue;
@@ -1210,20 +1163,20 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 #endif
 		if(tot_sectors)
 			used_dev.tot_sectors = tot_sectors;
-		Fs->Direct = OpenImage(&used_dev, dev, name,
-				      O_RDWR|create, errmsg,
-				      ALWAYS_GET_GEOMETRY,
-				      O_RDWR,
-				      &maxSize, NULL,
+		Fs->head.Next = OpenImage(&used_dev, dev, name,
+					  O_RDWR|create, errmsg,
+					  ALWAYS_GET_GEOMETRY,
+					  O_RDWR,
+					  &maxSize, NULL,
 #ifdef USE_XDF
-				      &info
+					  &info
 #else
-				      NULL
+					  NULL
 #endif
-				      );
+					  );
 
 #ifdef USE_XDF
-		if(Fs->Direct && info.FatSize) {
+		if(Fs->head.Next && info.FatSize) {
 			if(!Fs->fat_len)
 				Fs->fat_len = info.FatSize;
 			if(!Fs->dir_len)
@@ -1231,7 +1184,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 		}
 #endif
 
-		if (!Fs->Direct)
+		if (!Fs->head.Next)
 			continue;
 
 		if(tot_sectors)
@@ -1250,7 +1203,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 		if(chs_to_totsectors(&used_dev, errmsg) < 0 ||
 		   check_if_sectors_fit(dev->tot_sectors, maxSize, blocksize,
 					errmsg) < 0) {
-			FREE(&Fs->Direct);
+			FREE(&Fs->head.Next);
 			continue;
 		}
 
@@ -1259,7 +1212,8 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 
 		/* do a "test" read */
 		if (!create &&
-		    READS(Fs->Direct, &boot.characters, 0, Fs->sector_size) !=
+		    PREADS(Fs->head.Next,
+			   &boot.characters, 0, Fs->sector_size) !=
 		    (signed int) Fs->sector_size) {
 #ifdef HAVE_SNPRINTF
 			snprintf(errmsg, sizeof(errmsg)-1,
@@ -1270,7 +1224,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 				"Error reading from '%s', wrong parameters?",
 				name);
 #endif
-			FREE(&Fs->Direct);
+			FREE(&Fs->head.Next);
 			continue;
 		}
 		break;
@@ -1278,7 +1232,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 
 	/* print error msg if needed */
 	if ( dev->drive == 0 ){
-		FREE(&Fs->Direct);
+		FREE(&Fs->head.Next);
 		fprintf(stderr,"%s: %s\n", argv[0],errmsg);
 		exit(1);
 	}
@@ -1290,9 +1244,9 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 
 	/* create the image file if needed */
 	if (create) {
-		WRITES(Fs->Direct, &boot.characters,
-		       sectorsToBytes(Fs, tot_sectors-1),
-		       Fs->sector_size);
+		PWRITES(Fs->head.Next, &boot.characters,
+			sectorsToBytes(Fs, tot_sectors-1),
+			Fs->sector_size);
 	}
 
 	/* the boot sector */
@@ -1316,11 +1270,10 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 	if(!keepBoot && !(used_dev.use_2m & 0x7f))
 		memset(boot.characters, '\0', Fs->sector_size);
 
-	Fs->Next = buf_init(Fs->Direct,
-			    blocksize * used_dev.heads * used_dev.sectors,
-			    blocksize * used_dev.heads * used_dev.sectors,
-			    blocksize);
-	Fs->Buffer = 0;
+	Fs->head.Next = buf_init(Fs->head.Next,
+				 blocksize * used_dev.heads * used_dev.sectors,
+				 blocksize * used_dev.heads * used_dev.sectors,
+				 blocksize);
 
 	boot.boot.nfat = Fs->num_fat;
 	if(!keepBoot)
@@ -1465,15 +1418,15 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 #endif
 
 	format_root(Fs, label, &boot);
-	if(WRITES((Stream_t *)Fs, boot.characters, 0, Fs->sector_size) < 0) {
+	if(PWRITES((Stream_t *)Fs, boot.characters, 0, Fs->sector_size) < 0) {
 		fprintf(stderr, "Error writing boot sector\n");
 		exit(1);
 	}
 
 	if(Fs->fat_bits == 32 && WORD_S(ext.fat32.backupBoot) != MAX16) {
-		if(WRITES((Stream_t *)Fs, boot.characters,
-			  sectorsToBytes(Fs, WORD_S(ext.fat32.backupBoot)),
-			  Fs->sector_size) < 0) {
+		if(PWRITES((Stream_t *)Fs, boot.characters,
+			   sectorsToBytes(Fs, WORD_S(ext.fat32.backupBoot)),
+			   Fs->sector_size) < 0) {
 			fprintf(stderr, "Error writing backup boot sector\n");
 			exit(1);
 		}

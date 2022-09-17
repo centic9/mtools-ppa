@@ -16,7 +16,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "msdos.h"
 #include "llong.h"
 typedef struct dos_name_t dos_name_t;
 
@@ -94,16 +93,12 @@ int getfreeMinClusters(Stream_t *Stream, uint32_t ref);
 FILE *opentty(int mode);
 
 int is_dir(Stream_t *Dir, char *path);
-void bufferize(Stream_t **Dir);
 
 int dir_grow(Stream_t *Dir, int size);
-int match(const wchar_t *, const wchar_t *, wchar_t *, int,  int);
 
-wchar_t *unix_name(doscp_t *fromDos,
-		   const char *base, const char *ext, uint8_t Case,
-		   wchar_t *answer);
 void *safe_malloc(size_t size);
-Stream_t *open_filter(Stream_t *Next,int convertCharset);
+Stream_t *open_dos2unix(Stream_t *Next,int convertCharset);
+Stream_t *open_unix2dos(Stream_t *Next,int convertCharset);
 
 extern int got_signal;
 /* int do_gotsignal(char *, int);
@@ -132,16 +127,6 @@ UNUSED(static __inline__ char ch_toupper(char ch))
 UNUSED(static __inline__ char ch_tolower(char ch))
 {
         return (char) tolower( (unsigned char) ch);
-}
-
-UNUSED(static __inline__ wchar_t ch_towupper(wchar_t ch))
-{
-        return (wchar_t) towupper( (wint_t) ch);
-}
-
-UNUSED(static __inline__ wchar_t ch_towlower(wchar_t ch))
-{
-        return (wchar_t) towlower( (wint_t) ch);
 }
 
 UNUSED(static __inline__ void init_random(void))
@@ -185,11 +170,10 @@ void read_config(void);
 off_t str_to_offset_with_end(const char *str, char **endp);
 mt_off_t str_to_off_with_end(const char *str, char **endp);
 off_t str_to_offset(char *str);
+uint32_t parseSize(char *sizeStr);
 unsigned int strtoui(const char *nptr, char **endptr, int base);
 unsigned int atoui(const char *nptr);
-#ifndef HAVE_STRTOI
-int strtoi(const char *nptr, char **endptr, int base);
-#endif
+int strtosi(const char *nptr, char **endptr, int base);
 unsigned long atoul(const char *nptr);
 uint8_t strtou8(const char *nptr, char **endptr, int base);
 uint8_t atou8(const char *str);
@@ -200,14 +184,13 @@ uint32_t atou32(const char *str);
 
 #define New(type) ((type*)(calloc(1,sizeof(type))))
 #define Grow(adr,n,type) ((type*)(realloc((char *)adr,n*sizeof(type))))
-#define Free(adr) (free((char *)adr));
+#define Free(adr) (free((char *)adr))
 #define NewArray(size,type) ((type*)(calloc((size),sizeof(type))))
 
 void mattrib(int argc, char **argv, int type);
 void mbadblocks(int argc, char **argv, int type);
 void mcat(int argc, char **argv, int type);
 void mcd(int argc, char **argv, int type);
-void mclasserase(int argc, char **argv, int type);
 void mcopy(int argc, char **argv, int type);
 void mdel(int argc, char **argv, int type);
 void mdir(int argc, char **argv, int type);
@@ -275,5 +258,15 @@ ssize_t safePopenOut(const char **command, char *output, size_t len);
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
+
+extern const char *mversion;
+extern const char *mdate;
+extern const char *mformat_banner;
+
+extern char *Version;
+extern char *Date;
+
+
+int init(char drive, int mode);
 
 #endif

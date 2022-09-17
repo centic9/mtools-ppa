@@ -32,15 +32,9 @@
 #include "plain_io.h"
 #include "llong.h"
 
-#ifdef HAVE_LINUX_FS_H
-# include <linux/fs.h>
-#endif
-
 typedef struct SimpleFile_t {
-    Class_t *Class;
-    int refs;
-    Stream_t *Next;
-    Stream_t *Buffer;
+    struct Stream_t head;
+
     struct MT_STAT statbuf;
     int fd;
     mt_off_t lastwhere;
@@ -56,18 +50,19 @@ typedef struct SimpleFile_t {
 
 typedef ssize_t (*iofn) (int, void *, size_t);
 
-static ssize_t file_io(Stream_t *Stream, char *buf, mt_off_t where, size_t len,
+static ssize_t file_io(SimpleFile_t *This, char *buf,
+		       mt_off_t where, size_t len,
 		       iofn io)
 {
-	DeclareThis(SimpleFile_t);
 	ssize_t ret;
 
 	if (This->seekable && where != This->lastwhere ){
 		if(mt_lseek( This->fd, where, SEEK_SET) < 0 ){
 			perror("seek");
-			This->lastwhere = -1;
-			return -1;
+			return -1; /* If seek failed, lastwhere did
+				      not change */
 		}
+		This->lastwhere = where;
 	}
 
 #ifdef OS_hpux
@@ -92,26 +87,37 @@ static ssize_t file_io(Stream_t *Stream, char *buf, mt_off_t where, size_t len,
 #endif
 
 	if ( ret == -1 ){
-		perror("plain_io");
-		This->lastwhere = -1;
+		perror("plain_io read/write");
 		return -1;
 	}
 	This->lastwhere = where + ret;
 	return ret;
 }
 
-
-
-static ssize_t file_read(Stream_t *Stream, char *buf,
-			 mt_off_t where, size_t len)
+static ssize_t file_read(Stream_t *Stream, char *buf, size_t len)
 {
-	return file_io(Stream, buf, where, len, read);
+	DeclareThis(SimpleFile_t);
+	return file_io(This, buf, This->lastwhere, len, read);
 }
 
-static ssize_t file_write(Stream_t *Stream, char *buf,
+static ssize_t file_write(Stream_t *Stream, char *buf, size_t len)
+{
+	DeclareThis(SimpleFile_t);
+	return file_io(This, buf, This->lastwhere, len, (iofn) write);
+}
+
+static ssize_t file_pread(Stream_t *Stream, char *buf,
 			  mt_off_t where, size_t len)
 {
-	return file_io(Stream, buf, where, len, (iofn) write);
+	DeclareThis(SimpleFile_t);
+	return file_io(This, buf, where, len, read);
+}
+
+static ssize_t file_pwrite(Stream_t *Stream, char *buf,
+			   mt_off_t where, size_t len)
+{
+	DeclareThis(SimpleFile_t);
+	return file_io(This, buf, where, len, (iofn) write);
 }
 
 static int file_flush(Stream_t *Stream UNUSEDP)
@@ -220,6 +226,8 @@ static int file_discard(Stream_t *Stream UNUSEDP)
 static Class_t SimpleFileClass = {
 	file_read,
 	file_write,
+	file_pread,
+	file_pwrite,
 	file_flush,
 	file_free,
 	file_geom,
@@ -296,16 +304,13 @@ APIRET rc;
 #ifdef OS_hpux
 	This->size_limited = 0;
 #endif
-	This->Class = &SimpleFileClass;
+	init_head(&This->head, &SimpleFileClass, NULL);
 	if (!name || strcmp(name,"-") == 0 ){
 		if (mode == O_RDONLY)
 			This->fd = 0;
 		else
 			This->fd = 1;
 		This->seekable = 0;
-		This->refs = 1;
-		This->Next = 0;
-		This->Buffer = 0;
 		if (MT_FSTAT(This->fd, &This->statbuf) < 0) {
 		    Free(This);
 		    if(errmsg)
@@ -319,7 +324,7 @@ APIRET rc;
 		    return NULL;
 		}
 
-		return (Stream_t *) This;
+		return &This->head;
 	}
 
 
@@ -428,16 +433,12 @@ APIRET rc;
 		}
 	}
 
-	This->refs = 1;
-	This->Next = 0;
-	This->Buffer = 0;
-
 	if(maxSize)
 		*maxSize = max_off_t_seek;
 
 	This->lastwhere = 0;
 
-	return (Stream_t *) This;
+	return &This->head;
  exit_0:
 	close(This->fd);
  exit_1:
@@ -449,7 +450,7 @@ int get_fd(Stream_t *Stream)
 {
 	Class_t *clazz;
 	DeclareThis(SimpleFile_t);
-	clazz = This->Class;
+	clazz = This->head.Class;
 	if(clazz != &SimpleFileClass)
 	  return -1;
 	else

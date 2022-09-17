@@ -26,7 +26,6 @@
 #include "sysincludes.h"
 #include "stream.h"
 #include "mtools.h"
-#include "msdos.h"
 #include "llong.h"
 
 #include "open_image.h"
@@ -34,12 +33,9 @@
 #include "scsi.h"
 #include "plain_io.h"
 #include "scsi_io.h"
-
+#ifdef HAVE_SCSI
 typedef struct ScsiDevice_t {
-	Class_t *Class;
-	int refs;
-	Stream_t *Next;
-	Stream_t *Buffer;
+	struct Stream_t head;
 
 	int fd;
 	int privileged;
@@ -232,7 +228,8 @@ static ssize_t scsi_io(Stream_t *Stream, char *buf,
 	else return (ssize_t)(nsect*This->scsi_sector_size-offset);
 }
 
-static ssize_t scsi_read(Stream_t *Stream, char *buf, mt_off_t where, size_t len)
+static ssize_t scsi_pread(Stream_t *Stream, char *buf,
+			  mt_off_t where, size_t len)
 {
 #ifdef JPD
 	printf("zip: to read %d bytes at %d\n", len, where);
@@ -240,8 +237,8 @@ static ssize_t scsi_read(Stream_t *Stream, char *buf, mt_off_t where, size_t len
 	return scsi_io(Stream, buf, where, len, SCSI_IO_READ);
 }
 
-static ssize_t scsi_write(Stream_t *Stream, char *buf,
-			  mt_off_t where, size_t len)
+static ssize_t scsi_pwrite(Stream_t *Stream, char *buf,
+			   mt_off_t where, size_t len)
 {
 #ifdef JPD
 	Printf("zip: to write %d bytes at %d\n", len, where);
@@ -264,8 +261,10 @@ static int scsi_get_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 
 
 static Class_t ScsiDeviceClass = {
-	scsi_read,
-	scsi_write,
+	0,
+	0,
+	scsi_pread,
+	scsi_pwrite,
 	0,
 	0,
 	set_geom_noop,
@@ -291,8 +290,8 @@ Stream_t *OpenScsi(struct device *dev,
 		return 0;
 	}
 	memset((void*)This, 0, sizeof(ScsiDevice_t));
+	init_head(&This->head, &ScsiDeviceClass, NULL);
 	This->scsi_sector_size = 512;
-	This->Class = &ScsiDeviceClass;
 
 	if(dev) {
 		if(!(mode2 & NO_PRIV))
@@ -330,13 +329,9 @@ Stream_t *OpenScsi(struct device *dev,
 
 	if(LockDevice(This->fd, dev, locked, lockMode, errmsg) < 0)
 		goto exit_0;
-	This->refs = 1;
-	This->Next = 0;
-	This->Buffer = 0;
 
 	if(maxSize)
 		*maxSize = MAX_OFF_T_B(31+log_2(This->scsi_sector_size));
-	This->Class = &ScsiDeviceClass;
 	if(This->privileged)
 		reclaim_privs();
 	ret=scsi_init(This);
@@ -345,10 +340,11 @@ Stream_t *OpenScsi(struct device *dev,
 	if(ret < 0)
 		goto exit_0;
 	dev->tot_sectors = This->tot_sectors;
-	return (Stream_t *) This;
+	return &This->head;
  exit_0:
 	close(This->fd);
  exit_1:
 	Free(This);
 	return NULL;
 }
+#endif

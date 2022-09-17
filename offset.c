@@ -23,31 +23,30 @@
 #include "offset.h"
 
 typedef struct Offset_t {
-	struct Class_t *Class;
-	int refs;
-	struct Stream_t *Next;
-	struct Stream_t *Buffer;
+	struct Stream_t head;
 
 	mt_off_t offset;
 } Offset_t;
 
-static ssize_t offset_read(Stream_t *Stream, char *buf,
-			  mt_off_t start, size_t len)
+static ssize_t offset_pread(Stream_t *Stream, char *buf,
+			    mt_off_t start, size_t len)
 {
 	DeclareThis(Offset_t);
-	return READS(This->Next, buf, start+This->offset, len);
+	return PREADS(This->head.Next, buf, start+This->offset, len);
 }
 
-static ssize_t offset_write(Stream_t *Stream, char *buf,
-			   mt_off_t start, size_t len)
+static ssize_t offset_pwrite(Stream_t *Stream, char *buf,
+			     mt_off_t start, size_t len)
 {
 	DeclareThis(Offset_t);
-	return WRITES(This->Next, buf, start+This->offset, len);
+	return PWRITES(This->head.Next, buf, start+This->offset, len);
 }
 
 static Class_t OffsetClass = {
-	offset_read,
-	offset_write,
+	0,
+	0,
+	offset_pread,
+	offset_pwrite,
 	0, /* flush */
 	0, /* free */
 	set_geom_pass_through, /* set_geom */
@@ -67,9 +66,7 @@ Stream_t *OpenOffset(Stream_t *Next, struct device *dev, off_t offset,
 		return 0;
 	}
 	memset((void*)This, 0, sizeof(Offset_t));
-	This->Class = &OffsetClass;
-	This->refs = 1;
-	This->Next = Next;
+	init_head(&This->head, &OffsetClass, Next);
 
 	This->offset = offset;
 
@@ -86,7 +83,7 @@ Stream_t *OpenOffset(Stream_t *Next, struct device *dev, off_t offset,
 	if(adjust_tot_sectors(dev, This->offset, errmsg) < 0)
 		goto exit_0;
 
-	return (Stream_t *) This;
+	return &This->head;
  exit_0:
 	Free(This);
 	return NULL;

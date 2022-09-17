@@ -18,7 +18,6 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "remap.h"
 
@@ -36,10 +35,7 @@ struct map {
 };
 
 typedef struct Remap_t {
-	struct Class_t *Class;
-	int refs;
-	struct Stream_t *Next;
-	struct Stream_t *Buffer;
+	struct Stream_t head;
 
 	struct map *map;
 	int mapSize;
@@ -58,24 +54,24 @@ static enum map_type_t remap(Remap_t *This, mt_off_t *start, size_t *len) {
 	return This->map[i].type;
 }
 
-static ssize_t remap_read(Stream_t *Stream, char *buf,
+static ssize_t remap_pread(Stream_t *Stream, char *buf,
 			  mt_off_t start, size_t len)
 {
 	DeclareThis(Remap_t);
 	if(remap(This, &start, &len)==DATA)
-		return READS(This->Next, buf, start, len);
+		return PREADS(This->head.Next, buf, start, len);
 	else {
 		memset(buf, 0, len);
 		return (ssize_t) len;
 	}
 }
 
-static ssize_t remap_write(Stream_t *Stream, char *buf,
+static ssize_t remap_pwrite(Stream_t *Stream, char *buf,
 			   mt_off_t start, size_t len)
 {
 	DeclareThis(Remap_t);
 	if(remap(This, &start, &len)==DATA)
-		return WRITES(This->Next, buf, start, len);
+		return PWRITES(This->head.Next, buf, start, len);
 	else {
 		unsigned int i;
 		/* When writing to a "zero" sector, make sure that we
@@ -102,8 +98,10 @@ static int remap_free(Stream_t *Stream)
 }
 
 static Class_t RemapClass = {
-	remap_read,
-	remap_write,
+	0,
+	0,
+	remap_pread,
+	remap_pwrite,
 	0, /* flush */
 	remap_free, /* free */
 	set_geom_pass_through, /* set_geom */
@@ -189,9 +187,7 @@ Stream_t *Remap(Stream_t *Next, struct device *dev, char *errmsg) {
 		return 0;
 	}
 	memset((void*)This, 0, sizeof(Remap_t));
-	This->Class = &RemapClass;
-	This->refs = 1;
-	This->Next = Next;
+	init_head(&This->head, &RemapClass, Next);
 
 	/* First count number of items */
 	nrItems=process_map(This, map, 1, errmsg);
@@ -212,7 +208,7 @@ Stream_t *Remap(Stream_t *Next, struct device *dev, char *errmsg) {
 		goto exit_1;
 
 	This->mapSize=nrItems;
-	return (Stream_t *) This;
+	return &This->head;
  exit_1:
 	free(This->map);
  exit_0:

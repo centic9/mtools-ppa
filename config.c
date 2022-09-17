@@ -17,7 +17,6 @@
  */
 #include "sysincludes.h"
 #include "mtools.h"
-#include "codepage.h"
 #include "mtoolsPaths.h"
 
 /* global variables */
@@ -49,7 +48,7 @@ static int cur_dev; /* device being filled in. If negative, none */
 static int trusted=0; /* is the currently parsed device entry trusted? */
 static unsigned int nr_dev; /* number of devices that the current table can
 			       hold */
-struct device *devices; /* the device table */
+struct device *devices=NULL; /* the device table */
 static int token_nr; /* number of tokens in line */
 
 static char default_drive='\0'; /* default drive */
@@ -67,7 +66,6 @@ unsigned int mtools_twenty_four_hour_clock=1;
 unsigned int mtools_lock_timeout=30;
 unsigned int mtools_default_codepage=850;
 const char *mtools_date_string="yyyy-mm-dd";
-char *country_string=0;
 
 typedef struct switches_l {
     const char *name;
@@ -266,7 +264,7 @@ static void get_env_conf(void)
 	    errno = 0;
 	    switch(global_switches[i].type) {
 	    case T_INT:
-		* ((int *)global_switches[i].address) = strtoi(s,0,0);
+		* ((int *)global_switches[i].address) = strtosi(s,0,0);
 		break;
 	    case T_UINT:
 		* ((unsigned int *)global_switches[i].address) = strtoui(s,0,0);

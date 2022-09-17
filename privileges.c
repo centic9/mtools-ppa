@@ -16,7 +16,6 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 
 int noPrivileges=0;
@@ -175,7 +174,9 @@ void init_privs(void)
 #endif
 
 	if(euid != ruid) {
+#ifdef HAVE_UNSETENV
 		unsetenv("SOURCE_DATE_EPOCH");
+#endif
 	}
 	if(euid == 0 && ruid != 0) {
 #ifdef HAVE_SETEUID
