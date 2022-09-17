@@ -15,11 +15,10 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "sysincludes.h"
-#include "vfat.h"
+#include "mtoolsDirentry.h"
 #include "dirCache.h"
 #include "dirCacheP.h"
 #include <assert.h>
-
 
 #define BITS_PER_INT (sizeof(unsigned int) * 8)
 
@@ -47,7 +46,7 @@ static uint32_t calcHash(wchar_t *name)
 				     * successive letters cannot cover each
 				     * other easily */
 		c = towupper((wint_t)*name);
-		hash ^=  (c * (c+2)) ^ (i * (i+2));
+		hash ^= (uint32_t) (c * (c+2)) ^ (i * (i+2));
 		hash &= 0xffffffff;
 		i++;
 		name++;

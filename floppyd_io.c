@@ -28,11 +28,7 @@
 #include "sysincludes.h"
 #include "stream.h"
 #include "mtools.h"
-#include "msdos.h"
-#include "scsi.h"
 #include "floppyd_io.h"
-
-#ifdef USE_FLOPPYD
 
 /* ######################################################################## */
 
@@ -42,21 +38,19 @@ static const char* AuthErrors[] = {
 	"Auth failed: Packet oversized",
 	"Auth failed: X-Cookie doesn't match",
 	"Auth failed: Wrong transmission protocol version",
-	"Auth failed: Device locked"
+	"Auth failed: Device locked",
 	"Auth failed: Bad packet",
 	"Auth failed: I/O Error"
 };
 
 
 typedef struct RemoteFile_t {
-	Class_t *Class;
-	int refs;
-	Stream_t *Next;
-	Stream_t *Buffer;
+	struct Stream_t head;
+
 	int fd;
 	mt_off_t offset;
 	mt_off_t lastwhere;
-	mt_size_t size;
+	mt_off_t size;
 	unsigned int version;
 	unsigned int capabilities;
 	int drive;
@@ -237,6 +231,7 @@ static int floppyd_lseek(int fd, int32_t offset, int whence)
 	return gotlen;
 }
 
+#if SIZEOF_OFF_T >= 8
 static mt_off_t floppyd_lseek64(int fd, mt_off_t offset, int whence)
 {
 	int errcode;
@@ -265,6 +260,7 @@ static mt_off_t floppyd_lseek64(int fd, mt_off_t offset, int whence)
 
 	return gotlen.v;
 }
+#endif
 
 static int floppyd_open(RemoteFile_t *This, int mode)
 {
@@ -315,20 +311,23 @@ static ssize_t floppyd_io(Stream_t *Stream, char *buf, mt_off_t where,
 	where += This->offset;
 
 	if (where != This->lastwhere ){
+#if SIZEOF_OFF_T >= 8
 		if(This->capabilities & FLOPPYD_CAP_LARGE_SEEK) {
 			if(floppyd_lseek64( This->fd, where, SEEK_SET) < 0 ){
 				perror("floppyd_lseek64");
-				This->lastwhere = (mt_off_t) -1;
+				This->lastwhere = -1;
 				return -1;
 			}
-		} else {
+		} else
+#endif
+			{
 			if(where > INT32_MAX  || where < INT32_MIN) {
 				fprintf(stderr, "Seek position out of range\n");
 				return -1;
 			}
 			if(floppyd_lseek(This->fd, (int32_t) where, SEEK_SET) < 0 ){
 				perror("floppyd_lseek");
-				This->lastwhere = (mt_off_t) -1;
+				This->lastwhere = -1;
 				return -1;
 			}
 		}
@@ -337,21 +336,21 @@ static ssize_t floppyd_io(Stream_t *Stream, char *buf, mt_off_t where,
 		 (len > INT32_MAX) ? (uint32_t)INT32_MAX+1 : (uint32_t) len);
 	if ( ret == -1 ){
 		perror("floppyd_io");
-		This->lastwhere = (mt_off_t) -1;
+		This->lastwhere = -1;
 		return -1;
 	}
-	This->lastwhere = where + (mt_off_t) ret;
+	This->lastwhere = where + ret;
 	return ret;
 }
 
-static ssize_t floppyd_read(Stream_t *Stream, char *buf,
-			    mt_off_t where, size_t len)
+static ssize_t floppyd_pread(Stream_t *Stream, char *buf,
+			     mt_off_t where, size_t len)
 {
 	return floppyd_io(Stream, buf, where, len, floppyd_reader);
 }
 
-static ssize_t floppyd_write(Stream_t *Stream, char *buf,
-			     mt_off_t where, size_t len)
+static ssize_t floppyd_pwrite(Stream_t *Stream, char *buf,
+			      mt_off_t where, size_t len)
 {
 	return floppyd_io(Stream, buf, where, len, floppyd_writer);
 }
@@ -412,7 +411,7 @@ static int floppyd_free(Stream_t *Stream)
 
 
 
-static int floppyd_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+static int floppyd_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 			int *type, uint32_t *address)
 {
 	DeclareThis(RemoteFile_t);
@@ -433,8 +432,10 @@ static int floppyd_data(Stream_t *Stream, time_t *date, mt_size_t *size,
 /* ######################################################################## */
 
 static Class_t FloppydFileClass = {
-	floppyd_read,
-	floppyd_write,
+	0,
+	0,
+	floppyd_pread,
+	floppyd_pwrite,
 	floppyd_flush,
 	floppyd_free,
 	set_geom_noop,
@@ -467,7 +468,7 @@ static int get_host_and_port_and_drive(const char* name, char** hostname,
 	  p++;
 	*drive = 0;
 	if(*p >= '0' && *p <= '9')
-	  *drive = strtoi(p, &p, 0);
+	  *drive = strtosi(p, &p, 0);
 
 	*display = strdup(newname);
 
@@ -561,7 +562,7 @@ static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
 
 Stream_t *FloppydOpen(struct device *dev,
 		      const char *name, int mode, char *errmsg,
-		      mt_size_t *maxSize)
+		      mt_off_t *maxSize)
 {
 	RemoteFile_t *This;
 
@@ -573,12 +574,10 @@ Stream_t *FloppydOpen(struct device *dev,
 		printOom();
 		return NULL;
 	}
-	This->Class = &FloppydFileClass;
-	This->Next = 0;
+	init_head(&This->head, &FloppydFileClass, NULL);
+
 	This->offset = 0;
 	This->lastwhere = 0;
-	This->refs = 1;
-	This->Buffer = 0;
 
 	This->fd = ConnectToFloppyd(This, name, errmsg);
 	if (This->fd == -1) {
@@ -595,11 +594,11 @@ Stream_t *FloppydOpen(struct device *dev,
 	}
 
 	if(maxSize) {
-		*maxSize = (mt_size_t)
+		*maxSize =
 			((This->capabilities & FLOPPYD_CAP_LARGE_SEEK) ?
 			 max_off_t_seek : max_off_t_31);
 	}
-	return (Stream_t *) This;
+	return &This->head;
 }
 
 static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
@@ -656,4 +655,3 @@ static int ConnectToFloppyd(RemoteFile_t *floppyd, const char* name,
 
 	return sock;
 }
-#endif

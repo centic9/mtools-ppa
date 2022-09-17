@@ -19,7 +19,6 @@ Buffer read/write module
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "lba.h"
 
@@ -48,7 +47,7 @@ Buffer read/write module
 Stream_t *OpenImage(struct device *out_dev, struct device *dev,
 		    const char *name, int mode, char *errmsg,
 		    int flags, int lockMode,
-		    mt_size_t *maxSize, int *geomFailureP,
+		    mt_off_t *maxSize, int *geomFailureP,
 #ifdef USE_XDF
 		    struct xdf_info *xdf_info
 #else
@@ -70,10 +69,11 @@ Stream_t *OpenImage(struct device *out_dev, struct device *dev,
 		if(Stream) {
 			out_dev->use_2m = 0x7f;
 			if(maxSize)
-				*maxSize = (mt_size_t) max_off_t_31;
+				*maxSize = max_off_t_31;
 		}
 #endif
 
+#ifdef HAVE_SCSI
 		if (!Stream) {
 			Stream = OpenScsi(out_dev, name,
 					  mode,
@@ -81,7 +81,7 @@ Stream_t *OpenImage(struct device *out_dev, struct device *dev,
 					  lockMode,
 					  maxSize);
 		}
-
+#endif
 		if (!Stream) {
 			Stream = SimpleFileOpenWithLm(out_dev, dev, name,
 						      mode,

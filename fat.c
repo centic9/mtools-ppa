@@ -41,24 +41,24 @@ typedef struct FatMap_t {
 static __inline__ ssize_t readSector(Fs_t *This, char *buf, unsigned int off,
 				     size_t size)
 {
-	return READS(This->Next, buf, sectorsToBytes((Stream_t *)This, off),
-		     size << This->sectorShift);
+	return PREADS(This->head.Next, buf, sectorsToBytes(This, off),
+		      size << This->sectorShift);
 }
 
 
 static __inline__ ssize_t forceReadSector(Fs_t *This, char *buf,
 					  unsigned int off, size_t size)
 {
-	return force_read(This->Next, buf, sectorsToBytes((Stream_t *)This, off),
-					  size << This->sectorShift);
+	return force_pread(This->head.Next, buf, sectorsToBytes(This, off),
+			   size << This->sectorShift);
 }
 
 
 static __inline__ ssize_t forceWriteSector(Fs_t *This, char *buf, unsigned int off,
 					   size_t size)
 {
-	return force_write(This->Next, buf, sectorsToBytes((Stream_t*)This, off),
-					   size << This->sectorShift);
+	return force_pwrite(This->head.Next, buf, sectorsToBytes(This, off),
+			    size << This->sectorShift);
 }
 
 
@@ -344,11 +344,12 @@ static unsigned int fat16_decode(Fs_t *Stream, unsigned int num)
 
 static void fat16_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 {
+	unsigned char *address;
 	if(code > UINT16_MAX) {
 		fprintf(stderr, "FAT16 code %x too big\n", code);
 		exit(1);
 	}
-	unsigned char *address = getAddress(Stream, num << 1, FAT_ACCESS_WRITE);
+	address = getAddress(Stream, num << 1, FAT_ACCESS_WRITE);
 	set_word(address, (uint16_t) code);
 }
 
@@ -863,6 +864,18 @@ unsigned int get_next_free_cluster(Fs_t *This, unsigned int last)
 	return 1;
 }
 
+bool getSerialized(Fs_t *Fs) {
+	return Fs->serialized;
+}
+
+unsigned long getSerialNumber(Fs_t *Fs) {
+	return Fs->serial_number;
+}
+
+uint32_t getClusterBytes(Fs_t *Fs) {
+	return Fs->cluster_size * Fs->sector_size;
+}
+
 int fat_error(Stream_t *Dir)
 {
 	Stream_t *Stream = GetFs(Dir);
@@ -909,15 +922,15 @@ mt_off_t getfree(Stream_t *Dir)
 		}
 		This->freeSpace = total;
 	}
-	return (mt_off_t) sectorsToBytes((Stream_t*)This,
-					  This->freeSpace * This->cluster_size);
+	return sectorsToBytes(This,
+			      This->freeSpace * This->cluster_size);
 }
 
 
 /*
  * Ensure that there is a minimum of total sectors free
  */
-int getfreeMinClusters(Stream_t *Dir, size_t size)
+int getfreeMinClusters(Stream_t *Dir, uint32_t size)
 {
 	Stream_t *Stream = GetFs(Dir);
 	DeclareThis(Fs_t);
@@ -976,20 +989,20 @@ int getfreeMinClusters(Stream_t *Dir, size_t size)
 }
 
 
-int getfreeMinBytes(Stream_t *Dir, mt_size_t size)
+int getfreeMinBytes(Stream_t *Dir, mt_off_t size)
 {
 	Stream_t *Stream = GetFs(Dir);
 	DeclareThis(Fs_t);
-	mt_size_t size2;
+	mt_off_t size2;
 
 	size2 = size  / (This->sector_size * This->cluster_size);
 	if(size % (This->sector_size * This->cluster_size))
 		size2++;
-	if(size2 > UINT32_MAX) {
+	if((smt_off_t)size2 > UINT32_MAX) {
 		fprintf(stderr, "Requested size too big\n");
 		exit(1);
 	}
-	return getfreeMinClusters(Dir, (size_t) size2);
+	return getfreeMinClusters(Dir, (uint32_t) size2);
 }
 
 

@@ -17,7 +17,6 @@
  */
 #include "sysincludes.h"
 #include "mtools.h"
-#include "codepage.h"
 #include "mtoolsPaths.h"
 
 /* global variables */
@@ -49,7 +48,7 @@ static int cur_dev; /* device being filled in. If negative, none */
 static int trusted=0; /* is the currently parsed device entry trusted? */
 static unsigned int nr_dev; /* number of devices that the current table can
 			       hold */
-struct device *devices; /* the device table */
+struct device *devices=NULL; /* the device table */
 static int token_nr; /* number of tokens in line */
 
 static char default_drive='\0'; /* default drive */
@@ -67,7 +66,6 @@ unsigned int mtools_twenty_four_hour_clock=1;
 unsigned int mtools_lock_timeout=30;
 unsigned int mtools_default_codepage=850;
 const char *mtools_date_string="yyyy-mm-dd";
-char *country_string=0;
 
 typedef struct switches_l {
     const char *name;
@@ -253,6 +251,8 @@ static void syntax(const char *msg, int thisLine)
     exit(1);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
 static void get_env_conf(void)
 {
     char *s;
@@ -262,11 +262,9 @@ static void get_env_conf(void)
 	s = getenv(global_switches[i].name);
 	if(s) {
 	    errno = 0;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
 	    switch(global_switches[i].type) {
 	    case T_INT:
-		* ((int *)global_switches[i].address) = strtoi(s,0,0);
+		* ((int *)global_switches[i].address) = strtosi(s,0,0);
 		break;
 	    case T_UINT:
 		* ((unsigned int *)global_switches[i].address) = strtoui(s,0,0);
@@ -282,7 +280,6 @@ static void get_env_conf(void)
 		* ((char **)global_switches[i].address) = s;
 		break;
 	    }
-#pragma GCC diagnostic pop
 	    if(errno != 0) {
 		fprintf(stderr, "Bad number %s for %s (%s)\n", s,
 			global_switches[i].name,
@@ -292,6 +289,7 @@ static void get_env_conf(void)
 	}
     }
 }
+#pragma GCC diagnostic pop
 
 static int mtools_getline(void)
 {
@@ -505,6 +503,8 @@ static void finish_drive_clause(void)
     cur_dev = -1;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
 static int set_var(struct switches_l *switches, int nr,
 		   caddr_t base_address)
 {
@@ -512,8 +512,6 @@ static int set_var(struct switches_l *switches, int nr,
     for(i=0; i < nr; i++) {
 	if(match_token(switches[i].name)) {
 	    expect_char('=');
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
 	    /* All pointers cast back to pointers with alignment
 	     * constraints were such pointers with alignment
 	     * constraints initially, thus they do indeed fit the
@@ -537,12 +535,12 @@ static int set_var(struct switches_l *switches, int nr,
 	    else if (switches[i].type == T_UQSTRING)
 		* ((char**)((long)switches[i].address+base_address))=
 		    get_unquoted_string();
-#pragma GCC diagnostic pop
 	    return 0;
 	}
     }
     return 1;
 }
+#pragma GCC diagnostic pop
 
 static int set_openflags(struct device *dev)
 {
@@ -655,7 +653,7 @@ void check_number_parse_errno(char c, const char *oarg, char *endptr) {
 }
 
 static uint16_t tou16(int in, const char *comment) {
-    if(in > UINT16_MAX) {
+    if(in > (int) UINT16_MAX) {
 	fprintf(stderr, "Number of %s %d too big\n", comment, in);
 	exit(1);
     }

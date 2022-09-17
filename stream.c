@@ -16,10 +16,26 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "stream.h"
 
 int batchmode = 0;
+
+void limitSizeToOffT(size_t *len, mt_off_t maxLen)
+{
+#if SIZEOF_SIZE_T >= SIZEOF_MT_OFF_T
+	if(*len > (size_t) maxLen)
+#else
+	if(*len > maxLen)
+#endif
+		*len = (size_t) maxLen;
+}
+
+void init_head(Stream_t *Stream, struct Class_t *Class, Stream_t *Next)
+{
+	Stream->Class = Class;
+	Stream->refs = 1;
+	Stream->Next = Next;
+}
 
 int flush_stream(Stream_t *Stream)
 {
@@ -75,22 +91,22 @@ int set_geom_noop(Stream_t *Stream UNUSEDP,
 	return 0;
 }
 
-int get_data_pass_through(Stream_t *Stream, time_t *date, mt_size_t *size,
+int get_data_pass_through(Stream_t *Stream, time_t *date, mt_off_t *size,
 			  int *type, uint32_t *address)
 {
        return GET_DATA(Stream->Next, date, size, type, address);
 }
 
-ssize_t read_pass_through(Stream_t *Stream, char *buf,
-			  mt_off_t start, size_t len)
-{
-	return READS(Stream->Next, buf, start, len);
-}
-
-ssize_t write_pass_through(Stream_t *Stream, char *buf,
+ssize_t pread_pass_through(Stream_t *Stream, char *buf,
 			   mt_off_t start, size_t len)
 {
-	return WRITES(Stream->Next, buf, start, len);
+	return PREADS(Stream->Next, buf, start, len);
+}
+
+ssize_t pwrite_pass_through(Stream_t *Stream, char *buf,
+			    mt_off_t start, size_t len)
+{
+	return PWRITES(Stream->Next, buf, start, len);
 }
 
 doscp_t *get_dosConvert_pass_through(Stream_t *Stream)
@@ -103,17 +119,18 @@ doscp_t *get_dosConvert_pass_through(Stream_t *Stream)
  */
 int adjust_tot_sectors(struct device *dev, mt_off_t offset, char *errmsg)
 {
+	mt_off_t offs_sectors;
 	if(!dev->tot_sectors)
 		/* tot_sectors not set, do nothing */
 		return 0;
 
-	mt_off_t offs_sectors = offset /
+	offs_sectors = offset /
 		(dev->sector_size ? dev->sector_size : 512);
-	if(offs_sectors > 0 && dev->tot_sectors < offs_sectors) {
+	if(offs_sectors > 0 && dev->tot_sectors < (smt_off_t) offs_sectors) {
 		if(errmsg)
 			sprintf(errmsg,"init: Offset bigger than base image");
 		return -1;
 	}
-	dev->tot_sectors -= offs_sectors;
+	dev->tot_sectors -= (uint32_t) offs_sectors;
 	return 0;
 }

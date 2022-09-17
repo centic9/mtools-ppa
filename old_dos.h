@@ -1,5 +1,6 @@
-/*  Copyright 1986-1992 Emmet P. Gray.
- *  Copyright 1996,1997,2001,2002,2009 Alain Knaff.
+#ifndef MTOOLS_OLDDOS_H
+#define MTOOLS_OLDDOS_H
+/*  Copyright 2021 Alain Knaff.
  *  This file is part of mtools.
  *
  *  Mtools is free software: you can redistribute it and/or modify
@@ -16,29 +17,27 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sysincludes.h"
-#include "msdos.h"
-#include "mtools.h"
-#include "vfat.h"
-#include "file.h"
-#include "buffer.h"
+#include "device.h"
 
-/*
- * Find the directory and load a new dir_chain[].  A null directory
- * is OK.  Returns a 1 on error.
- */
+struct OldDos_t {
+	unsigned int tracks;
+	uint16_t sectors;
+	uint16_t  heads;
 
+	uint16_t dir_len;
+	uint8_t cluster_size;
+	uint32_t fat_len;
 
-void bufferize(Stream_t **Dir)
-{
-	Stream_t *BDir;
+	uint8_t media;
+};
 
-	if(!*Dir)
-		return;
-	BDir = buf_init(*Dir, 64*16384, 512, MDIR_SIZE);
-	if(!BDir){
-		FREE(Dir);
-		*Dir = NULL;
-	} else
-		*Dir = BDir;
-}
+extern struct OldDos_t *getOldDosBySize(size_t size);
+extern struct OldDos_t *getOldDosByMedia(int media);
+extern struct OldDos_t *getOldDosByParams(unsigned int tracks,
+					  unsigned int heads,
+					  unsigned int sectors,
+					  unsigned int dir_len,
+					  unsigned int cluster_size);
+int setDeviceFromOldDos(int media, struct device *dev);
+
+#endif

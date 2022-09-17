@@ -37,6 +37,9 @@
 
 #endif /* HAVE_SYS_SYSMACROS_H */
 
+#define MT_READ 1
+#define MT_WRITE 2
+
 #include <linux/fd.h>
 #include <linux/fdreg.h>
 #include <linux/major.h>
@@ -183,5 +186,7 @@ UNUSED(static __inline__ int GET_DRIVE(int fd))
 int send_one_cmd(int fd, RawRequest_t *raw_cmd, const char *message);
 int analyze_one_reply(RawRequest_t *raw_cmd, int *bytes, int do_print);
 
-
 #endif
+
+int init_geom(int fd, struct device *dev, struct device *orig_dev,
+	      struct MT_STAT *statbuf);

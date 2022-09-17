@@ -20,13 +20,10 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
-#include "vfat.h"
 #include "mtools.h"
 #include "file.h"
 #include "mainloop.h"
 #include "fs.h"
-#include "codepage.h"
 #include "file_name.h"
 
 #ifdef TEST_SIZE
@@ -53,8 +50,8 @@ static int dirsOnDrive; /* number of listed directories on this drive */
 
 static int debug = 0; /* debug mode */
 
-static mt_size_t bytesInDir;
-static mt_size_t bytesOnDrive;
+static mt_off_t bytesInDir;
+static mt_off_t bytesOnDrive;
 static Stream_t *RootDir;
 
 
@@ -121,7 +118,7 @@ static __inline__ void print_time(struct directory *dir)
 /*
  * Return a number in dotted notation
  */
-static const char *dotted_num(mt_size_t num, size_t width, char **buf)
+static const char *dotted_num(mt_off_t num, size_t width, char **buf)
 {
 	size_t len;
 	register char *srcp, *dstp;
@@ -159,7 +156,7 @@ static const char *dotted_num(mt_size_t num, size_t width, char **buf)
 	srcp = (*buf)+len;
 	dstp = (*buf)+len+1;
 
-	for ( ; dstp >= (*buf)+4 && isdigit (srcp[-1]); ) {
+	for ( ; dstp >= (*buf)+4 && isdigit ((unsigned char)srcp[-1]); ) {
 		srcp -= 3;  /* from here we copy three digits */
 		dstp -= 4;  /* that's where we put these 3 digits */
 	}
@@ -184,7 +181,7 @@ static __inline__ int print_volume_label(Stream_t *Dir, char drive)
 {
 	Stream_t *Stream = GetFs(Dir);
 	direntry_t entry;
-	DeclareThis(FsPublic_t);
+	DeclareThis(Fs_t);
 	char shortname[13];
 	char longname[VBUFSIZE];
 	int r;
@@ -210,15 +207,17 @@ static __inline__ int print_volume_label(Stream_t *Dir, char drive)
 	else
 		printf(" Volume in drive %c is %s",
 		       drive, shortname);
-	if(This->serialized)
+	if(getSerialized(This)) {
+		unsigned long serial_number = getSerialNumber(This);
 		printf("\n Volume Serial Number is %04lX-%04lX",
-		       (This->serial_number >> 16) & 0xffff,
-		       This->serial_number & 0xffff);
+		       (serial_number >> 16) & 0xffff,
+		       serial_number & 0xffff);
+	}
 	return 0;
 }
 
 
-static void printSummary(int files, mt_size_t bytes)
+static void printSummary(int files, mt_off_t bytes)
 {
 	if(!filesInDir)
 		printf("No files\n");
@@ -251,12 +250,11 @@ static void leaveDrive(int haveError)
 		}
 		if(RootDir && !fast) {
 			char *s1 = NULL;
-			mt_off_t ret = getfree(RootDir);
-			if(ret == -1) {
+			mt_off_t bytes = getfree(RootDir);
+			if(bytes == -1) {
 				fprintf(stderr, "Fat error\n");
 				goto exit_1;
 			}
-			mt_size_t bytes = (mt_size_t) ret;
 			printf("                  %s bytes free\n\n",
 			       dotted_num(bytes,17, &s1));
 #ifdef TEST_SIZE
@@ -454,8 +452,8 @@ static int list_file(direntry_t *entry, MainParam_t *mp UNUSEDP)
 	filesOnDrive++;
 	filesInDir++;
 
-	bytesOnDrive += (mt_size_t) size;
-	bytesInDir += (mt_size_t) size;
+	bytesOnDrive += size;
+	bytesInDir += size;
 	return GOT_ONE;
 }
 
@@ -500,7 +498,7 @@ static int list_recurs_directory(direntry_t *entry UNUSEDP,
 	/* then list subdirectories */
 	subMp = *mp;
 	subMp.lookupflags = ACCEPT_DIR | NO_DOTS | NO_MSG | DO_OPEN;
-	return ret | mp->loop(mp->File, &subMp, "*");
+	return ret | mp->loop(mp->File, &subMp, "*") | GOT_ONE;
 }
 
 #if 0
@@ -603,9 +601,10 @@ void mdir(int argc, char **argv, int type UNUSEDP)
 		mp.dirCallback = test_directory;
 	} else
 #endif
-		if(recursive) {
-		mp.lookupflags = ACCEPT_DIR | DO_OPEN_DIRS | NO_DOTS;
+	if(recursive) {
+		mp.lookupflags = ACCEPT_DIR | ACCEPT_PLAIN | DO_OPEN_DIRS | NO_DOTS;
 		mp.dirCallback = list_recurs_directory;
+		mp.callback = list_file;
 	} else {
 		mp.lookupflags = ACCEPT_DIR | ACCEPT_PLAIN | DO_OPEN_DIRS;
 		mp.dirCallback = list_non_recurs_directory;

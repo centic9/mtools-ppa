@@ -28,18 +28,13 @@
 #include "mtools.h"
 #include "msdos.h"
 #include "open_image.h"
+#include "devices.h"
 #include "plain_io.h"
 #include "llong.h"
 
-#ifdef HAVE_LINUX_FS_H
-# include <linux/fs.h>
-#endif
-
 typedef struct SimpleFile_t {
-    Class_t *Class;
-    int refs;
-    Stream_t *Next;
-    Stream_t *Buffer;
+    struct Stream_t head;
+
     struct MT_STAT statbuf;
     int fd;
     mt_off_t lastwhere;
@@ -55,18 +50,19 @@ typedef struct SimpleFile_t {
 
 typedef ssize_t (*iofn) (int, void *, size_t);
 
-static ssize_t file_io(Stream_t *Stream, char *buf, mt_off_t where, size_t len,
+static ssize_t file_io(SimpleFile_t *This, char *buf,
+		       mt_off_t where, size_t len,
 		       iofn io)
 {
-	DeclareThis(SimpleFile_t);
 	ssize_t ret;
 
 	if (This->seekable && where != This->lastwhere ){
 		if(mt_lseek( This->fd, where, SEEK_SET) < 0 ){
 			perror("seek");
-			This->lastwhere = (mt_off_t) -1;
-			return -1;
+			return -1; /* If seek failed, lastwhere did
+				      not change */
 		}
+		This->lastwhere = where;
 	}
 
 #ifdef OS_hpux
@@ -91,26 +87,37 @@ static ssize_t file_io(Stream_t *Stream, char *buf, mt_off_t where, size_t len,
 #endif
 
 	if ( ret == -1 ){
-		perror("plain_io");
-		This->lastwhere = (mt_off_t) -1;
+		perror("plain_io read/write");
 		return -1;
 	}
 	This->lastwhere = where + ret;
 	return ret;
 }
 
-
-
-static ssize_t file_read(Stream_t *Stream, char *buf,
-			 mt_off_t where, size_t len)
+static ssize_t file_read(Stream_t *Stream, char *buf, size_t len)
 {
-	return file_io(Stream, buf, where, len, read);
+	DeclareThis(SimpleFile_t);
+	return file_io(This, buf, This->lastwhere, len, read);
 }
 
-static ssize_t file_write(Stream_t *Stream, char *buf,
+static ssize_t file_write(Stream_t *Stream, char *buf, size_t len)
+{
+	DeclareThis(SimpleFile_t);
+	return file_io(This, buf, This->lastwhere, len, (iofn) write);
+}
+
+static ssize_t file_pread(Stream_t *Stream, char *buf,
 			  mt_off_t where, size_t len)
 {
-	return file_io(Stream, buf, where, len, (iofn) write);
+	DeclareThis(SimpleFile_t);
+	return file_io(This, buf, where, len, read);
+}
+
+static ssize_t file_pwrite(Stream_t *Stream, char *buf,
+			   mt_off_t where, size_t len)
+{
+	DeclareThis(SimpleFile_t);
+	return file_io(This, buf, where, len, (iofn) write);
 }
 
 static int file_flush(Stream_t *Stream UNUSEDP)
@@ -146,9 +153,9 @@ static int init_geom_with_reg(int fd, struct device *dev,
 			return 0;
 		}
 		sectors = statbuf->st_size /
-			(dev->sector_size ? dev->sector_size : 512);
+			(mt_off_t)(dev->sector_size ? dev->sector_size : 512);
 		dev->tot_sectors =
-			(sectors > (mt_off_t) UINT32_MAX)
+			((smt_off_t) sectors > UINT32_MAX)
 			? UINT32_MAX
 			: (uint32_t) sectors;
 		return 0;
@@ -186,7 +193,7 @@ static int file_geom(Stream_t *Stream, struct device *dev,
 }
 
 
-static int file_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+static int file_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 		     int *type, uint32_t *address)
 {
 	DeclareThis(SimpleFile_t);
@@ -194,7 +201,7 @@ static int file_data(Stream_t *Stream, time_t *date, mt_size_t *size,
 	if(date)
 		*date = This->statbuf.st_mtime;
 	if(size)
-		*size = (mt_size_t) This->statbuf.st_size;
+		*size = This->statbuf.st_size;
 	if(type)
 		*type = S_ISDIR(This->statbuf.st_mode);
 	if(address)
@@ -202,7 +209,7 @@ static int file_data(Stream_t *Stream, time_t *date, mt_size_t *size,
 	return 0;
 }
 
-static int file_discard(Stream_t *Stream)
+static int file_discard(Stream_t *Stream UNUSEDP)
 {
 #ifdef BLKFLSBUF
 	int ret;
@@ -219,6 +226,8 @@ static int file_discard(Stream_t *Stream)
 static Class_t SimpleFileClass = {
 	file_read,
 	file_write,
+	file_pread,
+	file_pwrite,
 	file_flush,
 	file_free,
 	file_geom,
@@ -266,7 +275,7 @@ int LockDevice(int fd, struct device *dev,
 
 Stream_t *SimpleFileOpen(struct device *dev, struct device *orig_dev,
 			 const char *name, int mode, char *errmsg,
-			 int mode2, int locked, mt_size_t *maxSize) {
+			 int mode2, int locked, mt_off_t *maxSize) {
 	return SimpleFileOpenWithLm(dev, orig_dev, name, mode,
 				    errmsg, mode2, locked, mode, maxSize,
 				    NULL);
@@ -275,7 +284,7 @@ Stream_t *SimpleFileOpen(struct device *dev, struct device *orig_dev,
 Stream_t *SimpleFileOpenWithLm(struct device *dev, struct device *orig_dev,
 			       const char *name, int mode, char *errmsg,
 			       int mode2, int locked, int lockMode,
-			       mt_size_t *maxSize, int *geomFailure)
+			       mt_off_t *maxSize, int *geomFailure)
 {
 	SimpleFile_t *This;
 #ifdef __EMX__
@@ -295,16 +304,13 @@ APIRET rc;
 #ifdef OS_hpux
 	This->size_limited = 0;
 #endif
-	This->Class = &SimpleFileClass;
+	init_head(&This->head, &SimpleFileClass, NULL);
 	if (!name || strcmp(name,"-") == 0 ){
 		if (mode == O_RDONLY)
 			This->fd = 0;
 		else
 			This->fd = 1;
 		This->seekable = 0;
-		This->refs = 1;
-		This->Next = 0;
-		This->Buffer = 0;
 		if (MT_FSTAT(This->fd, &This->statbuf) < 0) {
 		    Free(This);
 		    if(errmsg)
@@ -318,7 +324,7 @@ APIRET rc;
 		    return NULL;
 		}
 
-		return (Stream_t *) This;
+		return &This->head;
 	}
 
 
@@ -427,16 +433,12 @@ APIRET rc;
 		}
 	}
 
-	This->refs = 1;
-	This->Next = 0;
-	This->Buffer = 0;
-
 	if(maxSize)
-		*maxSize = (mt_size_t) max_off_t_seek;
+		*maxSize = max_off_t_seek;
 
 	This->lastwhere = 0;
 
-	return (Stream_t *) This;
+	return &This->head;
  exit_0:
 	close(This->fd);
  exit_1:
@@ -448,7 +450,7 @@ int get_fd(Stream_t *Stream)
 {
 	Class_t *clazz;
 	DeclareThis(SimpleFile_t);
-	clazz = This->Class;
+	clazz = This->head.Class;
 	if(clazz != &SimpleFileClass)
 	  return -1;
 	else

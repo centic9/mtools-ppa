@@ -24,7 +24,6 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "vfat.h"
 #include "nameclash.h"
@@ -677,14 +676,14 @@ void init_clash_handling(ClashHandling_t *ch)
 	ch->is_label = 0;
 }
 
-int handle_clash_options(ClashHandling_t *ch, char c)
+int handle_clash_options(ClashHandling_t *ch, int c)
 {
 	int isprimary;
 	if(isupper(c))
 		isprimary = 0;
 	else
 		isprimary = 1;
-	c = ch_tolower(c);
+	c = tolower(c);
 	switch(c) {
 		case 'o':
 			/* Overwrite if primary name matches */

@@ -18,15 +18,11 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "buffer.h"
 
 typedef struct Buffer_t {
-	Class_t *Class;
-	int refs;
-	Stream_t *Next;
-	Stream_t *Buffer;
+	struct Stream_t head;
 
 	size_t size;     	/* size of read/write buffer */
 	int dirty;	       	/* is the buffer dirty? */
@@ -69,7 +65,11 @@ static int _buf_flush(Buffer_t *Buffer)
 {
 	ssize_t ret;
 
-	if (!Buffer->Next || !Buffer->dirty)
+#ifdef HAVE_ASSERT_H
+	assert(Buffer->head.Next != NULL);
+#endif
+	
+	if (!Buffer->dirty)
 		return 0;
 #ifdef DEBUG
 	fprintf(stderr, "write %08x -- %02x %08x %08x\n",
@@ -79,15 +79,17 @@ static int _buf_flush(Buffer_t *Buffer)
 		Buffer->dirty_end - Buffer->dirty_pos);
 #endif
 
-	ret = force_write(Buffer->Next,
-			  Buffer->buf + Buffer->dirty_pos,
-			  Buffer->current + (mt_off_t) Buffer->dirty_pos,
-			  Buffer->dirty_end - Buffer->dirty_pos);
-	if(ret != (signed int) (Buffer->dirty_end - Buffer->dirty_pos)) {
-		if(ret < 0)
-			perror("buffer_flush: write");
-		else
-			fprintf(stderr,"buffer_flush: short write\n");
+	ret = force_pwrite(Buffer->head.Next,
+			   Buffer->buf + Buffer->dirty_pos,
+			   Buffer->current + (mt_off_t) Buffer->dirty_pos,
+			   Buffer->dirty_end - Buffer->dirty_pos);
+	if(ret < 0) {
+		perror("buffer_flush: write");
+		return -1;
+	}
+	
+	if((size_t) ret != Buffer->dirty_end - Buffer->dirty_pos) {
+		fprintf(stderr,"buffer_flush: short write\n");
 		return -1;
 	}
 	Buffer->dirty = 0;
@@ -146,7 +148,8 @@ static position_t isInBuffer(Buffer_t *This, mt_off_t start, size_t *len)
 	}
 }
 
-static ssize_t buf_read(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
+static ssize_t buf_pread(Stream_t *Stream, char *buf,
+			 mt_off_t start, size_t len)
 {
 	size_t length;
 	size_t offset;
@@ -166,10 +169,10 @@ static ssize_t buf_read(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
 			maximize(length, This->size - This->cur_size);
 
 			/* read it! */
-			ret=READS(This->Next,
-				  This->buf + This->cur_size,
-				  This->current + (mt_off_t) This->cur_size,
-				  length);
+			ret=PREADS(This->head.Next,
+				   This->buf + This->cur_size,
+				   This->current + (mt_off_t) This->cur_size,
+				   length);
 			if ( ret < 0 )
 				return ret;
 			This->cur_size += (size_t) ret;
@@ -192,8 +195,8 @@ static ssize_t buf_read(Stream_t *Stream, char *buf, mt_off_t start, size_t len)
 	return (ssize_t) len;
 }
 
-static ssize_t buf_write(Stream_t *Stream, char *buf,
-			 mt_off_t start, size_t len)
+static ssize_t buf_pwrite(Stream_t *Stream, char *buf,
+			  mt_off_t start, size_t len)
 {
 	char *disk_ptr;
 	DeclareThis(Buffer_t);
@@ -227,13 +230,14 @@ static ssize_t buf_write(Stream_t *Stream, char *buf,
 				readSize = This->cylinderSize -
 					(size_t)(This->current % (mt_off_t) This->cylinderSize);
 
-				ret=READS(This->Next, This->buf, (mt_off_t)This->current, readSize);
+				ret=PREADS(This->head.Next, This->buf,
+					   (mt_off_t)This->current, readSize);
 				/* read it! */
 				if ( ret < 0 )
 					return ret;
 				bytes_read = (size_t) ret;
 				if(bytes_read % This->sectorSize) {
-				  fprintf(stderr, "Weird: read size (%zd) not a multiple of sector size (%d)\n", bytes_read, (int) This->sectorSize);
+				  fprintf(stderr, "Weird: read size ("SSZF") not a multiple of sector size (%d)\n", bytes_read, (int) This->sectorSize);
 				    bytes_read -= bytes_read % This->sectorSize;
 				    if(bytes_read == 0) {
 					fprintf(stderr, "Nothing left\n");
@@ -258,8 +262,8 @@ static ssize_t buf_write(Stream_t *Stream, char *buf,
 			offset = OFFSET;
 			maximize(len, This->size - offset);
 			This->cur_size += len;
-			if(This->Next->Class->pre_allocate)
-				PRE_ALLOCATE(This->Next, cur_end(This));
+			if(This->head.Next->Class->pre_allocate)
+				PRE_ALLOCATE(This->head.Next, cur_end(This));
 			break;
 		case INSIDE:
 			/* nothing to do */
@@ -337,8 +341,10 @@ static int buf_free(Stream_t *Stream)
 }
 
 static Class_t BufferClass = {
-	buf_read,
-	buf_write,
+	0,
+	0,
+	buf_pread,
+	buf_pwrite,
 	buf_flush,
 	buf_free,
 	0, /* set_geom */
@@ -353,12 +359,12 @@ Stream_t *buf_init(Stream_t *Next, size_t size,
 		   size_t sectorSize)
 {
 	Buffer_t *Buffer;
-	Stream_t *Stream;
 
 #ifdef HAVE_ASSERT_H
 	assert(size != 0);
 	assert(cylinderSize != 0);
 	assert(sectorSize != 0);
+	assert(Next != NULL);
 #endif
 
 	if(size % cylinderSize != 0) {
@@ -370,19 +376,13 @@ Stream_t *buf_init(Stream_t *Next, size_t size,
 		exit(1);
 	}
 
-	if(Next->Buffer){
-		Next->refs--;
-		Next->Buffer->refs++;
-		return Next->Buffer;
-	}
-
-	Stream = (Stream_t *) malloc (sizeof(Buffer_t));
-	if(!Stream)
+	Buffer = New(Buffer_t);
+	if(!Buffer)
 		return 0;
-	Buffer = (Buffer_t *) Stream;
+	init_head(&Buffer->head, &BufferClass, Next);
 	Buffer->buf = malloc(size);
 	if ( !Buffer->buf){
-		Free(Stream);
+		Free(Buffer);
 		return 0;
 	}
 	Buffer->size = size;
@@ -396,11 +396,6 @@ Stream_t *buf_init(Stream_t *Next, size_t size,
 	Buffer->current = 0L;
 	Buffer->cur_size = 0; /* buffer currently empty */
 
-	Buffer->Next = Next;
-	Buffer->Class = &BufferClass;
-	Buffer->refs = 1;
-	Buffer->Buffer = 0;
-	Buffer->Next->Buffer = (Stream_t *) Buffer;
-	return Stream;
+	return &Buffer->head;
 }
 
