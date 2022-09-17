@@ -1,0 +1,171 @@
+mtools 2.0.7 -- Kitted up by Bill Mitchell <mitchell.mdd.comm.mot.com>
+
+  * 1. Received Ian Murdock's mtools-2.0.5 sources already modified for debian
+    I note that I've seen sources on prep.ai.mit for mtools 2.0.7
+    We seem to be on a branch from the main mtools code
+
+  * 2. Added #include "string.h" to devices.c
+
+  * 3. Added mtools.ref
+
+  * 4. Retrieved mtools-2.0.7 from prep.ai.mit.edu
+
+  * 5. Reconciled [1] and [4], merging the linux+debian changes for 2.0.5
+    into the mtools-2.0.7 distribution.
+
+  * 6. Modified Makefile "install:" target per debian packaging guidelines.
+
+  * 7. Added debian.rules
+
+  * 8. Added debian.control
+
+  * 9. Added debian.postinst
+
+  * 10. Added debian.postrm
+
+  * 11. Added debian.conffiles
+
+Changes for debian mtools-2.0.7-1 distribution
+
+  * Renamed README.debian to debian.README
+  * Renamed COPYRIGHT.debian to debian.COPYRIGHT
+  * Added debian.control
+  * Added debian.rules
+  * Added debian.conffiles
+  * Added debian.postinst
+  * Added debian.rules
+
+Changes for debian mtools-2.0.7-2 distribution
+
+  * Corrected permissions on man pages from 640 to 644
+
+  * Renamed man page files to have all lowercase filenames
+    (e.g., mtools.1, not Mtools.1)
+
+Changes for debian mtools-2.0.7-3 distribution
+
+  * For the debian.rules target build:
+    pass CFLAGS and LDFLAGS to Makefile
+
+  * Renamed man page files to have all lowercase filenames
+
+Changes for debian mtools-2.0.7-4 distribution
+
+  * Modified debian.rules to use debian.rules.inc
+
+Changes for debian mtools-2.0.7-5 distribution
+
+  * In msdos.h, #define cfg_file "/etc/mtools.ref", not "/etc/mtools"
+    This to enable debian.rules.inc and "make -f debian.rules binary"
+    to handle the mtools.ref file more easily (the config file name
+    does not change from the name under which it was distributed, and
+    it does not conflict with the "mtools" executable name).  This
+    was added inside a #ifdef DEBIAN conditional block.
+
+  * Changed debian.confiles to name /etc/mtools.ref, not /etc/mtools.
+
+  * Modified Makefile, adding -DDEBIAN to CFLAGS
+
+  * Use the 1.2 revision of debian.rules.inc.
+
+Changes for debian mtools-2.0.7-6 distribution
+
+  * Changes for new packaging guidelines
+    preinst and postinst scripts return exit status
+    use debian.rules.inc 1.6 to support new package naming conventions
+    debian.rules changes for new debian.rules.inc
+
+Changes for debian mtools-2.0.7-7 distribution
+
+  * Removed leading tab on "include debian.rules.inc" line of debian.rules
+
+Changes for debian mtools-2.0.7-8 distribution
+
+  * Changed debian.COPYRIGHT to announce copyright terms.
+  * corrected typo "esit" to "exit" in debian.postrm.
+
+Changes for debian mtools-2.0.7-9 distribution
+
+  * Corrected syntax errors in preinst and postinst files
+
+  * merged debian-rules.inc into debian.rules
+
+Changes for debian mtools-2.0.7-10 distribution
+
+  * Added "#CHK_FAT=FALSE" mtools.ref.option.
+
+  * Replaced mtools.1 manpage with debian.mtools.1, which
+    describes the added option.
+
+  * Redid debian.rules in the Ian Murdock format.
+
+Changes for debian mtools-2.0.7-11 distribution
+
+  * Changed man page modes from 755 to 644
+
+Changes for debian mtools-2.0.7-12 distribution
+
+  * Cleaned up control file description and extended description.
+
+Changes for debian mtools-2.0.7-13
+        elf package
+        * rebuilt for elf
+        * updated mtools.1 to get tbl(1) used
+
+Changes for debian mtools-2.0.7-14
+        elf package
+
+Changes for debian mtools-2.0.7-15
+        elf package
+        * added -DCHK_FAT_OPTION in Makefile, inadvertantly omitted
+
+Changes for debian mtools-2.5.4-1
+
+        * New upstream version.
+
+        * New maintainer.
+
+Changes for debian mtools-2.5.4-2
+
+        * Added upstream patches (mtools-2.5.4-2204.diff.gz)
+
+        * Fixed bug#2788
+
+Changes for debian mtools-3.0-1
+
+        * New upstream version
+
+        * Applied patches mtools-3.0-1405b.diff.gz 
+
+Changes for debian mtools-3.0-2
+
+        * Applied patches mtools-3.0-1605.diff.gz
+
+        * Info file now is installed correctly
+
+Changes for debian mtools-3.0-3
+
+        * Applied patches mtools-3.0-2805.diff.gz to fix
+          mcopy "a:*.tar.gz" . bug.
+
+Changes for debian mtools_3.0-4
+
+        * Applied patches mtools-3.0-2306.diff.gz
+
+        * Changed debian.rules for new naming scheme
+
+        * Gzip manpages
+
+Changes for debian mtools_3.0-5
+
+        * Changed priority back to standard
+
+        * Applied upstream patches mtools-3.0-2807.diff.gz
+
+Changes for debian mtools_3.0-5.1
+
+        * Fixed bug#6213
+
+        * New maintainer (Mark Eichin <eichin@cygnus.com>)
+
+ -- Mark Eichin <eichin@cygnus.com>  Thu, 13 Feb 1997 01:54:37 +0100
