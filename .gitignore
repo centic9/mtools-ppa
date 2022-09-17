@@ -1,2 +1,4 @@
 .pc/
 debian/files
+config.guess
+config.sub
