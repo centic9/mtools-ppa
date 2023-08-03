@@ -20,7 +20,6 @@
 
 #include "sysincludes.h"
 #include "mtools.h"
-#include "mainloop.h"
 #include "fsP.h"
 #include "file.h"
 #include "plain_io.h"
@@ -657,7 +656,7 @@ void mpartition(int argc, char **argv, int dummy UNUSEDP)
 		printf("The following command will recreate the partition for drive %c:\n",
 		       drive);
 		used_dev.tracks =
-			(_DWORD(tpartition->nr_sects) +
+			(DWORD(tpartition->nr_sects) +
 			 (BEGIN(tpartition) % sec_per_cyl)) /
 			sec_per_cyl;
 		printf("mpartition -c -b %d -l %d -t %d -h %d -s %d -b %u %c:\n",

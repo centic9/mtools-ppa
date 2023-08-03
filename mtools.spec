@@ -1,12 +1,12 @@
 %define _binary_payload w9.gzdio
 Name:           mtools
 Summary:        mtools, read/write/list/format DOS disks under Unix
-Version:        4.0.40
+Version:        4.0.43
 Release:        1
 License:        GPLv3+
 Group:          Utilities/System
 URL:            http://www.gnu.org/software/mtools/
-Source:         ftp://ftp.gnu.org/gnu/%{name}/%{name}-%{version}.tar.gz
+Source:         http://ftp.gnu.org/gnu/%{name}/%{name}-%{version}.tar.gz
 Buildroot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 
@@ -133,6 +133,26 @@ if [ -f %{_bindir}/install-info ] ; then
 fi
 
 %changelog
+* Tue Mar 21 2023 Alain Knaff <alain@knaff.lu>
+- Fix root directory test in mattrib
+- -b BiosDisk flag for mformat to allow setting physdrive to a user-specified
+  value
+- Clearer error message in mformat when trying to mformat a disk whose total
+  size is not known
+- Make recursive copy more consistent
+- Trailing slash now always implies target should be a directory
+- Code cleanup
+* Sat Oct 22 2022 Alain Knaff <alain@knaff.lu>
+- Added postcmd attribute in drive description to allow to
+  execute "device release" code automatically at end of command
+- Code cleanup (unneeded functions, initializations, added
+  comments to unobvious code, obsolete stuff in Makefile)
+- signedness cleanup about directory entries
+* Sun Sep 18 2022 Alain Knaff <alain@knaff.lu>
+- Made it possible again to have FAT32 filesystems with less
+  than 0xfff5 clusters
+- Make FAT32 entries 0 and 1 match what windows 10 does
+- Misc source code and configure script cleanup
 * Sat Jun 04 2022 Alain Knaff <alain@knaff.lu>
 - Remove libbsd dependency
 - Better compatibility with legacy platforms such as AT&T UnixPC

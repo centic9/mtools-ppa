@@ -27,14 +27,16 @@
 
 #define INIT_NOOP
 
-#define DEF_ARG1(x) (x), 0x2,0,(char *)0, 0, 0, 0, 0, 0, 0, NULL
+#define DEF_ARG1(x) (x), 0x2,0,(char *)0, 0, 0, 0, 0, 0, 0, 0, NULL
 #define DEF_ARG0(x) 0,DEF_ARG1(x)
 
 #define MDEF_ARG 0L,DEF_ARG0(MFORMAT_ONLY_FLAG)
 #define FDEF_ARG 0L,DEF_ARG0(0)
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-macros"
+#ifdef HAVE_PRAGMA_DIAGNOSTIC
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-macros"
+#endif
 
 #define VOLD_DEF_ARG 0L,DEF_ARG0(VOLD_FLAG|MFORMAT_ONLY_FLAG)
 
@@ -69,7 +71,9 @@
 #define ZIP(x)	 ZIPJAZ(x,96, 64, 32, 0)
 #define RZIP(x)	 ZIPJAZ(x,96, 64, 32, SCSI_FLAG|PRIV_FLAG)
 
-#pragma GCC diagnostic pop
+#ifdef HAVE_PRAGMA_DIAGNOSTIC
+# pragma GCC diagnostic pop
+#endif
 
 #define REMOTE    {"$DISPLAY", 'X', 0,0, 0,0, 0,0,0L, DEF_ARG0(FLOPPYD_FLAG)}
 
@@ -658,7 +662,7 @@ static const char *error_msg[22]={
 "Seek end" };
 
 
-static __inline__ void print_message(RawRequest_t *raw_cmd,const char *message)
+static inline void print_message(RawRequest_t *raw_cmd,const char *message)
 {
 	int i, code;
 	if(!message)
@@ -813,7 +817,7 @@ struct device devices[] = {
 #define USE_2M(floppy) ((floppy.rate & FD_2M) ? 0xff : 0x80 )
 #define SSIZE(floppy) ((((floppy.rate & 0x38) >> 3 ) + 2) % 8)
 
-static __inline__ void set_2m(struct floppy_struct *floppy, unsigned int value)
+static inline void set_2m(struct floppy_struct *floppy, unsigned int value)
 {
 	uint8_t v;
 	if (value & 0x7f)
@@ -824,7 +828,7 @@ static __inline__ void set_2m(struct floppy_struct *floppy, unsigned int value)
 }
 #define SET_2M set_2m
 
-static __inline__ void set_ssize(struct floppy_struct *floppy, int value)
+static inline void set_ssize(struct floppy_struct *floppy, int value)
 {
 	uint8_t v = (uint8_t) ((( (value & 7) + 6 ) % 8) << 3);
 
@@ -833,7 +837,7 @@ static __inline__ void set_ssize(struct floppy_struct *floppy, int value)
 
 #define SET_SSIZE set_ssize
 
-static __inline__ int set_parameters(int fd, struct floppy_struct *floppy,
+static inline int set_parameters(int fd, struct floppy_struct *floppy,
 				     struct MT_STAT *buf)
 {
 	if ( ( MINOR(buf->st_rdev ) & 0x7f ) > 3 )
@@ -842,7 +846,7 @@ static __inline__ int set_parameters(int fd, struct floppy_struct *floppy,
 	return ioctl(fd, FDSETPRM, floppy);
 }
 
-static __inline__ int get_parameters(int fd, struct floppy_struct *floppy)
+static inline int get_parameters(int fd, struct floppy_struct *floppy)
 {
 	return ioctl(fd, FDGETPRM, floppy);
 }
@@ -1192,8 +1196,8 @@ int init_geom(int fd, struct device *dev, struct device *orig_dev,
 #endif /* INIT_GENERIC */
 
 #ifdef INIT_NOOP
-int init_geom(int fd, struct device *dev, struct device *orig_dev,
-	      struct MT_STAT *statbuf)
+int init_geom(int fd UNUSEDP, struct device *dev, struct device *orig_dev,
+	      struct MT_STAT *statbuf UNUSEDP)
 {
 	return compare_geom(dev, orig_dev);
 }

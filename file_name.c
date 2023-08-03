@@ -67,17 +67,17 @@ static void TranslateToDos(doscp_t *toDos, const char *in, char *out,
 			continue;
 		}
 
-		if (iswcntrl(*s)) {
+		if (iswcntrl((wint_t)*s)) {
 			/* "control" characters */
 			*mangled |= 3;
 			buffer[t_idx] = '_';
-		} else if (iswlower(*s)) {
+		} else if (iswlower((wint_t)*s)) {
 			buffer[t_idx] = ch_towupper(*s);
 			if(*Case == UPPER && !mtools_no_vfat)
 				*mangled |= 1;
 			else
 				*Case = LOWER;
-		} else if (iswupper(*s)) {
+		} else if (iswupper((wint_t)*s)) {
 			buffer[t_idx] = *s;
 			if(*Case == LOWER && !mtools_no_vfat)
 				*mangled |= 1;
@@ -189,4 +189,28 @@ wchar_t *unix_name(doscp_t *dosCp,
 	dos_to_wchar(dosCp, ans, ret, 12);
 	return ret;
 }
+
+int isSpecial(const char *name)
+{
+	if(name[0] == '\0')
+		return 1;
+	if(!strcmp(name,"."))
+		return 1;
+	if(!strcmp(name,".."))
+		return 1;
+	return 0;
+}
+
+#ifdef HAVE_WCHAR_H
+int isSpecialW(const wchar_t *name)
+{
+	if(name[0] == '\0')
+		return 1;
+	if(!wcscmp(name,L"."))
+		return 1;
+	if(!wcscmp(name,L".."))
+		return 1;
+	return 0;
+}
+#endif
 

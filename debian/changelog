@@ -1,3 +1,11 @@
+mtools (4.0.43-1) unstable; urgency=medium
+
+  * Orphan package.
+  * New upstream release.
+  * Bump Standards-Version to 4.6.2.
+
+ -- Chris Lamb <lamby@debian.org>  Thu, 03 Aug 2023 09:33:19 +0100
+
 mtools (4.0.33-1+really4.0.32-1) unstable; urgency=medium
 
   * Revert to version 4.0.32-1 due to regressions on ARM* systems affecting the

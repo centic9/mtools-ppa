@@ -83,10 +83,6 @@ static const char *fix_mcwd(char *ans)
 	return ans;
 }
 
-int unix_dir_loop(Stream_t *Stream, MainParam_t *mp);
-int unix_loop(Stream_t *Stream UNUSEDP, MainParam_t *mp, char *arg,
-	      int follow_dir_link);
-
 static int _unix_loop(Stream_t *Dir, MainParam_t *mp,
 		      const char *filename UNUSEDP)
 {
@@ -157,31 +153,6 @@ int unix_loop(Stream_t *Stream UNUSEDP, MainParam_t *mp,
 	return ret;
 }
 
-
-int isSpecial(const char *name)
-{
-	if(name[0] == '\0')
-		return 1;
-	if(!strcmp(name,"."))
-		return 1;
-	if(!strcmp(name,".."))
-		return 1;
-	return 0;
-}
-
-#ifdef HAVE_WCHAR_H
-int isSpecialW(const wchar_t *name)
-{
-	if(name[0] == '\0')
-		return 1;
-	if(!wcscmp(name,L"."))
-		return 1;
-	if(!wcscmp(name,L".."))
-		return 1;
-	return 0;
-}
-#endif
-
 static int checkForDot(int lookupflags, const wchar_t *name)
 {
 	return (lookupflags & NO_DOTS) && isSpecialW(name);
@@ -202,7 +173,8 @@ static int isUniqueTarget(const char *name)
 }
 
 static int handle_leaf(direntry_t *direntry, MainParam_t *mp,
-		       lookupState_t *lookupState)
+		       lookupState_t *lookupState,
+		       Stream_t **DeferredFileP)
 {
 	Stream_t *MyFile=0;
 	int ret;
@@ -234,13 +206,24 @@ static int handle_leaf(direntry_t *direntry, MainParam_t *mp,
 			MyFile = mp->File = OpenFileByDirentry(direntry);
 		ret = mp->dirCallback(direntry, mp);
 	} else {
-		if(mp->lookupflags & DO_OPEN)
+		if(mp->lookupflags & DO_OPEN) {
+			if(DeferredFileP && *DeferredFileP) {
+				/* Already a deferred file => close it and error */
+				FREE(DeferredFileP);
+				fprintf(stderr,
+					"Attempt to copy multiple files to non-directory\n");
+				return STOP_NOW | ERROR_ONE;
+			}
+
 			MyFile = mp->File = OpenFileByDirentry(direntry);
+			if(DeferredFileP) {
+				*DeferredFileP = MyFile;
+				return 0;
+			}
+		}
 		ret = mp->callback(direntry, mp);
 	}
 	FREE(&MyFile);
-	if(isUniqueTarget(mp->targetName))
-		ret |= STOP_NOW;
 	return ret;
 }
 
@@ -290,7 +273,8 @@ static int _dos_loop(Stream_t *Dir, MainParam_t *mp, const char *filename)
 
 static int recurs_dos_loop(MainParam_t *mp, const char *filename0,
 			   const char *filename1,
-			   lookupState_t *lookupState)
+			   lookupState_t *lookupState,
+			   Stream_t **DeferredFileP)
 {
 	/* Dir is de-allocated by the same entity which allocated it */
 	const char *ptr;
@@ -330,7 +314,8 @@ static int recurs_dos_loop(MainParam_t *mp, const char *filename0,
 	   (!strcmp(filename0, "..") && filename1)) {
 		/* up one level */
 		mp->File = getDirentry(mp->File)->Dir;
-		return recurs_dos_loop(mp, filename0+2, filename1, lookupState);
+		return recurs_dos_loop(mp, filename0+2, filename1, lookupState,
+				       DeferredFileP);
 	}
 
 	doing_mcwd = !!filename1;
@@ -348,19 +333,19 @@ static int recurs_dos_loop(MainParam_t *mp, const char *filename0,
 		if(mp->lookupflags & OPEN_PARENT) {
 			mp->targetName = filename0;
 			ret = handle_leaf(getDirentry(mp->File), mp,
-					  lookupState);
+					  lookupState, NULL);
 			mp->targetName = 0;
 			return ret;
 		}
 
 		if(!strcmp(filename0, ".") || !filename0[0]) {
 			return handle_leaf(getDirentry(mp->File),
-					   mp, lookupState);
+					   mp, lookupState, NULL);
 		}
 
 		if(!strcmp(filename0, "..")) {
 			return handle_leaf(getParent(getDirentry(mp->File)), mp,
-					   lookupState);
+					   lookupState, NULL);
 		}
 
 		lookupflags = mp->lookupflags;
@@ -400,12 +385,12 @@ static int recurs_dos_loop(MainParam_t *mp, const char *filename0,
 		if(ptr) {
 			Stream_t *SubDir;
 			SubDir = mp->File = OpenFileByDirentry(&entry);
-			ret |= recurs_dos_loop(mp, ptr, filename1, lookupState);
+			ret |= recurs_dos_loop(mp, ptr, filename1, lookupState,
+					       DeferredFileP);
 			FREE(&SubDir);
 		} else {
-			ret |= handle_leaf(&entry, mp, lookupState);
-			if(isUniqueTarget(mp->targetName))
-				return ret | STOP_NOW;
+			ret |= handle_leaf(&entry, mp, lookupState,
+					   DeferredFileP);
 		}
 		if(doing_mcwd)
 			break;
@@ -426,6 +411,8 @@ static int common_dos_loop(MainParam_t *mp, const char *pathname,
 	Stream_t *RootDir;
 	const char *cwd;
 	char drive;
+	Stream_t *DeferredFile=NULL;
+	Stream_t **DeferredFileP=NULL;
 
 	int ret;
 	mp->loop = _dos_loop;
@@ -451,12 +438,22 @@ static int common_dos_loop(MainParam_t *mp, const char *pathname,
 	if(!mp->File)
 		return ERROR_ONE;
 
-	ret = recurs_dos_loop(mp, cwd, pathname, lookupState);
+	if(mp->originalArg && strpbrk(mp->originalArg, "*[?") != 0 &&
+	   (mp->lookupflags & DEFERABLE) &&
+	   isUniqueTarget(mp->targetName))
+		DeferredFileP = &DeferredFile;
+	
+	ret = recurs_dos_loop(mp, cwd, pathname, lookupState, DeferredFileP);
 	if(ret & NO_CWD) {
 		/* no CWD */
 		*mp->mcwd = '\0';
 		unlink_mcwd();
-		ret = recurs_dos_loop(mp, "", pathname, lookupState);
+		ret = recurs_dos_loop(mp, "", pathname, lookupState, DeferredFileP);
+	}
+	if(DeferredFile) {
+		mp->File = DeferredFile;
+		ret = mp->callback(NULL, mp);
+		FREE(&DeferredFile);
 	}
 	FREE(&RootDir);
 	return ret;
@@ -468,7 +465,7 @@ static int dos_loop(MainParam_t *mp, const char *arg)
 }
 
 
-static int dos_target_lookup(MainParam_t *mp, const char *arg)
+int dos_target_lookup(MainParam_t *mp, const char *arg)
 {
 	lookupState_t lookupState;
 	int ret;
@@ -507,56 +504,6 @@ static int dos_target_lookup(MainParam_t *mp, const char *arg)
 			fprintf(stderr, "Ambiguous %s\n", arg);
 			return ERROR_ONE;
 	}
-}
-
-/*
- * Is target a Unix directory
- * -1 error occured
- * 0 regular file
- * 1 directory
- */
-static int unix_is_dir(const char *name)
-{
-	struct stat buf;
-	if(stat(name, &buf) < 0)
-		return -1;
-	else
-		return 1 && S_ISDIR(buf.st_mode);
-}
-
-static int unix_target_lookup(MainParam_t *mp, const char *arg)
-{
-	char *ptr;
-	mp->unixTarget = strdup(arg);
-	/* try complete filename */
-	if(access(mp->unixTarget, F_OK) == 0) {
-		switch(unix_is_dir(mp->unixTarget)) {
-		case -1:
-			return ERROR_ONE;
-		case 0:
-			mp->targetName="";
-			break;
-		}
-		return GOT_ONE;
-	}
-	ptr = strrchr(mp->unixTarget, '/');
-	if(!ptr) {
-		mp->targetName = mp->unixTarget;
-		mp->unixTarget = strdup(".");
-		return GOT_ONE;
-	} else {
-		*ptr = '\0';
-		mp->targetName = ptr+1;
-		return GOT_ONE;
-	}
-}
-
-int target_lookup(MainParam_t *mp, const char *arg)
-{
-	if((mp->lookupflags & NO_UNIX) || (arg[0] && arg[1] == ':' ))
-		return dos_target_lookup(mp, arg);
-	else
-		return unix_target_lookup(mp, arg);
 }
 
 int main_loop(MainParam_t *mp, char **argv, int argc)
@@ -622,15 +569,16 @@ void init_mp(MainParam_t *mp)
 {
 	fix_mcwd(mp->mcwd);
 	mp->openflags = O_RDONLY;
+	mp->lookupflags = 0;
 	mp->targetName = 0;
 	mp->targetDir = 0;
-	mp->unixTarget = 0;
 	mp->dirCallback = dispatchToFile;
 	mp->unixcallback = NULL;
 	mp->shortname.data = mp->longname.data = 0;
 	mp->shortname.len = mp->longname.len = 0;
 	mp->File = 0;
 	mp->fast_quit = 0;
+	mp->originalArg = 0;
 }
 
 const char *mpGetBasename(MainParam_t *mp)
@@ -659,35 +607,4 @@ const char *mpPickTargetName(MainParam_t *mp)
 		return mp->targetName;
 	else
 		return mpGetBasename(mp);
-}
-
-char *mpBuildUnixFilename(MainParam_t *mp)
-{
-	const char *target;
-	char *ret;
-	char *tmp;
-
-	target = mpPickTargetName(mp);
-	ret = malloc(strlen(mp->unixTarget) + 2 + strlen(target));
-	if(!ret)
-		return 0;
-	strcpy(ret, mp->unixTarget);
-	if(*target) {
-		/* fix for 'mcopy -n x:file existingfile' -- H. Lermen 980816 */
-		if(!mp->targetName && !mp->targetDir && !unix_is_dir(ret))
-			return ret;
-		strcat(ret, "/");
-		if(!strcmp(target, ".")) {
-		  target="DOT";
-		} else if(!strcmp(target, "..")) {
-		  target="DOTDOT";
-		}
-		while( (tmp=strchr(target, '/')) ) {
-		  strncat(ret, target, ptrdiff(tmp,target));
-		  strcat(ret, "\\");
-		  target=tmp+1;
-		}
-		strcat(ret, target);
-	}
-	return ret;
 }
