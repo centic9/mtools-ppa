@@ -94,7 +94,7 @@ FILE *opentty(int mode);
 
 int is_dir(Stream_t *Dir, char *path);
 
-int dir_grow(Stream_t *Dir, int size);
+int dir_grow(Stream_t *Dir, unsigned int size);
 
 void *safe_malloc(size_t size);
 Stream_t *open_dos2unix(Stream_t *Next,int convertCharset);
@@ -119,22 +119,22 @@ if(source)target=source
 
 #define compare(ref,testee) ((ref) && (ref) != (testee))
 
-UNUSED(static __inline__ char ch_toupper(char ch))
+static inline char ch_toupper(char ch)
 {
         return (char) toupper( (unsigned char) ch);
 }
 
-UNUSED(static __inline__ char ch_tolower(char ch))
+static inline char ch_tolower(char ch)
 {
         return (char) tolower( (unsigned char) ch);
 }
 
-UNUSED(static __inline__ void init_random(void))
+static inline void init_random(void)
 {
 	srandom((unsigned int)time (0));
 }
 
-UNUSED(static __inline__ size_t ptrdiff (const char *end, const char *begin))
+static inline size_t ptrdiff (const char *end, const char *begin)
 {
 	return (size_t) (end-begin);
 }
@@ -249,7 +249,7 @@ FILE *open_mcwd(const char *mode);
 void unlink_mcwd(void);
 
 #ifndef OS_mingw32msvc
-ssize_t safePopenOut(const char **command, char *output, size_t len);
+ssize_t safePopenOut(const char* const* command, char *output, size_t len);
 #endif
 
 #define ROUND_DOWN(value, grain) ((value) - (value) % (grain))

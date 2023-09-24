@@ -1,5 +1,5 @@
 '\" t
-.TH mtools 5 "04Jun22" MTOOLS MTOOLS
+.TH mtools 5 "21Mar23" MTOOLS MTOOLS
 .SH Name
 mtools.conf - mtools configuration files
 '\" t
@@ -13,7 +13,7 @@ mtools.conf - mtools configuration files
 .tr \(if`
 .tr \(pd"
 
-.ds St Mtools\ 4.0.40
+.ds St Mtools\ 4.0.43
 .PP
 .SH Description
 .PP
@@ -318,9 +318,9 @@ architectures, and for plain files it has no effect at all.
 .PP
 .SS \ \ General\ Purpose\ Drive\ Variables
 .PP
-The following general purpose drive variables are available.  Depending
-to their type, these variables can be set to a string (precmd) or
-an integer (all others)
+The following general purpose drive variables are available.
+Depending to their type, these variables can be set to a string
+(precmd, postcmd) or an integer (all others)
 .TP
 \&\fR\&\f(CWfat_bits\fR\ 
 The number of FAT bits. This may be 12 or 16. This is very rarely
@@ -368,10 +368,16 @@ FAT and root directory), then one sector from image is skipped
 .IP
 .TP
 \&\fR\&\f(CWprecmd\fR\ 
+Executes the given command before opening the device.
 On some variants of Solaris, it is necessary to call 'volcheck -v'
 before opening a floppy device, in order for the system to notice that
 there is indeed a disk in the drive. \fR\&\f(CWprecmd="volcheck -v"\fR in the
 drive clause establishes the desired behavior.
+.TP
+\&\fR\&\f(CWpostcmd\fR\ 
+Executes the given command after closing the device.
+May be useful if mtools shares the image file with some other application,
+in order to release the image file to that application.
 .TP
 \&\fR\&\f(CWblocksize\fR\ 
 This parameter represents a default block size to be always used on this

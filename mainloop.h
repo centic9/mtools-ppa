@@ -38,47 +38,60 @@ typedef struct MainParam_t {
 	void *arg; /* command-specific parameters
 		    * to be passed to callback */
 
-       	int openflags; /* flags used to open disk */
-	int lookupflags; /* flags used to lookup up using vfat_lookup */
+       	int openflags; /* flags used to open disk, supplied by application */
+	
+	int lookupflags; /* flags used to lookup up using vfat_lookup,
+			    supplied by application */
+	
 	int fast_quit; /* for commands manipulating multiple files, quit
-			* as soon as even _one_ file has a problem */
+			* as soon as even _one_ file has a
+			* problem. Supplied by application, used by
+			* mattrib and mcopy */
 
 	bounded_string shortname; /* where to put the short name of the
-				   * matched file */
+				   * matched file, used by mdir and mmove */
 	bounded_string longname; /* where to put the long name of the
-				  * matched file */
+				  * matched file, used by mdir and mmove */
 	/* out parameters */
-	Stream_t *File;
+	Stream_t *File; /* needed by mattrib, mcopy */
 
-	direntry_t *direntry;  /* dir of this entry */
+	direntry_t *direntry;  /* dir of this entry: needed by mmove */
+
 	char *unixSourceName;  /* filename of the last opened Unix source
-				* file (Unix equiv of Dos direntry) */
+				* file (Unix equiv of Dos direntry). Only used
+				* when "copying" from Unix */
 
-	Stream_t *targetDir; /* directory where to place files */
-	char *unixTarget; /* directory on Unix where to put files */
+	Stream_t *targetDir; /* directory on Dos where to place files
+				or subdirectories. Needed by mcopy,
+				mmd, mmove */
 
 	const char *targetName; /* basename of target file, or NULL if same
-				 * basename as source should be conserved */
+				 * basename as source should be conserved,
+				 * needed by mcopy, mmd, mmove */
+	
+	char *originalArg; /* original argument, complete with wildcards.
+			    * Used by mainloop internally for display in printed 
+			    * messages */
 
-	char *originalArg; /* original argument, complete with wildcards */
 	int basenameHasWildcard; /* true if there are wildcards in the
-				  * basename */
-
+				  * basename. Output only parameter,
+				  * needed by mdir, mcopy */
 
 	/* internal data */
-	char mcwd[MAX_PATH+4];
+	char mcwd[MAX_PATH+4]; /* needed by mcwd and mmove */
 
-	char *fileName; /* resolved Unix filename */
-
-	char targetBuffer[4*MAX_VNAMELEN+1]; /* buffer for target name */
+	char targetBuffer[4*MAX_VNAMELEN+1]; /* buffer for target
+						name, only used by
+						mpGetBasename() and
+						callers as a temporary
+						output for formatted
+						name */
 } MainParam_t;
 
 void init_mp(MainParam_t *MainParam);
 int main_loop(MainParam_t *MainParam, char **argv, int argc);
 
-int target_lookup(MainParam_t *mp, const char *arg);
-
-Stream_t *open_root_dir(char drivename, int flags, int *isRop);
+int dos_target_lookup(MainParam_t *mp, const char *arg);
 
 const char *mpGetBasename(MainParam_t *mp); /* statically allocated
 					     * string */
@@ -86,10 +99,9 @@ const char *mpGetBasename(MainParam_t *mp); /* statically allocated
 void mpPrintFilename(FILE *file, MainParam_t *mp);
 const char *mpPickTargetName(MainParam_t *mp); /* statically allocated string */
 
-char *mpBuildUnixFilename(MainParam_t *mp); /* dynamically allocated, must
-					     * be freed */
-
-int isSpecial(const char *name);
+int unix_dir_loop(Stream_t *Stream, MainParam_t *mp);
+int unix_loop(Stream_t *Stream UNUSEDP, MainParam_t *mp, char *arg,
+	      int follow_dir_link);
 
 #define MISSED_ONE 2  /* set if one cmd line argument didn't match any files */
 #define GOT_ONE 4     /* set if a match was found, used for exit status */

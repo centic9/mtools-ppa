@@ -30,6 +30,7 @@
 #include "buffer.h"
 #include "file_name.h"
 #include "open_image.h"
+#include "fat_device.h"
 
 #define FULL_CYL
 
@@ -54,7 +55,7 @@ static int read_boot(Stream_t *Stream, union bootsector * boot, size_t size)
 	if (force_pread(Stream, boot->characters, 0, size) != (ssize_t) size)
 		return -1;
 
-	boot_sector_size = WORD(secsiz);
+	boot_sector_size = BOOT_WORD(secsiz);
 	if(boot_sector_size < sizeof(boot->bytes)) {
 		/* zero rest of in-memory boot sector */
 		memset(boot->bytes+boot_sector_size, 0,
@@ -136,10 +137,10 @@ static void boot_to_geom(struct device *dev, int media,
 	dev->use_2m = 0x80; /* disable 2m mode to begin */
 
 	if(media == 0xf0 || media >= 0x100){
-		dev->heads = WORD(nheads);
-		dev->sectors = WORD(nsect);
-		tot_sectors = DWORD(bigsect);
-		SET_INT(tot_sectors, WORD(psect));
+		dev->heads = BOOT_WORD(nheads);
+		dev->sectors = BOOT_WORD(nsect);
+		tot_sectors = BOOT_DWORD(bigsect);
+		SET_INT(tot_sectors, BOOT_WORD(psect));
 		sect_per_track = dev->heads * dev->sectors;
 		if(sect_per_track == 0) {
 		    if(mtools_skip_check) {
@@ -162,12 +163,12 @@ static void boot_to_geom(struct device *dev, int media,
 			/* round size up */
 			dev->tracks++;
 
-		BootP = WORD(ext.old.BootP);
-		Infp0 = WORD(ext.old.Infp0);
-		InfpX = WORD(ext.old.InfpX);
-		InfTm = WORD(ext.old.InfTm);
+		BootP = BOOT_WORD(ext.old.BootP);
+		Infp0 = BOOT_WORD(ext.old.Infp0);
+		InfpX = BOOT_WORD(ext.old.InfpX);
+		InfTm = BOOT_WORD(ext.old.InfTm);
 
-		if(WORD(fatlen)) {
+		if(BOOT_WORD(fatlen)) {
 			labelBlock = &boot->boot.ext.old.labelBlock;
 		} else {
 			labelBlock = &boot->boot.ext.fat32.labelBlock;
@@ -187,7 +188,7 @@ static void boot_to_geom(struct device *dev, int media,
 				dev->ssize |= 0x80; /* is set */
 			}
 		}
-		dev->sector_size = WORD(secsiz);
+		dev->sector_size = BOOT_WORD(secsiz);
 	} else
 		if(setDeviceFromOldDos(media, dev) < 0)
 			exit(1);
@@ -406,6 +407,7 @@ uint32_t parseFsParams(	Fs_t *This,
 			unsigned int cylinder_size)
 {
 	uint32_t tot_sectors;
+	int haveBigFatLen = 0;
 
 	if ((media & ~7) == 0xf8){
 		/* This bit of code is only entered if there is no BPB, or
@@ -429,7 +431,7 @@ uint32_t parseFsParams(	Fs_t *This,
 		struct label_blk_t *labelBlock;
 		unsigned int i;
 
-		This->sector_size = WORD(secsiz);
+		This->sector_size = BOOT_WORD(secsiz);
 		if(This->sector_size > MAX_SECTOR){
 			fprintf(stderr,"init: sector size too big\n");
 			return 0;
@@ -450,34 +452,35 @@ uint32_t parseFsParams(	Fs_t *This,
 		 * all numbers are in sectors, except num_clus
 		 * (which is in clusters)
 		 */
-		tot_sectors = WORD(psect);
+		tot_sectors = BOOT_WORD(psect);
 		if(!tot_sectors)
-			tot_sectors = DWORD(bigsect);
+			tot_sectors = BOOT_DWORD(bigsect);
 
 		This->cluster_size = boot->boot.clsiz;
-		This->fat_start = WORD(nrsvsect);
-		This->fat_len = WORD(fatlen);
-		This->dir_len = WORD(dirents) * MDIR_SIZE / This->sector_size;
+		This->fat_start = BOOT_WORD(nrsvsect);
+		This->fat_len = BOOT_WORD(fatlen);
+		This->dir_len = BOOT_WORD(dirents) * MDIR_SIZE / This->sector_size;
 		This->num_fat = boot->boot.nfat;
 
 		if (This->fat_len) {
 			labelBlock = &boot->boot.ext.old.labelBlock;
 		} else {
 			labelBlock = &boot->boot.ext.fat32.labelBlock;
-			This->fat_len = DWORD(ext.fat32.bigFat);
-			This->backupBoot = WORD(ext.fat32.backupBoot);
+			This->fat_len = BOOT_DWORD(ext.fat32.bigFat);
+			haveBigFatLen = 1;
+			This->backupBoot = BOOT_WORD(ext.fat32.backupBoot);
 		}
 
 		if(has_BPB4) {
 			This->serialized = 1;
-			This->serial_number = _DWORD(labelBlock->serial);
+			This->serial_number = DWORD(labelBlock->serial);
 		}
 	}
 
 	if(calc_num_clus(This, tot_sectors) < 0)
 		/* Too few sectors */
 		return 0;
-	set_fat(This);
+	set_fat(This, haveBigFatLen);
 
 	return tot_sectors;
 }

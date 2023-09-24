@@ -108,6 +108,8 @@ typedef struct Xdf_t {
 	unsigned int stretch:1;
 	unsigned int rootskip:1;
 	signed  int drive:4;
+
+	const char *postcmd;
 } Xdf_t;
 
 typedef struct {
@@ -245,7 +247,7 @@ static void adjust_bounds(Xdf_t *This, uint32_t ibegin, uint32_t iend,
 }
 
 
-static __inline__ int try_flush_dirty(Xdf_t *This)
+static inline int try_flush_dirty(Xdf_t *This)
 {
 	unsigned char ptr;
 	int nr, bytes;
@@ -557,10 +559,13 @@ static int xdf_flush(Stream_t *Stream)
 
 static int xdf_free(Stream_t *Stream)
 {
+	int ret;
 	DeclareThis(Xdf_t);
 	Free(This->track_map);
 	Free(This->buffer);
-	return close(This->fd);
+	ret = close(This->fd);
+	postcmd(This->postcmd);
+	return ret;
 }
 
 
@@ -601,7 +606,7 @@ static void set_geom(Xdf_t *This, struct device *dev)
 	dev->tracks = 80;
 }
 
-static int config_geom(Stream_t *Stream UNUSEDP, struct device *dev,
+static int config_geom(Stream_t *Stream, struct device *dev,
 		       struct device *orig_dev UNUSEDP)
 {
 	DeclareThis(Xdf_t);
@@ -645,8 +650,12 @@ Stream_t *XdfOpen(struct device *dev, const char *name,
 
 	This->sector_size = 512;
 	This->stretch = 0;
+	This->postcmd = 0;
 
 	precmd(dev);
+	if(dev)
+		This->postcmd = dev->postcmd;
+
 	This->fd = open(name,
 			((mode | dev->mode) & ~O_ACCMODE) |
 			O_EXCL | O_NDELAY | O_RDWR);
@@ -659,7 +668,7 @@ Stream_t *XdfOpen(struct device *dev, const char *name,
 		goto exit_0;
 	}
 	closeExec(This->fd);
-
+	
 	This->drive = GET_DRIVE(This->fd);
 	if(This->drive < 0)
 		goto exit_1;
@@ -699,14 +708,14 @@ Stream_t *XdfOpen(struct device *dev, const char *name,
 
 	boot = (union bootsector *) This->buffer;
 
-	fatSize = WORD(fatlen);
+	fatSize = BOOT_WORD(fatlen);
 	if(fatSize > UINT8_MAX) {
 		fprintf(stderr, "Fat size %d too large\n", fatSize);
 		exit(1);
 	}
 	This->FatSize = (uint8_t) fatSize;
-	This->RootDirSize = WORD(dirents)/16;
-	This->track_size = WORD(nsect);
+	This->RootDirSize = BOOT_WORD(dirents)/16;
+	This->track_size = BOOT_WORD(nsect);
 	for(type=0; type < NUMBER(xdf_table); type++) {
 		if(xdf_table[type].track_size == This->track_size) {
 			This->map = xdf_table[type].map;

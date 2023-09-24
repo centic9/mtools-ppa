@@ -39,15 +39,14 @@ struct scan_state {
 	int longmatch;
 	unsigned int free_start;
 	unsigned int free_end;
-	int slot;
+	unsigned int slot;
 	int got_slots;
 	unsigned int size_needed;
-	int max_entry;
+	unsigned int max_entry;
 };
 
 #include "mtoolsDirentry.h"
 
-int clear_vses(Stream_t *, int, unsigned int);
 void autorename_short(struct dos_name_t *, int);
 void autorename_long(char *, int);
 
@@ -61,6 +60,10 @@ void autorename_long(char *, int);
 #define DO_OPEN_DIRS 0x400 /* open all directories that are found */
 #define OPEN_PARENT 0x1000  /* in target lookup, open parent
 			     * instead of file itself */
-#define NO_UNIX 0x2000 /* in target lookup, consider all files to reside on
-			* the DOS fs */
+
+#define DEFERABLE 0x2000 /* When copying from a source with wildcards
+			  * to a destination that is not a directory, defer the
+			  * copy until the directory has been scanned fully, to
+			  * make sure that no multiple files match the wildcard */
+
 #endif

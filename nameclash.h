@@ -58,6 +58,7 @@ typedef struct ClashHandling_t {
 } ClashHandling_t;
 
 /* write callback */
+struct direntry_t;
 typedef int (write_data_callback)(dos_name_t *,char *, void *, struct direntry_t *);
 
 int mwrite_one(Stream_t *Dir,

@@ -1,6 +1,6 @@
 This is mtools.info, produced by makeinfo version 6.7 from mtools.texi.
 
-This manual is for Mtools (version 4.0.40, June 2022), which is a
+This manual is for Mtools (version 4.0.43, March 2023), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -53,7 +53,7 @@ preliminary mounting or initialization (assuming the default
 '/etc/mtools.conf' works on your machine).  With mtools, one can change
 floppies too without unmounting and mounting.
 
-   This manual is for Mtools (version 4.0.40, June 2022), which is a
+   This manual is for Mtools (version 4.0.43, March 2023), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -87,7 +87,7 @@ File: mtools.info,  Node: Location,  Next: Common features,  Prev: Top,  Up: Top
 *********************
 
 Mtools can be found at the following places (and their mirrors):
-     http://ftp.gnu.org/gnu/mtools/mtools-4.0.40.tar.gz
+     http://ftp.gnu.org/gnu/mtools/mtools-4.0.43.tar.gz
 
    These patches are named 'mtools-'VERSION'-'DDMM'.taz', where version
 stands for the base version, DD for the day and MM for the month.  Due
@@ -834,8 +834,8 @@ File: mtools.info,  Node: miscellaneous variables,  Next: miscellaneous flags,  
 -------------------------------------
 
 The following general purpose drive variables are available.  Depending
-to their type, these variables can be set to a string (precmd) or an
-integer (all others)
+to their type, these variables can be set to a string (precmd, postcmd)
+or an integer (all others)
 
 'fat_bits'
      The number of FAT bits.  This may be 12 or 16.  This is very rarely
@@ -881,10 +881,16 @@ integer (all others)
      ('skip1s'), and finally the rest of image is used as is (implicit)
 
 'precmd'
-     On some variants of Solaris, it is necessary to call 'volcheck -v'
-     before opening a floppy device, in order for the system to notice
-     that there is indeed a disk in the drive.  'precmd="volcheck -v"'
-     in the drive clause establishes the desired behavior.
+     Executes the given command before opening the device.  On some
+     variants of Solaris, it is necessary to call 'volcheck -v' before
+     opening a floppy device, in order for the system to notice that
+     there is indeed a disk in the drive.  'precmd="volcheck -v"' in the
+     drive clause establishes the desired behavior.
+
+'postcmd'
+     Executes the given command after closing the device.  May be useful
+     if mtools shares the image file with some other application, in
+     order to release the image file to that application.
 
 'blocksize'
      This parameter represents a default block size to be always used on
@@ -1712,6 +1718,11 @@ has a different meaning.
      older mtools version, and may make the disk unreadable.  Only use
      if you know what you are doing.
 
+'b'
+     Use a non-standard bios disk number for this disk.  By default,
+     bios disk number is inferred from media descriptor: 0x80 for media
+     descriptor 0xf8, or 0x00 otherwise.
+
    To format a diskette at a density other than the default, you must
 supply (at least) those command line parameters that are different from
 the default.
@@ -2461,12 +2472,12 @@ Concept index
 * Bad blocks:                            mbadblocks.           (line  6)
 * bigger sectors:                        bigger sectors.       (line  6)
 * blocksize:                             miscellaneous variables.
-                                                               (line 60)
+                                                               (line 66)
 * bugs:                                  Location.             (line  6)
 * Case sensitivity:                      case sensitivity.     (line  6)
 * Changing file attributes:              mattrib.              (line  6)
 * character devices:                     miscellaneous variables.
-                                                               (line 60)
+                                                               (line 66)
 * Checking configuration file:           mtoolstest.           (line  6)
 * Clusters of a file:                    mshowfat.             (line  6)
 * Command list:                          Commands.             (line  6)
@@ -2522,6 +2533,8 @@ Concept index
 * erasing an MS-DOS directory recursively: mdeltree.           (line  6)
 * erasing MS-DOS files:                  mdel.                 (line  6)
 * exclusive access to a drive:           open flags.           (line  6)
+* Executing commands after closing the device: miscellaneous variables.
+                                                               (line 61)
 * Executing commands before opening the device: miscellaneous variables.
                                                                (line 54)
 * Fat:                                   mshowfat.             (line  6)
@@ -2626,7 +2639,7 @@ Concept index
 * Primary file name (name clashes):      name clashes.         (line  6)
 * Ram disk:                              location information. (line 28)
 * raw device:                            miscellaneous variables.
-                                                               (line 60)
+                                                               (line 66)
 * Read errors:                           mbadblocks.           (line  6)
 * Read-only files (changing the attribute): mattrib.           (line  6)
 * Read-only files (listing them):        mdir.                 (line  6)
@@ -2699,71 +2712,71 @@ Concept index
 
 
 Tag Table:
-Node: Top868
-Node: Location3121
-Node: Common features4059
-Node: arguments4823
-Node: drive letters6588
-Node: directory7942
-Node: long names8388
-Node: name clashes10934
-Node: case sensitivity13218
-Node: high capacity formats14455
-Node: more sectors15500
-Node: bigger sectors16555
-Node: 2m17284
-Node: XDF18470
-Node: exit codes19813
-Node: bugs20451
-Node: Configuration20984
-Node: configuration file location22273
-Node: general syntax22726
-Node: default values23557
-Node: global variables24085
-Node: per drive variables26278
-Node: general information27113
-Node: location information27555
-Node: geometry description29084
-Node: open flags32945
-Node: miscellaneous variables33545
-Node: miscellaneous flags37135
-Node: multiple descriptions40765
-Node: parsing order42439
-Node: old style configuration43470
-Node: Commands44169
-Node: floppyd46050
-Node: floppyd_installtest50843
-Node: mattrib51474
-Node: mbadblocks53266
-Node: mcat54560
-Node: mcd55374
-Node: mcopy56229
-Node: mdel59239
-Node: mdeltree59578
-Node: mdir59995
-Node: mdu61271
-Node: mformat61777
-Node: mkmanifest70288
-Node: minfo72262
-Node: mlabel72832
-Node: mmd73985
-Node: mmount74334
-Node: mmove74937
-Node: mpartition75742
-Node: mrd81268
-Node: mren81626
-Node: mshortname82375
-Node: mshowfat82705
-Node: mtoolstest83114
-Node: mtype83686
-Node: mzip84537
-Ref: mzip-Footnote-186562
-Ref: mzip-Footnote-286643
-Node: Compiling mtools86930
-Node: Porting mtools88029
-Node: Command Index93937
-Node: Variable Index94065
-Node: Concept Index95888
+Node: Top869
+Node: Location3123
+Node: Common features4061
+Node: arguments4825
+Node: drive letters6590
+Node: directory7944
+Node: long names8390
+Node: name clashes10936
+Node: case sensitivity13220
+Node: high capacity formats14457
+Node: more sectors15502
+Node: bigger sectors16557
+Node: 2m17286
+Node: XDF18472
+Node: exit codes19815
+Node: bugs20453
+Node: Configuration20986
+Node: configuration file location22275
+Node: general syntax22728
+Node: default values23559
+Node: global variables24087
+Node: per drive variables26280
+Node: general information27115
+Node: location information27557
+Node: geometry description29086
+Node: open flags32947
+Node: miscellaneous variables33547
+Node: miscellaneous flags37417
+Node: multiple descriptions41047
+Node: parsing order42721
+Node: old style configuration43752
+Node: Commands44451
+Node: floppyd46332
+Node: floppyd_installtest51125
+Node: mattrib51756
+Node: mbadblocks53548
+Node: mcat54842
+Node: mcd55656
+Node: mcopy56511
+Node: mdel59521
+Node: mdeltree59860
+Node: mdir60277
+Node: mdu61553
+Node: mformat62059
+Node: mkmanifest70757
+Node: minfo72731
+Node: mlabel73301
+Node: mmd74454
+Node: mmount74803
+Node: mmove75406
+Node: mpartition76211
+Node: mrd81737
+Node: mren82095
+Node: mshortname82844
+Node: mshowfat83174
+Node: mtoolstest83583
+Node: mtype84155
+Node: mzip85006
+Ref: mzip-Footnote-187031
+Ref: mzip-Footnote-287112
+Node: Compiling mtools87399
+Node: Porting mtools88498
+Node: Command Index94406
+Node: Variable Index94534
+Node: Concept Index96357
 
 End Tag Table
 

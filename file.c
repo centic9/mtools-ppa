@@ -387,7 +387,7 @@ static int root_map(File_t *This, uint32_t where, uint32_t *len,
 {
 	Fs_t *Fs = _getFs(This);
 
-	if(Fs->dir_len * Fs->sector_size < where) {
+	if((Fs->dir_len + 0u) * Fs->sector_size < where) {
 		*len = 0;
 		errno = ENOSPC;
 		return -2;
@@ -484,7 +484,7 @@ static ssize_t pwrite_file(Stream_t *Stream, char *buf, mt_off_t where,
 
 static int month[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334,
 					  0, 0, 0 };
-static __inline__ time_t conv_stamp(struct directory *dir)
+static inline time_t conv_stamp(struct directory *dir)
 {
 	struct tm *tmbuf;
 	long tzone, dst;
@@ -702,7 +702,7 @@ static Stream_t *_internalFileOpen(Stream_t *Dir, unsigned int first,
 	File->preallocatedSize = 0;
 	/* memorize dir for date and attrib */
 	File->direntry = *entry;
-	if(entry->entry == -3)
+	if(isRootEntry(entry))
 		File->direntry.Dir = (Stream_t *) File; /* root directory */
 	else
 		COPY(File->direntry.Dir);
@@ -763,7 +763,7 @@ Stream_t *OpenRoot(Stream_t *Dir)
 	num = fat32RootCluster(Dir);
 
 	/* make the directory entry */
-	entry.entry = -3;
+	entry.entry = ROOT_ENTRY;
 	entry.name[0] = '\0';
 	mk_entry_from_base("/", ATTR_DIR, num, 0, 0, &entry.dir);
 

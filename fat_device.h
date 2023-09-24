@@ -1,4 +1,7 @@
-/*  Copyright 1997,1999,2001-2004,2007,2009 Alain Knaff.
+#ifndef MTOOLS_FAT_DEVICE_H
+#define MTOOLS_FAT_DEVICE_H
+
+/*  Copyright 2022 Alain Knaff.
  *  This file is part of mtools.
  *
  *  Mtools is free software: you can redistribute it and/or modify
@@ -13,40 +16,15 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Do filename expansion with the shell.
  */
 
-#include "sysincludes.h"
-#include "mtools.h"
+#include "msdos.h"
+#include "device.h"
+#include "stream.h"
 
-void precmd(struct device *dev)
-{
-	if(!dev)
-		return;
-	postcmd(dev->precmd);
-}
+Stream_t *find_device(char drive, int mode, struct device *out_dev,
+		      union bootsector *boot,
+		      char *name, int *media, mt_off_t *maxSize,
+		      int *isRop);
 
-void postcmd(const char *cmd)
-{
-#ifndef OS_mingw32msvc
-	int status;
-	pid_t pid;
-
-	if(!cmd)
-		return;
-
-	switch((pid=fork())){
-		case -1:
-			perror("Could not fork");
-			exit(1);
-		case 0: /* the son */
-			execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
-			break;
-		default:
-			wait(&status);
-			break;
-	}
 #endif
-}
-

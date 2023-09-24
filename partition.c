@@ -18,7 +18,6 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "partition.h"
 
@@ -36,7 +35,7 @@ typedef struct Partition_t {
 	uint16_t cyclinders;
 } Partition_t;
 
-static __inline__ void print_hsc(hsc *h)
+static inline void print_hsc(hsc *h)
 {
 	printf(" h=%d s=%d c=%d\n",
 	       head(*h), sector(*h), cyl(*h));
@@ -121,7 +120,7 @@ int consistencyCheck(struct partition *partTable, int doprint,
 			printf("  end:");
 			print_hsc(&partition->end);
 			printf("  start=%d\n", BEGIN(partition));
-			printf("  nr=%d\n", _DWORD(partition->nr_sects));
+			printf("  nr=%d\n", DWORD(partition->nr_sects));
 			printf("\n");
 		}
 	}
@@ -224,7 +223,7 @@ Stream_t *OpenPartition(Stream_t *Next, struct device *dev,
 	/* read the first sector, or part of it */
 	if (force_pread(This->head.Next, (char*) buf, 0, 512) != 512)
 		goto exit_0;
-	if( _WORD(buf+510) != 0xaa55) {
+	if( WORD(buf+510) != 0xaa55) {
 		/* Not a partition table */
 		if(errmsg)
 			sprintf(errmsg,
