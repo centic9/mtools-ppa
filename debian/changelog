@@ -1,8 +1,72 @@
+mtools (4.0.33-1+really4.0.32-1) unstable; urgency=medium
+
+  * Revert to version 4.0.32-1 due to regressions on ARM* systems affecting the
+    the Debian Installer. Thanks to Cyril Brulebois (kibi) for the report and
+    patience. (Closes: #991403)
+
+ -- Chris Lamb <lamby@debian.org>  Fri, 23 Jul 2021 10:16:33 +0100
+
+mtools (4.0.33-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Wed, 21 Jul 2021 09:19:56 +0100
+
+mtools (4.0.32-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Thu, 15 Jul 2021 13:28:59 +0100
+
+mtools (4.0.31-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Wed, 23 Jun 2021 08:36:53 +0100
+
+mtools (4.0.30-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Sat, 19 Jun 2021 09:02:14 +0100
+
+mtools (4.0.29-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Wed, 02 Jun 2021 08:26:35 +0100
+
+mtools (4.0.27-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Apply wrap-and-sort -sa.
+
+ -- Chris Lamb <lamby@debian.org>  Sat, 17 Apr 2021 10:31:11 +0100
+
+mtools (4.0.26-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Bump Standards-Version to 4.5.1.
+
+ -- Chris Lamb <lamby@debian.org>  Wed, 02 Dec 2020 09:56:28 +0000
+
 mtools (4.0.26) stable; urgency=low
   * Fix compilation on Macintosh
   * Ignore image file locking errors if we are performing a read-only access anyways
   * Minor man-page fixes
  -- Alain Knaff <alain@knaff.lu>  Sat, 28 Nov 2020 12:46:04 +0100
+
+mtools (4.0.25-1) unstable; urgency=medium
+
+  [ Chris Lamb ]
+  * New upstream release.
+    - Parsing config file now works correctly with Turkish locale.
+      (Closes: #972387)
+
+  [ Debian Janitor ]
+  * Fix day-of-week for a previous changelog entry (3.9.8-10).
+
+ -- Chris Lamb <lamby@debian.org>  Sun, 25 Oct 2020 10:39:36 +0000
 
 mtools (4.0.25) stable; urgency=low
   * Preserve non-updated contents of info sector, just in case it contains program code
@@ -11,17 +75,17 @@ mtools (4.0.25) stable; urgency=low
 
 mtools (4.0.24-1) unstable; urgency=medium
 
-mtools (4.0.24) stable; urgency=low
-  * Spelling fixes in documentation
-  * Permit calling "make install" with >= -j2
-  * Added AC_SYS_LARGEFILE, needed for compiling on certain ARM procs
-
   * New upstream release.
   * Drop 0001-Correct-grammatical-errors-in-upstream-documentation.patch;
     applied upstream.
   * Drop 0002-Permit-calling-make-install-with-j2.patch; applied upstream.
 
  -- Chris Lamb <lamby@debian.org>  Sun, 22 Mar 2020 13:50:44 +0000
+
+mtools (4.0.24) stable; urgency=low
+  * Spelling fixes in documentation
+  * Permit calling "make install" with >= -j2
+  * Added AC_SYS_LARGEFILE, needed for compiling on certain ARM procs
 
 mtools (4.0.23-3) unstable; urgency=medium
 
@@ -378,7 +442,7 @@ mtools (3.9.8-10) unstable; urgency=low
   * Fixed problem with parse_range(). Patch from Moritz Barsnick
     <barsnick@gmx.net>.
 
- -- Luis Bustamante <luferbu@fluidsignal.com>  Fri, 17 Jun 2002 15:59:21 -0500
+ -- Luis Bustamante <luferbu@fluidsignal.com>  Mon, 17 Jun 2002 15:59:21 -0500
 
 mtools (3.9.8-9) unstable; urgency=low
 
