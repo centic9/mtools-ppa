@@ -6,6 +6,82 @@ mtools (4.0.43-1) unstable; urgency=medium
 
  -- Chris Lamb <lamby@debian.org>  Thu, 03 Aug 2023 09:33:19 +0100
 
+mtools (4.0.40-0ubuntu0~ppa2) jammy; urgency=medium
+
+  * Try to use rules from Debian package
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sat, 17 Sep 2022 22:37:41 +0200
+
+mtools (4.0.40-0ubuntu0~ppa1) jammy; urgency=medium
+
+  * Backport to Jammy
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sat, 17 Sep 2022 22:00:45 +0200
+
+mtools (4.0.40) stable; urgency=low
+
+  * Remove libbsd dependency
+  * Better compatibility with legacy platforms such as AT&T UnixPC
+  * Upgraded to autoconf 2.71
+
+ -- Alain Knaff <alain@knaff.lu>  Mon,  9 May 2022 21:26:09 +0200
+mtools (4.0.39) stable; urgency=low
+
+  * Rename strtoi to strosi (string to signed int). The strtoi
+    function on BSD does something else (returns an intmax, not an
+    int)
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 10 Apr 2022 19:19:40 +0200
+mtools (4.0.38) stable; urgency=low
+
+  * Make sure case byte is cleared when making the special
+    directory entries "." and ".."
+
+ -- Alain Knaff <alain@knaff.lu>  Thu,  3 Mar 2022 21:24:44 +0100
+mtools (4.0.37) stable; urgency=low
+
+  * Removed mclasserase commands, which doesn't fit the coding
+    structure of the rest of mtools
+  * Add support to -i option to mcd
+  * Document -i in mtools.1
+  * Fix a missing command error in floppyd_io.c
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 26 Dec 2021 18:57:02 +0100
+mtools (4.0.36) stable; urgency=low
+
+  * Fix error status of recursive listing of empty root directory
+  * If recursive listing, also show matched files at level one
+  * Use "seekless" reads & write internally, where possible
+  * Text mode conversion refactoring
+  * Misc refactoring
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 21 Nov 2021 16:41:10 +0100
+
+mtools (4.0.35-0ubuntu0~ppa2) jammy; urgency=medium
+
+  * Reupload for Jammy
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sat, 17 Sep 2022 21:42:49 +0200
+
+mtools (4.0.35-0ubuntu0~ppa1) focal; urgency=medium
+
+  * Update to 4.0.35
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Thu, 21 Oct 2021 21:34:10 +0200
+
+mtools (4.0.35) stable; urgency=low
+
+  * Fix cluster padding at end of file in batch mode, and add comments
+    about what happens here
+
+ -- Alain Knaff <alain@knaff.lu>  Fri,  6 Aug 2021 20:13:59 +0200
+
+mtools (4.0.34) stable; urgency=low
+
+  *  Fix mcopy -s issue
+
+ -- Alain Knaff <alain@knaff.lu>  Fri, 23 Jul 2021 12:41:11 +0200
+
 mtools (4.0.33-1+really4.0.32-1) unstable; urgency=medium
 
   * Revert to version 4.0.32-1 due to regressions on ARM* systems affecting the
@@ -20,11 +96,49 @@ mtools (4.0.33-1) unstable; urgency=medium
 
  -- Chris Lamb <lamby@debian.org>  Wed, 21 Jul 2021 09:19:56 +0100
 
+mtools (4.0.33) stable; urgency=low
+
+  * Fix support for partitions (broken in 4.0.30)
+  * Portability fixes for Solaris 10 and 11
+  * General simplification of configure script, and largefile handling
+  * Tested and fixed for platforms *without* largefile support
+  * In cases where lseek works with 32-bit offsets, prefer lseek64 over llseek
+  * Fixed floppy sector size handling on platforms that are not Linux
+  * Added support for image files on command line to mcat
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 17 Jul 2021 18:31:38 +0200
+
 mtools (4.0.32-1) unstable; urgency=medium
 
   * New upstream release.
 
  -- Chris Lamb <lamby@debian.org>  Thu, 15 Jul 2021 13:28:59 +0100
+
+mtools (4.0.32) stable; urgency=low
+
+  * Simplify algorithm that choses filesystem parameters for format, and align
+    it more closely with what Win7 does
+
+  * Fix mformatting XDF when XDF not explicitly specified on mformat command
+    line
+
+  * easier way to enter sizes on mformat command line (mformat -C -T 1440K)
+
+  * For small sizes, mformat assumes floppy geometries (heads 1 or 2,
+    tracks 40 or 80)
+
+  * Handle attempts to mformat too small filesystems more gracefully
+
+  * Enable minfo to print out additional mformat command line parameters, if
+    the present filesystem uses non-default values for these
+
+  * minfo no longer prints bigsect if smallsect is set
+
+  * for remap filter, error when trying to write non-zero data to unmapped
+    sectors
+
+  * Fix misc compilation warnings occuring when disabling certain features
+    (largefiles, raw-term)
 
 mtools (4.0.31-1) unstable; urgency=medium
 
@@ -32,11 +146,59 @@ mtools (4.0.31-1) unstable; urgency=medium
 
  -- Chris Lamb <lamby@debian.org>  Wed, 23 Jun 2021 08:36:53 +0100
 
+mtools (4.0.31) stable; urgency=low
+
+  * Move Linux-specific block device sizing code into
+    linux-specific section of devices.c
+  * Error messages for all failure cases on fs_init failure
+  * Fix compilation without XDF support (OpenImage signature)
+  * Fix polarity of format_xdf command-line parameter of mformat
+  * In XDF_IO retry enough times to actually succeed, even if
+    FDC was in a bad state before
+  * Remove useless buffer flushing triggered when giving up a
+    reference to a stream node that is still referenced
+    elsewhere.
+  * Clearer error message if neither size nor geometry of drive
+    to be mformatted is known
+  * In mformat, make Fs dynamically allocated rather than
+    on-stack, so as to be able to use utilities supplied by
+    stream.c
+  * Remove duplicate writing of backup boot sector
+  * Allow to infer geometry if only size is specified
+  * Protect against attempt to create zero-sized buffer
+  * Code simplification in mattrib
+  * Remove dead code in mpartition
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 19 Jun 2021 17:22:27 +0200
+
 mtools (4.0.30-1) unstable; urgency=medium
 
   * New upstream release.
 
  -- Chris Lamb <lamby@debian.org>  Sat, 19 Jun 2021 09:02:14 +0100
+
+mtools (4.0.30) stable; urgency=low
+
+  * Fixed XDF floppy disk access
+  * Fixed faulty behavior at end of image in mcat
+  * Device/Image size handling refactoring
+  * allow remap to write to zero-backed sectors (may happen if
+    buffer is flushed, and is not an error in that case)
+  * Raise an error when trying to mcopy multiple source files
+    over a single destination file (rather than directory)
+  * fix handling of "hidden" sectors (is a 2 byte quantity on
+    small disks, not 4 byte as previously assumed)
+  * Modernize partition support. Tuned consistency check to
+    actually check about important issues (such as overlapping
+    partitions) rather than stuff nobody else cares about
+    (alignment on entire cylinder boundaries)
+  * Move various "filter" options (partition, offset, swap,
+    scsi) into separate classes, rather than leaving almost
+    everything in plain_io
+  * Simplify and centralize geometry handling and LBA code
+  * Fix some more more compiler warnings
+
+ -- Alain Knaff <alain@knaff.lu>  Thu, 17 Jun 2021 22:23:39 +0200
 
 mtools (4.0.29-1) unstable; urgency=medium
 
@@ -81,6 +243,12 @@ mtools (4.0.25) stable; urgency=low
   * When parsing config file, always use "C" locale for case-insensitive comparisons
  -- Alain Knaff <alain@knaff.lu>  Sat, 24 Oct 2020 16:53:52 +0200
 
+mtools (4.0.24-1ubuntu0~ppa1) bionic; urgency=medium
+
+  * Backport to bionic
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sat, 04 Apr 2020 08:21:28 +0200
+
 mtools (4.0.24-1) unstable; urgency=medium
 
   * New upstream release.
@@ -115,6 +283,13 @@ mtools (4.0.23-2) unstable; urgency=medium
   * Bump Standards-Version to 4.5.0.
 
  -- Chris Lamb <lamby@debian.org>  Fri, 07 Feb 2020 11:00:48 +0000
+
+mtools (4.0.23-1ubuntu0~ppa1) bionic; urgency=medium
+
+  * Update to latest version from debian
+  * Support for xz was merged upstream
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sat, 12 Jan 2019 12:47:28 +0100
 
 mtools (4.0.23-1) unstable; urgency=medium
 
@@ -152,6 +327,12 @@ mtools (4.0.23-1) unstable; urgency=medium
 
  -- Chris Lamb <lamby@debian.org>  Sat, 05 Jan 2019 15:18:13 +0100
 
+mtools (4.0.18-2.1ubuntu0~ppa1) bionic; urgency=medium
+
+  * Upload for bionic.
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sun, 18 Nov 2018 08:23:47 +0100
+
 mtools (4.0.18-2.1) unstable; urgency=medium
 
   * Non-maintainer upload.
@@ -167,6 +348,18 @@ mtools (4.0.18-2.1) unstable; urgency=medium
   * Use "Priority: extra" over "Priority: optional" for Debian Policy § 2.0.5.
 
  -- Chris Lamb <lamby@debian.org>  Wed, 25 Jul 2018 20:23:59 +0800
+
+mtools (4.0.18-2ubuntu2~ppa1) xenial; urgency=medium
+
+  * Up-port patch to support xz
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Tue, 20 Sep 2016 21:39:10 +0200
+
+mtools (4.0.18-2ubuntu0~ppa1) xenial; urgency=medium
+
+  * Up-port patch to support xz
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sun, 07 Aug 2016 01:51:14 +0200
 
 mtools (4.0.18-2) unstable; urgency=medium
 
@@ -185,6 +378,19 @@ mtools (4.0.18-1.1) unstable; urgency=medium
 
  -- Ian Campbell <ijc@debian.org>  Wed, 17 Sep 2014 20:14:49 +0100
 
+mtools (4.0.18-1ubuntu2~ppa1) trusty; urgency=medium
+
+  * Up-port patch for xz to latest Ubuntu version.
+  * Upload for trusty.
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Thu, 26 Jun 2014 22:16:32 +0200
+
+mtools (4.0.18-1ubuntu1) saucy; urgency=low
+
+  * Use dh_autotools-dev to update config.{sub,guess} for AArch64.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 10 Oct 2013 13:41:02 +0200
+
 mtools (4.0.18-1) unstable; urgency=low
 
   * New upstream version 4.0.18
@@ -195,6 +401,18 @@ mtools (4.0.18-1) unstable; urgency=low
     Closes: #607426
 
  -- Anibal Monsalve Salazar <anibal@debian.org>  Sat, 25 May 2013 14:35:17 +1000
+
+mtools (4.0.17-1ubuntu0~ppa2) precise; urgency=low
+
+  * Add support for .tar.xz extension.
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Fri, 19 Apr 2013 21:07:11 +0200
+
+mtools (4.0.17-1ubuntu0~ppa1) precise; urgency=low
+
+  * Backport to precise, re-apply patch to support zip-formats.
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Fri, 19 Apr 2013 21:01:22 +0200
 
 mtools (4.0.17-1) unstable; urgency=low
 
@@ -219,6 +437,14 @@ mtools (4.0.17-1) unstable; urgency=low
 
  -- Anibal Monsalve Salazar <anibal@debian.org>  Sat, 16 Jun 2012 21:22:06 +1000
 
+mtools (4.0.12-1ubuntu0~ppa1) lucid; urgency=low
+
+  * Backport from Maverick, remaining patches:
+    - detect .zip files and unzip them
+  * Updated patch to also detect java-archives .jar, .war, .ear, .aar
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Sat, 18 Dec 2010 09:26:42 +0100
+
 mtools (4.0.12-1) unstable; urgency=low
 
   * New upstream version
@@ -231,6 +457,19 @@ mtools (4.0.12-1) unstable; urgency=low
   * Fix maintainer-script-empty
 
  -- Anibal Monsalve Salazar <anibal@debian.org>  Mon, 15 Feb 2010 09:44:39 +1100
+
+mtools (4.0.10-1ubuntu2~ppa2) lucid; urgency=low
+
+  * Rebuild for Lucid.
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Wed, 02 Jun 2010 12:10:38 +0200
+
+mtools (4.0.10-1ubuntu2~ppa1) karmic; urgency=low
+
+  * Add patch 12.unzip-support.patch
+    - support zip-files via unzip
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Tue, 13 Apr 2010 23:05:42 +0200
 
 mtools (4.0.10-1ubuntu1) lucid; urgency=low
 
