@@ -24,13 +24,11 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "vfat.h"
 #include "nameclash.h"
 #include "fs.h"
 #include "stream.h"
-#include "mainloop.h"
 #include "file_name.h"
 
 /**
@@ -39,7 +37,7 @@
  *
  * @return 1 if name had to be mangled
  */
-static __inline__ int convert_to_shortname(doscp_t *cp, ClashHandling_t *ch,
+static inline int convert_to_shortname(doscp_t *cp, ClashHandling_t *ch,
 					   const char *un, dos_name_t *dn)
 {
 	int mangled;
@@ -52,7 +50,7 @@ static __inline__ int convert_to_shortname(doscp_t *cp, ClashHandling_t *ch,
 	return mangled;
 }
 
-static __inline__ void chomp(char *line)
+static inline void chomp(char *line)
 {
 	size_t l = strlen(line);
 	while(l > 0 && (line[l-1] == '\n' || line[l-1] == '\r')) {
@@ -63,7 +61,7 @@ static __inline__ void chomp(char *line)
 /**
  * Asks for an alternative new name for a file, in case of a clash
  */
-static __inline__ int ask_rename(doscp_t *cp, ClashHandling_t *ch,
+static inline int ask_rename(doscp_t *cp, ClashHandling_t *ch,
 				 dos_name_t *shortname,
 				 char *longname,
 				 int isprimary)
@@ -104,7 +102,7 @@ static __inline__ int ask_rename(doscp_t *cp, ClashHandling_t *ch,
  * The decision either comes from the default (ch), or the user will be
  * prompted if there is no default
  */
-static __inline__ clash_action ask_namematch(doscp_t *cp,
+static inline clash_action ask_namematch(doscp_t *cp,
 					     dos_name_t *dosname,
 					     char *longname,
 					     int isprimary,
@@ -247,7 +245,7 @@ static __inline__ clash_action ask_namematch(doscp_t *cp,
  *
  * Also, immediately copy the original name so that messages can use it.
  */
-static __inline__ clash_action process_namematch(doscp_t *cp,
+static inline clash_action process_namematch(doscp_t *cp,
 						 dos_name_t *dosname,
 						 char *longname,
 						 int isprimary,
@@ -340,7 +338,7 @@ static int is_reserved(char *ans, int islong)
 	return 0;
 }
 
-static __inline__ clash_action get_slots(Stream_t *Dir,
+static inline clash_action get_slots(Stream_t *Dir,
 					 dos_name_t *dosname,
 					 char *longname,
 					 struct scan_state *ssp,
@@ -400,8 +398,7 @@ static __inline__ clash_action get_slots(Stream_t *Dir,
 			case 6:
 				return NAMEMATCH_SUCCESS; /* Success */
 		}
-		match_pos = -2;
-		if (ssp->longmatch > -1) {
+		if (ssp->longmatch >= 0) {
 			/* Primary Long Name Match */
 #ifdef debug
 			fprintf(stderr,
@@ -419,6 +416,15 @@ static __inline__ clash_action get_slots(Stream_t *Dir,
 #endif
 
 			match_pos = ssp->shortmatch;
+			/* match_pos may become negative here (-2) in case
+			 * of pessimisticShortRename, i.e. creating a
+			 * long entry whose shortname matches another
+			 * entry's shortname:
+			 * mformat -C b: -s 18 -h 2 -t 80
+			 * mcopy /etc/issue b:12345678a
+			 * mcopy /etc/issue b:12345678b
+			 */
+			
 			isprimary = 0;
 		} else if (ssp->shortmatch >= 0) {
 			/* Primary Short Name Match */
@@ -475,7 +481,7 @@ static __inline__ clash_action get_slots(Stream_t *Dir,
 }
 
 
-static __inline__ int write_slots(Stream_t *Dir,
+static inline int write_slots(Stream_t *Dir,
 				  dos_name_t *dosname,
 				  char *longname,
 				  struct scan_state *ssp,
@@ -490,7 +496,8 @@ static __inline__ int write_slots(Stream_t *Dir,
 		return 0;
 
 	entry.Dir = Dir;
-	entry.entry = ssp->slot;
+	assert(ssp->got_slots);
+	setEntryToPos(&entry, ssp->slot);
 	native_to_wchar(longname, entry.name, MAX_VNAMELEN, 0, 0);
 	entry.name[MAX_VNAMELEN]='\0';
 	entry.dir.Case = Case & (EXTCASE | BASECASE);
@@ -504,8 +511,6 @@ static __inline__ int write_slots(Stream_t *Dir,
 			write_vfat(Dir, dosname, 0,
 				   ssp->free_start, &entry);
 		}
-		/* clear_vses(Dir, ssp->free_start + ssp->size_needed,
-		   ssp->free_end); */
 	} else
 		return 0;
 
@@ -677,14 +682,14 @@ void init_clash_handling(ClashHandling_t *ch)
 	ch->is_label = 0;
 }
 
-int handle_clash_options(ClashHandling_t *ch, char c)
+int handle_clash_options(ClashHandling_t *ch, int c)
 {
 	int isprimary;
 	if(isupper(c))
 		isprimary = 0;
 	else
 		isprimary = 1;
-	c = ch_tolower(c);
+	c = tolower(c);
 	switch(c) {
 		case 'o':
 			/* Overwrite if primary name matches */

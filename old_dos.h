@@ -1,4 +1,6 @@
-/*  Copyright 1997,1999,2001-2004,2007,2009 Alain Knaff.
+#ifndef MTOOLS_OLDDOS_H
+#define MTOOLS_OLDDOS_H
+/*  Copyright 2021 Alain Knaff.
  *  This file is part of mtools.
  *
  *  Mtools is free software: you can redistribute it and/or modify
@@ -13,40 +15,29 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Do filename expansion with the shell.
  */
 
-#include "sysincludes.h"
-#include "mtools.h"
+#include "device.h"
 
-void precmd(struct device *dev)
-{
-	if(!dev)
-		return;
-	postcmd(dev->precmd);
-}
+struct OldDos_t {
+	unsigned int tracks;
+	uint16_t sectors;
+	uint16_t  heads;
 
-void postcmd(const char *cmd)
-{
-#ifndef OS_mingw32msvc
-	int status;
-	pid_t pid;
+	uint16_t dir_len;
+	uint8_t cluster_size;
+	uint32_t fat_len;
 
-	if(!cmd)
-		return;
+	uint8_t media;
+};
 
-	switch((pid=fork())){
-		case -1:
-			perror("Could not fork");
-			exit(1);
-		case 0: /* the son */
-			execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
-			break;
-		default:
-			wait(&status);
-			break;
-	}
+extern struct OldDos_t *getOldDosBySize(size_t size);
+extern struct OldDos_t *getOldDosByMedia(int media);
+extern struct OldDos_t *getOldDosByParams(unsigned int tracks,
+					  unsigned int heads,
+					  unsigned int sectors,
+					  unsigned int dir_len,
+					  unsigned int cluster_size);
+int setDeviceFromOldDos(int media, struct device *dev);
+
 #endif
-}
-

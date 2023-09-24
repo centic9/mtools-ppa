@@ -19,9 +19,7 @@
 #define DONT_NEED_WAIT
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
-#include "mainloop.h"
 #include "fsP.h"
 #include "file.h"
 #include "plain_io.h"
@@ -253,14 +251,6 @@ static void usage(int ret)
 	exit(ret);
 }
 
-static void checkTotalSectors(unsigned long tot_sectors) {
-	if(tot_sectors > UINT32_MAX) {
-		fprintf(stderr, "Too many total sectors %ld\n",
-			tot_sectors);
-		exit(1);
-	}
-}
-
 void mpartition(int argc, char **argv, int dummy UNUSEDP) NORETURN;
 void mpartition(int argc, char **argv, int dummy UNUSEDP)
 {
@@ -387,7 +377,7 @@ void mpartition(int argc, char **argv, int dummy UNUSEDP)
 				break;
 			case 'l':
 				size_set = 1;
-				length = strtoui(optarg, &endptr, 0);
+				length = parseSize(optarg);
 				break;
 
 			default:
@@ -450,7 +440,7 @@ void mpartition(int argc, char **argv, int dummy UNUSEDP)
 		tot_sectors = used_dev.tot_sectors;
 
 		/* read the partition table */
-		if (READS(Stream, (char *) buf, 0, 512) != 512 && !initialize){
+		if (PREADS(Stream, (char *) buf, 0, 512) != 512 && !initialize){
 #ifdef HAVE_SNPRINTF
 			snprintf(errmsg, sizeof(errmsg)-1,
 				"Error reading from '%s', wrong parameters?",
@@ -557,7 +547,6 @@ void mpartition(int argc, char **argv, int dummy UNUSEDP)
 
 	if(!used_dev.sectors && !used_dev.heads) {
 		if(tot_sectors) {
-			checkTotalSectors(tot_sectors);
 			setsize0((uint32_t)tot_sectors,&dummy2,&used_dev.heads,
 				 &used_dev.sectors);
 		} else {
@@ -574,9 +563,7 @@ void mpartition(int argc, char **argv, int dummy UNUSEDP)
 	if(create) {
 		unsigned int overlap;
 		if(!end_set && !size_set && tot_sectors) {
-			checkTotalSectors(tot_sectors);
-			end = (uint32_t) tot_sectors -
-				(uint32_t) tot_sectors % sec_per_cyl;
+			end = tot_sectors - tot_sectors % sec_per_cyl;
 			end_set = 1;
 		}
 
@@ -669,7 +656,7 @@ void mpartition(int argc, char **argv, int dummy UNUSEDP)
 		printf("The following command will recreate the partition for drive %c:\n",
 		       drive);
 		used_dev.tracks =
-			(_DWORD(tpartition->nr_sects) +
+			(DWORD(tpartition->nr_sects) +
 			 (BEGIN(tpartition) % sec_per_cyl)) /
 			sec_per_cyl;
 		printf("mpartition -c -b %d -l %d -t %d -h %d -s %d -b %u %c:\n",
@@ -682,7 +669,7 @@ void mpartition(int argc, char **argv, int dummy UNUSEDP)
 		/* write data back to the disk */
 		if(verbose>=2)
 			print_sector("Writing sector", buf, 512);
-		if (WRITES(Stream, (char *) buf, 0, 512) != 512) {
+		if (PWRITES(Stream, (char *) buf, 0, 512) != 512) {
 			fprintf(stderr,"Error writing partition table");
 			exit(1);
 		}

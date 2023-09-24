@@ -24,12 +24,20 @@
 #include "msdos.h"
 #include "stream.h"
 #include "mtools.h"
+#include "device.h"
+#include "old_dos.h"
 #include "fsP.h"
 #include "buffer.h"
 #include "file_name.h"
 #include "open_image.h"
+#include "fat_device.h"
 
 #define FULL_CYL
+
+mt_off_t sectorsToBytes(Fs_t *This, uint32_t off)
+{
+	return (mt_off_t) off << This->sectorShift;
+}
 
 /*
  * Read the boot sector.  We glean the disk parameters from this sector.
@@ -44,10 +52,10 @@ static int read_boot(Stream_t *Stream, union bootsector * boot, size_t size)
 	if(size > MAX_BOOT)
 		size = MAX_BOOT;
 
-	if (force_read(Stream, boot->characters, 0, size) != (ssize_t) size)
+	if (force_pread(Stream, boot->characters, 0, size) != (ssize_t) size)
 		return -1;
 
-	boot_sector_size = WORD(secsiz);
+	boot_sector_size = BOOT_WORD(secsiz);
 	if(boot_sector_size < sizeof(boot->bytes)) {
 		/* zero rest of in-memory boot sector */
 		memset(boot->bytes+boot_sector_size, 0,
@@ -72,8 +80,10 @@ static doscp_t *get_dosConvert(Stream_t *Stream)
 }
 
 Class_t FsClass = {
-	read_pass_through, /* read */
-	write_pass_through, /* write */
+	0,
+	0,
+	pread_pass_through, /* read */
+	pwrite_pass_through, /* write */
 	fs_flush,
 	fs_free, /* free */
 	0, /* set geometry */
@@ -97,7 +107,7 @@ static int get_media_type(Stream_t *St, union bootsector *boot)
 		char temp[512];
 		/* old DOS disk. Media descriptor in the first FAT byte */
 		/* we assume 512-byte sectors here */
-		if (force_read(St,temp,(mt_off_t) 512,512) == 512)
+		if (force_pread(St,temp,512,512) == 512)
 			media = (unsigned char) temp[0];
 		else
 			media = 0;
@@ -127,10 +137,10 @@ static void boot_to_geom(struct device *dev, int media,
 	dev->use_2m = 0x80; /* disable 2m mode to begin */
 
 	if(media == 0xf0 || media >= 0x100){
-		dev->heads = WORD(nheads);
-		dev->sectors = WORD(nsect);
-		tot_sectors = DWORD(bigsect);
-		SET_INT(tot_sectors, WORD(psect));
+		dev->heads = BOOT_WORD(nheads);
+		dev->sectors = BOOT_WORD(nsect);
+		tot_sectors = BOOT_DWORD(bigsect);
+		SET_INT(tot_sectors, BOOT_WORD(psect));
 		sect_per_track = dev->heads * dev->sectors;
 		if(sect_per_track == 0) {
 		    if(mtools_skip_check) {
@@ -153,12 +163,12 @@ static void boot_to_geom(struct device *dev, int media,
 			/* round size up */
 			dev->tracks++;
 
-		BootP = WORD(ext.old.BootP);
-		Infp0 = WORD(ext.old.Infp0);
-		InfpX = WORD(ext.old.InfpX);
-		InfTm = WORD(ext.old.InfTm);
+		BootP = BOOT_WORD(ext.old.BootP);
+		Infp0 = BOOT_WORD(ext.old.Infp0);
+		InfpX = BOOT_WORD(ext.old.InfpX);
+		InfTm = BOOT_WORD(ext.old.InfTm);
 
-		if(WORD(fatlen)) {
+		if(BOOT_WORD(fatlen)) {
 			labelBlock = &boot->boot.ext.old.labelBlock;
 		} else {
 			labelBlock = &boot->boot.ext.fat32.labelBlock;
@@ -178,7 +188,7 @@ static void boot_to_geom(struct device *dev, int media,
 				dev->ssize |= 0x80; /* is set */
 			}
 		}
-		dev->sector_size = WORD(secsiz);
+		dev->sector_size = BOOT_WORD(secsiz);
 	} else
 		if(setDeviceFromOldDos(media, dev) < 0)
 			exit(1);
@@ -208,7 +218,7 @@ static void boot_to_geom(struct device *dev, int media,
 static Stream_t *try_device(struct device *dev,
 			    int mode, struct device *out_dev,
 			    union bootsector *boot,
-			    char *name, int *media, mt_size_t *maxSize,
+			    char *name, int *media, mt_off_t *maxSize,
 			    int *isRop, int try_writable,
 			    char *errmsg)
 {
@@ -306,7 +316,7 @@ static Stream_t *try_device(struct device *dev,
 #else
 			sprintf(errmsg,
 				"Can't set disk parameters for %c: %s",
-				drive, strerror(errno));
+				dev->drive, strerror(errno));
 #endif
 			else
 				sprintf(errmsg,
@@ -358,7 +368,7 @@ int calc_num_clus(Fs_t *Fs, uint32_t tot_sectors)
  */
 Stream_t *find_device(char drive, int mode, struct device *out_dev,
 		      union bootsector *boot,
-		      char *name, int *media, mt_size_t *maxSize,
+		      char *name, int *media, mt_off_t *maxSize,
 		      int *isRop)
 {
 	char errmsg[200];
@@ -397,6 +407,7 @@ uint32_t parseFsParams(	Fs_t *This,
 			unsigned int cylinder_size)
 {
 	uint32_t tot_sectors;
+	int haveBigFatLen = 0;
 
 	if ((media & ~7) == 0xf8){
 		/* This bit of code is only entered if there is no BPB, or
@@ -420,7 +431,7 @@ uint32_t parseFsParams(	Fs_t *This,
 		struct label_blk_t *labelBlock;
 		unsigned int i;
 
-		This->sector_size = WORD(secsiz);
+		This->sector_size = BOOT_WORD(secsiz);
 		if(This->sector_size > MAX_SECTOR){
 			fprintf(stderr,"init: sector size too big\n");
 			return 0;
@@ -441,34 +452,35 @@ uint32_t parseFsParams(	Fs_t *This,
 		 * all numbers are in sectors, except num_clus
 		 * (which is in clusters)
 		 */
-		tot_sectors = WORD(psect);
+		tot_sectors = BOOT_WORD(psect);
 		if(!tot_sectors)
-			tot_sectors = DWORD(bigsect);
+			tot_sectors = BOOT_DWORD(bigsect);
 
 		This->cluster_size = boot->boot.clsiz;
-		This->fat_start = WORD(nrsvsect);
-		This->fat_len = WORD(fatlen);
-		This->dir_len = WORD(dirents) * MDIR_SIZE / This->sector_size;
+		This->fat_start = BOOT_WORD(nrsvsect);
+		This->fat_len = BOOT_WORD(fatlen);
+		This->dir_len = BOOT_WORD(dirents) * MDIR_SIZE / This->sector_size;
 		This->num_fat = boot->boot.nfat;
 
 		if (This->fat_len) {
 			labelBlock = &boot->boot.ext.old.labelBlock;
 		} else {
 			labelBlock = &boot->boot.ext.fat32.labelBlock;
-			This->fat_len = DWORD(ext.fat32.bigFat);
-			This->backupBoot = WORD(ext.fat32.backupBoot);
+			This->fat_len = BOOT_DWORD(ext.fat32.bigFat);
+			haveBigFatLen = 1;
+			This->backupBoot = BOOT_WORD(ext.fat32.backupBoot);
 		}
 
 		if(has_BPB4) {
 			This->serialized = 1;
-			This->serial_number = _DWORD(labelBlock->serial);
+			This->serial_number = DWORD(labelBlock->serial);
 		}
 	}
 
 	if(calc_num_clus(This, tot_sectors) < 0)
 		/* Too few sectors */
 		return 0;
-	set_fat(This);
+	set_fat(This, haveBigFatLen);
 
 	return tot_sectors;
 }
@@ -483,8 +495,9 @@ Stream_t *fs_init(char drive, int mode, int *isRop)
 	char name[EXPAND_BUF];
 	unsigned int cylinder_size;
 	struct device dev;
-	mt_size_t maxSize;
-
+	mt_off_t maxSize;
+	char errmsg[81];
+	
 	union bootsector boot;
 
 	Fs_t *This;
@@ -493,11 +506,7 @@ Stream_t *fs_init(char drive, int mode, int *isRop)
 	if (!This)
 		return NULL;
 
-	This->Direct = NULL;
-	This->Next = NULL;
-	This->refs = 1;
-	This->Buffer = 0;
-	This->Class = &FsClass;
+	init_head(&This->head, &FsClass, NULL);
 	This->preallocatedClusters = 0;
 	This->lastFatSectorNr = 0;
 	This->lastFatAccessMode = 0;
@@ -505,9 +514,9 @@ Stream_t *fs_init(char drive, int mode, int *isRop)
 	This->drive = drive;
 	This->last = 0;
 
-	This->Direct = find_device(drive, mode, &dev, &boot, name, &media,
-				   &maxSize, isRop);
-	if(!This->Direct)
+	This->head.Next = find_device(drive, mode, &dev, &boot, name, &media,
+				      &maxSize, isRop);
+	if(!This->head.Next)
 		return NULL;
 
 	cylinder_size = dev.heads * dev.sectors;
@@ -519,9 +528,10 @@ Stream_t *fs_init(char drive, int mode, int *isRop)
 		return NULL;
 	}
 
-	if (tot_sectors >= (maxSize >> This->sectorShift)) {
-		fprintf(stderr, "Big disks not supported on this architecture\n");
-		exit(1);
+	if (check_if_sectors_fit(tot_sectors, maxSize,
+				 This->sector_size, errmsg) < 0) {
+		fprintf(stderr, "%s", errmsg);
+		return NULL;
 	}
 
 	/* full cylinder buffering */
@@ -556,25 +566,24 @@ Stream_t *fs_init(char drive, int mode, int *isRop)
 		blocksize = This->sector_size;
 	else
 		blocksize = dev.blocksize;
-	if (disk_size)
-		This->Next = buf_init(This->Direct,
-				      8 * disk_size * blocksize,
-				      disk_size * blocksize,
-				      This->sector_size);
-	else
-		This->Next = This->Direct;
+	if (disk_size) {
+		Stream_t *Buffer = buf_init(This->head.Next,
+					    disk_size * blocksize,
+					    disk_size * blocksize,
+					    This->sector_size);
 
-	if (This->Next == NULL) {
-		perror("init: allocate buffer");
-		This->Next = This->Direct;
+		if (Buffer != NULL)
+			This->head.Next = Buffer;
+		else
+			perror("init: allocate buffer");
 	}
 
 	/* read the FAT sectors */
 	if(fat_read(This, &boot, dev.use_2m&0x7f)){
 		fprintf(stderr, "Error reading FAT\n");
 		This->num_fat = 1;
-		FREE(&This->Next);
-		Free(This->Next);
+		FREE(&This->head.Next);
+		Free(This->head.Next);
 		return NULL;
 	}
 
@@ -583,8 +592,8 @@ Stream_t *fs_init(char drive, int mode, int *isRop)
 	if(This->cp == NULL) {
 		fprintf(stderr, "Error setting code page\n");
 		fs_free((Stream_t *)This);
-		FREE(&This->Next);
-		Free(This->Next);
+		FREE(&This->head.Next);
+		Free(This->head.Next);
 		return NULL;
 	}
 
@@ -595,7 +604,7 @@ char getDrive(Stream_t *Stream)
 {
 	DeclareThis(Fs_t);
 
-	if(This->Class != &FsClass)
+	if(This->head.Class != &FsClass)
 		return getDrive(GetFs(Stream));
 	else
 		return This->drive;

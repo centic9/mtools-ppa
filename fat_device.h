@@ -1,5 +1,7 @@
-/*  Copyright 1986-1992 Emmet P. Gray.
- *  Copyright 1996,1997,2001,2002,2009 Alain Knaff.
+#ifndef MTOOLS_FAT_DEVICE_H
+#define MTOOLS_FAT_DEVICE_H
+
+/*  Copyright 2022 Alain Knaff.
  *  This file is part of mtools.
  *
  *  Mtools is free software: you can redistribute it and/or modify
@@ -16,29 +18,13 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sysincludes.h"
 #include "msdos.h"
-#include "mtools.h"
-#include "vfat.h"
-#include "file.h"
-#include "buffer.h"
+#include "device.h"
+#include "stream.h"
 
-/*
- * Find the directory and load a new dir_chain[].  A null directory
- * is OK.  Returns a 1 on error.
- */
+Stream_t *find_device(char drive, int mode, struct device *out_dev,
+		      union bootsector *boot,
+		      char *name, int *media, mt_off_t *maxSize,
+		      int *isRop);
 
-
-void bufferize(Stream_t **Dir)
-{
-	Stream_t *BDir;
-
-	if(!*Dir)
-		return;
-	BDir = buf_init(*Dir, 64*16384, 512, MDIR_SIZE);
-	if(!BDir){
-		FREE(Dir);
-		*Dir = NULL;
-	} else
-		*Dir = BDir;
-}
+#endif

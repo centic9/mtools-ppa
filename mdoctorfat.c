@@ -19,9 +19,7 @@
 
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
-#include "vfat.h"
 #include "mainloop.h"
 #include "plain_io.h"
 #include "nameclash.h"
@@ -46,7 +44,7 @@ static int dos_doctorfat(direntry_t *entry, MainParam_t *mp)
 	Fs_t *Fs = getFs(mp->File);
 	Arg_t *arg=(Arg_t *) mp->arg;
 
-	if(!arg->markbad && entry->entry != -3) {
+	if(!arg->markbad && isRootEntry(entry)) {
 		/* if not root directory, change it */
 		set_word(entry->dir.start, arg->fat & 0xffff);
 		set_word(entry->dir.startHi, arg->fat >> 16);

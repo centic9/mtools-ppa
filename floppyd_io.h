@@ -2,7 +2,7 @@
 #define MTOOLS_FLOPPYDIO_H
 
 /*  Copyright 1999 Peter Schlaile.
- *  Copyright 1998,2000-2002,2009 Alain Knaff.
+ *  Copyright 1998,2000-2002,2009,2022 Alain Knaff.
  *  This file is part of mtools.
  *
  *  Mtools is free software: you can redistribute it and/or modify
@@ -23,6 +23,29 @@
 
 #include "stream.h"
 
+/* Networking headers needed by floppyd */
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+
+#ifdef HAVE_NETINET_TCP_H
+#include <netinet/tcp.h>
+#endif
+
+#ifdef HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+
+/* End Networking headers needed by floppyd */
+
 typedef uint8_t Byte;
 typedef uint32_t Dword;
 typedef uint64_t Qword;
@@ -32,7 +55,7 @@ typedef uint64_t Qword;
 /*extern int ConnectToFloppyd(const char* name, Class_t** ioclass);*/
 Stream_t *FloppydOpen(struct device *dev,
 		      const char *name, int mode, char *errmsg,
-		      mt_size_t *maxSize);
+		      mt_off_t *maxSize);
 
 #define FLOPPYD_DEFAULT_PORT 5703
 
@@ -66,7 +89,8 @@ enum AuthErrorsEnum {
 };
 
 
-UNUSED(static inline void cork(int sockhandle, int on))
+
+static inline void cork(int sockhandle, int on)
 {
 #ifdef TCP_CORK
 	if(setsockopt(sockhandle, IPPROTO_TCP,

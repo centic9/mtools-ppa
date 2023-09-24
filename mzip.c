@@ -37,9 +37,9 @@
 #include "mtools.h"
 #include "scsi.h"
 
-#ifndef _PASSWORD_LEN
-#define _PASSWORD_LEN 33
-#endif
+#ifdef HAVE_SCSI
+
+#define PASSWORD_LEN 33
 
 #ifdef OS_linux
 
@@ -53,7 +53,6 @@
 #include "devices.h"
 
 #endif
-
 
 static int zip_cmd(int priv, int fd, unsigned char cdb[6], uint8_t clen,
 		   scsi_io_mode_t mode, void *data, uint32_t len,
@@ -69,7 +68,11 @@ static int zip_cmd(int priv, int fd, unsigned char cdb[6], uint8_t clen,
 	return r;
 }
 
-static int test_mounted ( char *dev )
+static int test_mounted ( char *dev
+#ifndef HAVE_MNTENT_H
+			  UNUSEDP
+#endif
+			  )
 {
 #ifdef HAVE_MNTENT_H
 	struct mntent	*mnt;
@@ -221,8 +224,11 @@ static int door_command(int priv, int fd, uint8_t cmd1, uint8_t cmd2,
 {
 	return short_command(priv, fd, cmd1, 0, cmd2, 0, extra_data);
 }
+#endif
 
 void mzip(int argc, char **argv, int type UNUSEDP) NORETURN;
+
+#ifdef HAVE_SCSI
 void mzip(int argc, char **argv, int type UNUSEDP)
 {
 	void *extra_data = NULL;
@@ -245,7 +251,7 @@ void mzip(int argc, char **argv, int type UNUSEDP)
 	if(request & ZIP_MODE_CHANGE) usage(1); \
 	request |= ZIP_MODE_CHANGE; \
 	newMode = x; \
-	break;
+	break
 
 	/* get command line options */
 	if(helpFlag(argc, argv))
@@ -279,7 +285,7 @@ void mzip(int argc, char **argv, int type UNUSEDP)
 			case 'x': /* password protected */
 				setMode(ZIP_PW);
 			case 'u': /* password protected */
-				setMode(ZIP_UNLOCK_TIL_EJECT)
+				setMode(ZIP_UNLOCK_TIL_EJECT);
 			case 'h':
 				usage(0);
 			default:  /* unrecognized */
@@ -459,12 +465,12 @@ void mzip(int argc, char **argv, int type UNUSEDP)
 		}
 
 		if (newMode & 0x1) {
-			char first_try[_PASSWORD_LEN+1];
+			char first_try[PASSWORD_LEN+1];
 
 			passwd = getpass("Enter new password:");
-			strncpy(first_try, passwd,_PASSWORD_LEN);
+			strncpy(first_try, passwd,PASSWORD_LEN);
 			passwd = getpass("Re-type new password:");
-			if(strncmp(first_try, passwd, _PASSWORD_LEN)) {
+			if(strncmp(first_try, passwd, PASSWORD_LEN)) {
 				fprintf(stderr,
 					"You misspelled it. Password not set.\n");
 				exit(1);
@@ -550,5 +556,14 @@ void mzip(int argc, char **argv, int type UNUSEDP)
 	}
 
 	close(fd);
+	postcmd(dev->postcmd);
 	exit(0);
 }
+
+#else
+void mzip(UNUSEDP int argc, UNUSEDP char **argv, int type UNUSEDP)
+{
+	fprintf(stderr, "Mzip only available where SCSI is supported\n");
+	exit(-1);
+}
+#endif

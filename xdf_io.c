@@ -85,10 +85,7 @@ typedef struct {
 
 
 typedef struct Xdf_t {
-	Class_t *Class;
-	int refs;
-	Stream_t *Next;
-	Stream_t *Buffer;
+	struct Stream_t head;
 
 	int fd;
 	char *buffer;
@@ -111,6 +108,8 @@ typedef struct Xdf_t {
 	unsigned int stretch:1;
 	unsigned int rootskip:1;
 	signed  int drive:4;
+
+	const char *postcmd;
 } Xdf_t;
 
 typedef struct {
@@ -248,7 +247,7 @@ static void adjust_bounds(Xdf_t *This, uint32_t ibegin, uint32_t iend,
 }
 
 
-static __inline__ int try_flush_dirty(Xdf_t *This)
+static inline int try_flush_dirty(Xdf_t *This)
 {
 	unsigned char ptr;
 	int nr, bytes;
@@ -428,8 +427,8 @@ static int decompose(Xdf_t *This, mt_off_t iwhere, size_t len,
 	uint8_t lbegin, lend;
 	uint32_t track_size = This->track_size * 1024;
 
-	mt_off_t track = iwhere / track_size;
-	uint32_t where = iwhere % track_size;
+	smt_off_t track = (smt_off_t) iwhere / track_size;
+	uint32_t where = (smt_off_t) iwhere % track_size;
 
 	*begin = where;
 	if(where + len > track_size)
@@ -509,8 +508,8 @@ static int decompose(Xdf_t *This, mt_off_t iwhere, size_t len,
 }
 
 
-static ssize_t xdf_read(Stream_t *Stream, char *buf,
-			mt_off_t where, size_t len)
+static ssize_t xdf_pread(Stream_t *Stream, char *buf,
+			 mt_off_t where, size_t len)
 {
 	uint32_t begin, end;
 	ssize_t ret;
@@ -527,7 +526,8 @@ static ssize_t xdf_read(Stream_t *Stream, char *buf,
 	return (ssize_t) (end - begin);
 }
 
-static ssize_t xdf_write(Stream_t *Stream, char *buf, mt_off_t where, size_t len)
+static ssize_t xdf_pwrite(Stream_t *Stream, char *buf,
+			  mt_off_t where, size_t len)
 {
 	uint32_t begin, end;
 	ssize_t len2;
@@ -559,10 +559,13 @@ static int xdf_flush(Stream_t *Stream)
 
 static int xdf_free(Stream_t *Stream)
 {
+	int ret;
 	DeclareThis(Xdf_t);
 	Free(This->track_map);
 	Free(This->buffer);
-	return close(This->fd);
+	ret = close(This->fd);
+	postcmd(This->postcmd);
+	return ret;
 }
 
 
@@ -603,7 +606,7 @@ static void set_geom(Xdf_t *This, struct device *dev)
 	dev->tracks = 80;
 }
 
-static int config_geom(Stream_t *Stream UNUSEDP, struct device *dev,
+static int config_geom(Stream_t *Stream, struct device *dev,
 		       struct device *orig_dev UNUSEDP)
 {
 	DeclareThis(Xdf_t);
@@ -614,8 +617,10 @@ static int config_geom(Stream_t *Stream UNUSEDP, struct device *dev,
 }
 
 static Class_t XdfClass = {
-	xdf_read,
-	xdf_write,
+	0,
+	0,
+	xdf_pread,
+	xdf_pwrite,
 	xdf_flush,
 	xdf_free,
 	config_geom,
@@ -641,12 +646,16 @@ Stream_t *XdfOpen(struct device *dev, const char *name,
 	This = New(Xdf_t);
 	if (!This)
 		return NULL;
+	init_head(&This->head, &XdfClass, NULL);
 
-	This->Class = &XdfClass;
 	This->sector_size = 512;
 	This->stretch = 0;
+	This->postcmd = 0;
 
 	precmd(dev);
+	if(dev)
+		This->postcmd = dev->postcmd;
+
 	This->fd = open(name,
 			((mode | dev->mode) & ~O_ACCMODE) |
 			O_EXCL | O_NDELAY | O_RDWR);
@@ -659,7 +668,7 @@ Stream_t *XdfOpen(struct device *dev, const char *name,
 		goto exit_0;
 	}
 	closeExec(This->fd);
-
+	
 	This->drive = GET_DRIVE(This->fd);
 	if(This->drive < 0)
 		goto exit_1;
@@ -699,14 +708,14 @@ Stream_t *XdfOpen(struct device *dev, const char *name,
 
 	boot = (union bootsector *) This->buffer;
 
-	fatSize = WORD(fatlen);
+	fatSize = BOOT_WORD(fatlen);
 	if(fatSize > UINT8_MAX) {
 		fprintf(stderr, "Fat size %d too large\n", fatSize);
 		exit(1);
 	}
 	This->FatSize = (uint8_t) fatSize;
-	This->RootDirSize = WORD(dirents)/16;
-	This->track_size = WORD(nsect);
+	This->RootDirSize = BOOT_WORD(dirents)/16;
+	This->track_size = BOOT_WORD(nsect);
 	for(type=0; type < NUMBER(xdf_table); type++) {
 		if(xdf_table[type].track_size == This->track_size) {
 			This->map = xdf_table[type].map;
@@ -726,12 +735,9 @@ Stream_t *XdfOpen(struct device *dev, const char *name,
 	}
 	decompose(This, 0, 512, &begin, &end, 1);
 
-	This->refs = 1;
-	This->Next = 0;
-	This->Buffer = 0;
 	if(dev)
 		set_geom(This, dev);
-	return (Stream_t *) This;
+	return &This->head;
 
 exit_3:
 	Free(This->track_map);
@@ -747,4 +753,3 @@ exit_0:
 #endif
 
 /* Algorithms can't be patented */
-

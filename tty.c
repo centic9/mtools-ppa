@@ -15,7 +15,6 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdarg.h>
 #include "sysincludes.h"
 #include "mtools.h"
 
@@ -170,7 +169,11 @@ static void set_raw_tty(int mode)
 }
 #endif
 
-FILE *opentty(int mode UNUSEDP)
+FILE *opentty(int mode
+#ifndef USE_RAWTERM
+	      UNUSEDP
+#endif
+	      )
 {
 	if(notty)
 		return NULL;

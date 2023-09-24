@@ -3,9 +3,6 @@
 /* Define for debugging messages */
 #undef DEBUG
 
-/* Define when sys_errlist is defined in the standard include files */
-#undef DECL_SYS_ERRLIST
-
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 
@@ -24,8 +21,16 @@
 /* Define to 1 if the system has the type `caddr_t'. */
 #undef HAVE_CADDR_T
 
-/* Define to 1 if you have the `fchdir' function. */
-#undef HAVE_FCHDIR
+/* Define to 1 if you have the declaration of `optarg', and to 0 if you don't.
+   */
+#undef HAVE_DECL_OPTARG
+
+/* Define to 1 if you have the declaration of `sys_errlist', and to 0 if you
+   don't. */
+#undef HAVE_DECL_SYS_ERRLIST
+
+/* Define to 1 if you have the <dirent.h> header file. */
+#undef HAVE_DIRENT_H
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
@@ -60,9 +65,6 @@
 /* Define to 1 if you have the <io.h> header file. */
 #undef HAVE_IO_H
 
-/* Define to 1 if you have the `bsd' library (-lbsd). */
-#undef HAVE_LIBBSD
-
 /* Define to 1 if you have the `cam' library (-lcam). */
 #undef HAVE_LIBCAM
 
@@ -72,20 +74,11 @@
 /* Define to 1 if you have the `iconv' library (-liconv). */
 #undef HAVE_LIBICONV
 
-/* Define to 1 if you have the `socket' library (-lsocket). */
-#undef HAVE_LIBSOCKET
-
 /* Define to 1 if you have the `sun' library (-lsun). */
 #undef HAVE_LIBSUN
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
-
-/* Define to 1 if you have the <linux/fs.h> header file. */
-#undef HAVE_LINUX_FS_H
-
-/* Define to 1 if you have the <linux/unistd.h> header file. */
-#undef HAVE_LINUX_UNISTD_H
 
 /* Define to 1 if you have the `llseek' function. */
 #undef HAVE_LLSEEK
@@ -99,10 +92,10 @@
 /* Define to 1 if you have the `lockf' function. */
 #undef HAVE_LOCKF
 
-/* Define when the compiler supports LOFF_T type */
+/* Define to 1 if the system has the type `loff_t'. */
 #undef HAVE_LOFF_T
 
-/* Define when the compiler supports LONG_LONG type */
+/* Define to 1 if the system has the type `long long'. */
 #undef HAVE_LONG_LONG
 
 /* Define to 1 if you have the `lseek64' function. */
@@ -110,6 +103,9 @@
 
 /* Define when you have an LSEEK64 prototype */
 #undef HAVE_LSEEK64_PROTOTYPE
+
+/* Define to 1 if you have the `lstat' function. */
+#undef HAVE_LSTAT
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
@@ -129,6 +125,9 @@
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
 
+/* Define to 1 if you have the `mkdir' function. */
+#undef HAVE_MKDIR
+
 /* Define to 1 if you have the <mntent.h> header file. */
 #undef HAVE_MNTENT_H
 
@@ -141,11 +140,11 @@
 /* Define to 1 if you have the <netinet/tcp.h> header file. */
 #undef HAVE_NETINET_TCP_H
 
-/* Define when the compiler supports OFFSET_T type */
-#undef HAVE_OFFSET_T
+/* Define to 1 if the system has the type `off64_t'. */
+#undef HAVE_OFF64_T
 
-/* Define when the system has a 64 bit off_t type */
-#undef HAVE_OFF_T_64
+/* Define to 1 if the system has the type `offset_t'. */
+#undef HAVE_OFFSET_T
 
 /* Define to 1 if you have the `on_exit' function. */
 #undef HAVE_ON_EXIT
@@ -155,6 +154,9 @@
 
 /* Define to 1 if you have the `random' function. */
 #undef HAVE_RANDOM
+
+/* Define to 1 if you have the `readdir' function. */
+#undef HAVE_READDIR
 
 /* Define to 1 if you have the `setenv' function. */
 #undef HAVE_SETENV
@@ -189,7 +191,10 @@
 /* Define to 1 if you have the `stat64' function. */
 #undef HAVE_STAT64
 
-/* Define to 1 if you have the <stdbool.h> header file. */
+/* Define to 1 if you have the <stdarg.h> header file. */
+#undef HAVE_STDARG_H
+
+/* Define to 1 if stdbool.h conforms to C99. */
 #undef HAVE_STDBOOL_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
@@ -240,8 +245,8 @@
 /* Define to 1 if you have the `strspn' function. */
 #undef HAVE_STRSPN
 
-/* Define to 1 if you have the `strtoi' function. */
-#undef HAVE_STRTOI
+/* Define to 1 if you have the `strstr' function. */
+#undef HAVE_STRSTR
 
 /* Define to 1 if you have the `strtol' function. */
 #undef HAVE_STRTOL
@@ -254,6 +259,9 @@
 
 /* Define to 1 if you have the `strtoul' function. */
 #undef HAVE_STRTOUL
+
+/* Define to 1 if you have the <sys/fdio.h> header file. */
+#undef HAVE_SYS_FDIO_H
 
 /* Define to 1 if you have the <sys/file.h> header file. */
 #undef HAVE_SYS_FILE_H
@@ -306,6 +314,9 @@
 /* Define to 1 if you have the <termio.h> header file. */
 #undef HAVE_TERMIO_H
 
+/* Define to 1 if you have the <time.h> header file. */
+#undef HAVE_TIME_H
+
 /* Define to 1 if you have the `toupper_l' function. */
 #undef HAVE_TOUPPER_L
 
@@ -314,6 +325,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `unsetenv' function. */
+#undef HAVE_UNSETENV
 
 /* Define to 1 if you have the `usleep' function. */
 #undef HAVE_USLEEP
@@ -342,6 +356,12 @@
 /* Define to 1 if you have the <wctype.h> header file. */
 #undef HAVE_WCTYPE_H
 
+/* Define to 1 if you have the <X11/Xauth.h> header file. */
+#undef HAVE_X11_XAUTH_H
+
+/* Define to 1 if you have the <X11/Xlib.h> header file. */
+#undef HAVE_X11_XLIB_H
+
 /* Define to 1 if you have the <xlocale.h> header file. */
 #undef HAVE_XLOCALE_H
 
@@ -366,17 +386,17 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define as the return type of signal handlers (`int' or `void'). */
-#undef RETSIGTYPE
-
 /* Define to 1 if the `setpgrp' function takes no argument. */
 #undef SETPGRP_VOID
+
+/* The size of `int', as computed by sizeof. */
+#undef SIZEOF_INT
 
 /* The size of `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
-/* The size of `long long', as computed by sizeof. */
-#undef SIZEOF_LONG_LONG
+/* The size of `off_t', as computed by sizeof. */
+#undef SIZEOF_OFF_T
 
 /* The size of `size_t', as computed by sizeof. */
 #undef SIZEOF_SIZE_T
@@ -387,9 +407,6 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-#undef TIME_WITH_SYS_TIME
-
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
 
@@ -398,28 +415,6 @@
 
 /* Define on non Unix OS'es which don't have the concept of tty's */
 #undef USE_RAWTERM
-
-/* Enable extensions on AIX 3, Interix.  */
-#ifndef _ALL_SOURCE
-# undef _ALL_SOURCE
-#endif
-/* Enable GNU extensions on systems that have them.  */
-#ifndef _GNU_SOURCE
-# undef _GNU_SOURCE
-#endif
-/* Enable threading extensions on Solaris.  */
-#ifndef _POSIX_PTHREAD_SEMANTICS
-# undef _POSIX_PTHREAD_SEMANTICS
-#endif
-/* Enable extensions on HP NonStop.  */
-#ifndef _TANDEM_SOURCE
-# undef _TANDEM_SOURCE
-#endif
-/* Enable general extensions on Solaris.  */
-#ifndef __EXTENSIONS__
-# undef __EXTENSIONS__
-#endif
-
 
 /* Define this if you want to use Xdf */
 #undef USE_XDF
@@ -442,18 +437,14 @@
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS
 
+/* Needed for off64_t / lseek64 */
+#undef _LARGEFILE64_SOURCE
+
+/* Might be needed for loff_t / llseek64 */
+#undef _LARGEFILE_SOURCE
+
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
-
-/* Define to 1 if on MINIX. */
-#undef _MINIX
-
-/* Define to 2 if the system does not provide POSIX.1 features except with
-   this defined. */
-#undef _POSIX_1_SOURCE
-
-/* Define to 1 if you need to in order for `stat' and other things to work. */
-#undef _POSIX_SOURCE
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
@@ -491,6 +482,9 @@
 
 /* Define to `long int' if <sys/types.h> does not define. */
 #undef off_t
+
+/* Define to `int' if <sys/types.h> does not define. */
+#undef pid_t
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t

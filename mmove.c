@@ -21,9 +21,7 @@
 
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
-#include "vfat.h"
 #include "mainloop.h"
 #include "plain_io.h"
 #include "nameclash.h"
@@ -165,7 +163,7 @@ static int rename_directory(direntry_t *entry, MainParam_t *mp)
 		return ERROR_ONE;
 	}
 
-	if(entry->entry == -3) {
+	if(isRootEntry(entry)) {
 		fprintf(stderr, "Cannot move a root directory: ");
 		fprintPwd(stderr, entry,0);
 		return ERROR_ONE;
@@ -252,7 +250,7 @@ void mmove(int argc, char **argv, int oldsyntax)
 				arg.verbose = 1;
 				break;
 			case 'o':
-				handle_clash_options(&arg.ch, (char)c);
+				handle_clash_options(&arg.ch, c);
 				break;
 			case 'D':
 				if(handle_clash_options(&arg.ch, *optarg))
@@ -293,11 +291,10 @@ void mmove(int argc, char **argv, int oldsyntax)
 	if (oldsyntax && (argc - optind != 2 || strpbrk(":/", argv[argc-1])))
 		oldsyntax = 0;
 
-	arg.mp.lookupflags =
-	  ACCEPT_PLAIN | ACCEPT_DIR | DO_OPEN_DIRS | NO_DOTS | NO_UNIX;
+	arg.mp.lookupflags = ACCEPT_PLAIN | ACCEPT_DIR | DO_OPEN_DIRS | NO_DOTS;
 
 	if (!oldsyntax){
-		target_lookup(&arg.mp, argv[argc-1]);
+		dos_target_lookup(&arg.mp, argv[argc-1]);
 		arg.mp.callback = rename_file;
 		arg.mp.dirCallback = rename_directory;
 	} else {

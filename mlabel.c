@@ -20,12 +20,10 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
-#include "mainloop.h"
-#include "vfat.h"
-#include "mtools.h"
 #include "nameclash.h"
 #include "file_name.h"
+#include "vfat.h"
+#include "stream.h"
 
 static void _label_name(doscp_t *cp, const char *filename, int verbose UNUSEDP,
 			int *mangled, dos_name_t *ans, int preserve_case)
@@ -46,9 +44,9 @@ static void _label_name(doscp_t *cp, const char *filename, int verbose UNUSEDP,
 
 	have_lower = have_upper = 0;
 	for(i=0; i<len; i++){
-		if(islower(wbuffer[i]))
+		if(iswlower((wint_t)wbuffer[i]))
 			have_lower = 1;
-		if(isupper(wbuffer[i]))
+		if(iswupper((wint_t)wbuffer[i]))
 			have_upper = 1;
 		if(!preserve_case)
 			wbuffer[i] = ch_towupper(wbuffer[i]);
@@ -114,7 +112,6 @@ void mlabel(int argc, char **argv, int type UNUSEDP)
 	char longname[VBUFSIZE];
 	char shortname[45];
 	ClashHandling_t ch;
-	struct MainParam_t mp;
 	Stream_t *RootDir;
 	int c;
 	int mangled;
@@ -191,7 +188,6 @@ void mlabel(int argc, char **argv, int type UNUSEDP)
 	    drive = get_default_drive();
 	}
 
-	init_mp(&mp);
 	if(strlen(newLabel) > VBUFSIZE) {
 		fprintf(stderr, "Label too long\n");
 		FREE(&RootDir);
@@ -283,7 +279,7 @@ void mlabel(int argc, char **argv, int type UNUSEDP)
 	have_boot = 0;
 	if( (!show || newLabel[0]) || set_serial != SER_NONE) {
 		Fs = GetFs(RootDir);
-		have_boot = (force_read(Fs,boot.characters,0,sizeof(boot)) ==
+		have_boot = (force_pread(Fs,boot.characters,0,sizeof(boot)) ==
 			     sizeof(boot));
 	}
 
@@ -320,13 +316,13 @@ void mlabel(int argc, char **argv, int type UNUSEDP)
 	}
 
 	if(need_write_boot) {
-		force_write(Fs, (char *)&boot, 0, sizeof(boot));
+		force_pwrite(Fs, (char *)&boot, 0, sizeof(boot));
 		/* If this is fat 32, write backup boot sector too */
 		if(!WORD_S(fatlen)) {
 			int backupBoot = WORD_S(ext.fat32.backupBoot);
-			force_write(Fs, (char *)&boot,
-				    backupBoot * WORD_S(secsiz),
-				    sizeof(boot));
+			force_pwrite(Fs, (char *)&boot,
+				     backupBoot * WORD_S(secsiz),
+				     sizeof(boot));
 		}
 	}
 

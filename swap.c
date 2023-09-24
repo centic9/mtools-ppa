@@ -18,16 +18,11 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "swap.h"
 
 typedef struct Swap_t {
-	struct Class_t *Class;
-	int refs;
-	struct Stream_t *Next;
-	struct Stream_t *Buffer;
-
+	struct Stream_t head;
 } Swap_t;
 
 static void swap_buffer(char *buf, size_t len)
@@ -41,19 +36,19 @@ static void swap_buffer(char *buf, size_t len)
 }
 
 
-static ssize_t swap_read(Stream_t *Stream, char *buf,
-			 mt_off_t where, size_t len)
+static ssize_t swap_pread(Stream_t *Stream, char *buf,
+			  mt_off_t where, size_t len)
 {
 	DeclareThis(Swap_t);
 
-	ssize_t result = READS(This->Next, buf, where, len);
+	ssize_t result = PREADS(This->head.Next, buf, where, len);
 	if(result < 0)
 		return result;
 	swap_buffer( buf, (size_t) result);
 	return result;
 }
 
-static ssize_t swap_write(Stream_t *Stream, char *buf,
+static ssize_t swap_pwrite(Stream_t *Stream, char *buf,
 			  mt_off_t where, size_t len)
 {
 	DeclareThis(Swap_t);
@@ -63,7 +58,7 @@ static ssize_t swap_write(Stream_t *Stream, char *buf,
 	memcpy( swapping, buf, len );
 	swap_buffer( swapping, len );
 
-	result = WRITES(This->Next, swapping, where, len);
+	result = PWRITES(This->head.Next, swapping, where, len);
 
 	free(swapping);
 	return result;
@@ -71,8 +66,10 @@ static ssize_t swap_write(Stream_t *Stream, char *buf,
 
 
 static Class_t SwapClass = {
-	swap_read,
-	swap_write,
+	0,
+	0,
+	swap_pread,
+	swap_pwrite,
 	0, /* flush */
 	0, /* free */
 	set_geom_pass_through, /* set_geom */
@@ -91,9 +88,7 @@ Stream_t *OpenSwap(Stream_t *Next) {
 		return 0;
 	}
 	memset((void*)This, 0, sizeof(Swap_t));
-	This->Class = &SwapClass;
-	This->refs = 1;
-	This->Next = Next;
+	init_head(&This->head, &SwapClass, Next);
 
-	return (Stream_t *) This;
+	return &This->head;
 }

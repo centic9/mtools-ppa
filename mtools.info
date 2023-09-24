@@ -1,6 +1,6 @@
-This is mtools.info, produced by makeinfo version 6.5 from mtools.texi.
+This is mtools.info, produced by makeinfo version 6.7 from mtools.texi.
 
-This manual is for Mtools (version 4.0.32, July 2021), which is a
+This manual is for Mtools (version 4.0.43, March 2023), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -53,7 +53,7 @@ preliminary mounting or initialization (assuming the default
 '/etc/mtools.conf' works on your machine).  With mtools, one can change
 floppies too without unmounting and mounting.
 
-   This manual is for Mtools (version 4.0.32, July 2021), which is a
+   This manual is for Mtools (version 4.0.43, March 2023), which is a
 collection of tools to allow Unix systems to manipulate MS-DOS files.
 
    Copyright (C) 2007, 2009 Free Software Foundation, Inc.  Copyright
@@ -87,7 +87,7 @@ File: mtools.info,  Node: Location,  Next: Common features,  Prev: Top,  Up: Top
 *********************
 
 Mtools can be found at the following places (and their mirrors):
-     http://ftp.gnu.org/gnu/mtools/mtools-4.0.32.tar.gz
+     http://ftp.gnu.org/gnu/mtools/mtools-4.0.43.tar.gz
 
    These patches are named 'mtools-'VERSION'-'DDMM'.taz', where version
 stands for the base version, DD for the day and MM for the month.  Due
@@ -149,7 +149,11 @@ doesn't follow MS-DOS conventions, but which is more user-friendly.
 
    Most mtools commands allow options that instruct them how to handle
 file name clashes.  *Note name clashes::, for more details on these.
-All commands accept the '-V' flags which prints the version, and most
+
+   All commands accept the '-i' flag which allows to specify an image
+file (*Note drive letters::).
+
+   All commands accept the '-V' flag which prints the version, and most
 accept the '-v' flag, which switches on verbose mode.  In verbose mode,
 these commands print out the name of the MS-DOS files upon which they
 act, unless stated otherwise.  *Note Commands::, for a description of
@@ -830,8 +834,8 @@ File: mtools.info,  Node: miscellaneous variables,  Next: miscellaneous flags,  
 -------------------------------------
 
 The following general purpose drive variables are available.  Depending
-to their type, these variables can be set to a string (precmd) or an
-integer (all others)
+to their type, these variables can be set to a string (precmd, postcmd)
+or an integer (all others)
 
 'fat_bits'
      The number of FAT bits.  This may be 12 or 16.  This is very rarely
@@ -877,10 +881,16 @@ integer (all others)
      ('skip1s'), and finally the rest of image is used as is (implicit)
 
 'precmd'
-     On some variants of Solaris, it is necessary to call 'volcheck -v'
-     before opening a floppy device, in order for the system to notice
-     that there is indeed a disk in the drive.  'precmd="volcheck -v"'
-     in the drive clause establishes the desired behavior.
+     Executes the given command before opening the device.  On some
+     variants of Solaris, it is necessary to call 'volcheck -v' before
+     opening a floppy device, in order for the system to notice that
+     there is indeed a disk in the drive.  'precmd="volcheck -v"' in the
+     drive clause establishes the desired behavior.
+
+'postcmd'
+     Executes the given command after closing the device.  May be useful
+     if mtools shares the image file with some other application, in
+     order to release the image file to that application.
 
 'blocksize'
      This parameter represents a default block size to be always used on
@@ -1069,11 +1079,10 @@ description of those.
 
 * floppyd::           floppy daemon to run on your X server box
 * floppyd_installtest:: small utility to check for the presence of floppyd
-* mattrib::           change MS-DOS file attribute flags
+* mattrib::           change MS-DOS file attribute bits
 * mbadblocks::        tests a floppy disk, and marks the bad blocks in the FAT
 * mcat::              same as cat. Only useful with floppyd.
 * mcd::               change MS-DOS directory
-* mclasserase::       erase memory card
 * mcopy::             copy MS-DOS files to/from Unix
 * mdel::              delete an MS-DOS file
 * mdeltree::          recursively delete an MS-DOS directory
@@ -1236,14 +1245,14 @@ File: mtools.info,  Node: mattrib,  Next: mbadblocks,  Prev: floppyd_installtest
 4.3 Mattrib
 ===========
 
-'Mattrib' is used to change MS-DOS file attribute flags.  It has the
+'Mattrib' is used to change MS-DOS file attribute bits.  It has the
 following syntax:
 
    'mattrib' ['-a|+a'] ['-h|+h'] ['-r|+r'] ['-s|+s'] ['-/'] ['-p']
 ['-X'] MSDOSFILE [ MSDOSFILES ... ]
 
-   'Mattrib' adds attribute flags to an MS-DOS file (with the ''+''
-operator) or remove attribute flags (with the ''-'' operator).
+   'Mattrib' adds attribute bits to an MS-DOS file (with the ''+''
+operator) or remove attribute bits (with the ''-'' operator).
 
    'Mattrib' supports the following attribute bits:
 
@@ -1340,7 +1349,7 @@ the low-level nature of this command, it will happily destroy any data
 written before on the disk without warning!
 
 
-File: mtools.info,  Node: mcd,  Next: mclasserase,  Prev: mcat,  Up: Commands
+File: mtools.info,  Node: mcd,  Next: mcopy,  Prev: mcat,  Up: Commands
 
 4.6 Mcd
 =======
@@ -1365,33 +1374,9 @@ the file is more than 6 hours old.
 another device.  It may be wise to remove old '.mcwd' files at logout.
 
 
-File: mtools.info,  Node: mclasserase,  Next: mcopy,  Prev: mcd,  Up: Commands
+File: mtools.info,  Node: mcopy,  Next: mdel,  Prev: mcd,  Up: Commands
 
-4.7 Mclasserase
-===============
-
-The 'mclasserase' command is used to wipe memory cards by overwriting it
-three times: first with '0xff', then with '0x00', then with '0xff'
-again.  The command uses the following syntax:
-
-     mclasserase [-d] MSDOSDRIVE
-
-   MS-DOS drive is optional, if none is specified, use 'A:'.  If more
-than one drive are specified, all but the last are ignored.
-
-   'Mclasserase' accepts the following command line options:
-
-'d'
-     Stop after each erase cycle, for testing purposes
-'p'
-     Not yet implemented
-
-   'Mclasserase' returns 0 on success or -1 on failure.
-
-
-File: mtools.info,  Node: mcopy,  Next: mdel,  Prev: mclasserase,  Up: Commands
-
-4.8 Mcopy
+4.7 Mcopy
 =========
 
 The 'mcopy' command is used to copy MS-DOS files to and from Unix.  It
@@ -1455,7 +1440,7 @@ depending on its position on the command line.
 'v'
      Verbose.  Displays the name of each file as it is copied.
 
-4.8.1 Bugs
+4.7.1 Bugs
 ----------
 
 Unlike MS-DOS, the '+' operator (append) from MS-DOS is not supported.
@@ -1466,7 +1451,7 @@ However, you may use 'mtype' to produce the same effect:
 
 File: mtools.info,  Node: mdel,  Next: mdeltree,  Prev: mcopy,  Up: Commands
 
-4.9 Mdel
+4.8 Mdel
 ========
 
 The 'mdel' command is used to delete an MS-DOS file.  Its syntax is:
@@ -1480,8 +1465,8 @@ The 'mdel' command is used to delete an MS-DOS file.  Its syntax is:
 
 File: mtools.info,  Node: mdeltree,  Next: mdir,  Prev: mdel,  Up: Commands
 
-4.10 Mdeltree
-=============
+4.9 Mdeltree
+============
 
 The 'mdeltree' command is used to delete an MS-DOS file.  Its syntax is:
 
@@ -1494,7 +1479,7 @@ directory to be removed does not exist.
 
 File: mtools.info,  Node: mdir,  Next: mdu,  Prev: mdeltree,  Up: Commands
 
-4.11 Mdir
+4.10 Mdir
 =========
 
 The 'mdir' command is used to display an MS-DOS directory.  Its syntax
@@ -1531,7 +1516,7 @@ for some MS-DOS files.
 
 File: mtools.info,  Node: mdu,  Next: mformat,  Prev: mdir,  Up: Commands
 
-4.12 Mdu
+4.11 Mdu
 ========
 
 'Mdu' is used to list the space occupied by a directory, its
@@ -1550,7 +1535,7 @@ the cluster size.
 
 File: mtools.info,  Node: mformat,  Next: mkmanifest,  Prev: mdu,  Up: Commands
 
-4.13 Mformat
+4.12 Mformat
 ============
 
 The 'mformat' command is used to add an MS-DOS file system to a
@@ -1733,6 +1718,11 @@ has a different meaning.
      older mtools version, and may make the disk unreadable.  Only use
      if you know what you are doing.
 
+'b'
+     Use a non-standard bios disk number for this disk.  By default,
+     bios disk number is inferred from media descriptor: 0x80 for media
+     descriptor 0xf8, or 0x00 otherwise.
+
    To format a diskette at a density other than the default, you must
 supply (at least) those command line parameters that are different from
 the default.
@@ -1742,7 +1732,7 @@ the default.
    It doesn't record bad block information to the Fat, use 'mbadblocks'
 for that.
 
-4.13.1 Number of sectors per cluster
+4.12.1 Number of sectors per cluster
 ------------------------------------
 
 If the user indicates no cluster size, mformat figures out a default
@@ -1777,7 +1767,7 @@ sectors.
 
 File: mtools.info,  Node: mkmanifest,  Next: minfo,  Prev: mformat,  Up: Commands
 
-4.14 Mkmanifest
+4.13 Mkmanifest
 ===============
 
 The 'mkmanifest' command is used to create a shell script (packing list)
@@ -1795,7 +1785,7 @@ arc,' and 'mtools' to change perfectly good Unix filenames to fit the
 MS-DOS restrictions.  This command is only useful if the target system
 which will read the diskette cannot handle VFAT long names.
 
-4.14.1 Example
+4.13.1 Example
 --------------
 
 You want to copy the following Unix files to a MS-DOS diskette (using
@@ -1834,7 +1824,7 @@ system, and I now want the files back to their original names.  If the
 file "manifest" (the output captured above) was sent along with those
 files, it could be used to convert the filenames.
 
-4.14.2 Bugs
+4.13.2 Bugs
 -----------
 
 The short names generated by 'mkmanifest' follow the old convention
@@ -1843,7 +1833,7 @@ The short names generated by 'mkmanifest' follow the old convention
 
 File: mtools.info,  Node: minfo,  Next: mlabel,  Prev: mkmanifest,  Up: Commands
 
-4.15 Minfo
+4.14 Minfo
 ==========
 
 The 'minfo' command prints the parameters of a MS-DOS file system, such
@@ -1861,7 +1851,7 @@ with MS-DOS 1.0 file systems
 
 File: mtools.info,  Node: mlabel,  Next: mmd,  Prev: minfo,  Up: Commands
 
-4.16 Mlabel
+4.15 Mlabel
 ===========
 
 The 'mlabel' command adds a volume label to a disk.  Its syntax is:
@@ -1894,7 +1884,7 @@ success or 1 on failure.
 
 File: mtools.info,  Node: mmd,  Next: mmount,  Prev: mlabel,  Up: Commands
 
-4.17 Mmd
+4.16 Mmd
 ========
 
 The 'mmd' command is used to make an MS-DOS subdirectory.  Its syntax
@@ -1908,7 +1898,7 @@ occurs if the directory already exists.
 
 File: mtools.info,  Node: mmount,  Next: mmove,  Prev: mmd,  Up: Commands
 
-4.18 Mmount
+4.17 Mmount
 ===========
 
 The 'mmount' command is used to mount an MS-DOS disk.  It is only
@@ -1925,7 +1915,7 @@ the disk is write protected, it is automatically mounted read only.
 
 File: mtools.info,  Node: mmove,  Next: mpartition,  Prev: mmount,  Up: Commands
 
-4.19 Mmove
+4.18 Mmove
 ==========
 
 The 'mmove' command is used to move or rename an existing MS-DOS file or
@@ -1943,7 +1933,7 @@ parameters, drive a: is assumed by default.
 
 File: mtools.info,  Node: mpartition,  Next: mrd,  Prev: mmove,  Up: Commands
 
-4.20 Mpartition
+4.19 Mpartition
 ===============
 
 The 'mpartition' command is used to create MS-DOS file systems as
@@ -2028,7 +2018,7 @@ partition table:
 'B BOOTSECTOR'
      Reads the template master boot record from file BOOTSECTOR.
 
-4.20.1 Choice of partition type
+4.19.1 Choice of partition type
 -------------------------------
 
 Mpartition proceeds as follows to pick a type for the partition:
@@ -2071,7 +2061,7 @@ with two notable differences:
 
 File: mtools.info,  Node: mrd,  Next: mren,  Prev: mpartition,  Up: Commands
 
-4.21 Mrd
+4.20 Mrd
 ========
 
 The 'mrd' command is used to remove an MS-DOS subdirectory.  Its syntax
@@ -2085,7 +2075,7 @@ occurs if the directory does not exist or is not empty.
 
 File: mtools.info,  Node: mren,  Next: mshortname,  Prev: mrd,  Up: Commands
 
-4.22 Mren
+4.21 Mren
 =========
 
 The 'mren' command is used to rename or move an existing MS-DOS file or
@@ -2107,7 +2097,7 @@ version of 'REN', 'mren' can be used to rename directories.
 
 File: mtools.info,  Node: mshortname,  Next: mshowfat,  Prev: mren,  Up: Commands
 
-4.23 Mshortname
+4.22 Mshortname
 ===============
 
 The 'mshortname' command is used to display the short name of a file.
@@ -2121,7 +2111,7 @@ without any character set conversion.
 
 File: mtools.info,  Node: mshowfat,  Next: mtoolstest,  Prev: mshortname,  Up: Commands
 
-4.24 Mshowfat
+4.23 Mshowfat
 =============
 
 The 'mshowfat' command is used to display the FAT entries for a file.
@@ -2136,7 +2126,7 @@ containing that offset is printed.
 
 File: mtools.info,  Node: mtoolstest,  Next: mtype,  Prev: mshowfat,  Up: Commands
 
-4.25 Mtoolstest
+4.24 Mtoolstest
 ===============
 
 The 'mtoolstest' command is used to tests the mtools configuration
@@ -2150,7 +2140,7 @@ files into new style configuration files.
 
 File: mtools.info,  Node: mtype,  Next: mzip,  Prev: mtoolstest,  Up: Commands
 
-4.26 Mtype
+4.25 Mtype
 ==========
 
 The 'mtype' command is used to display contents of an MS-DOS file.  Its
@@ -2181,7 +2171,7 @@ arguments.
 
 File: mtools.info,  Node: mzip,  Prev: mtype,  Up: Commands
 
-4.27 Mzip
+4.26 Mzip
 =========
 
 The 'mzip' command is used to issue ZIP disk specific commands on Linux,
@@ -2226,7 +2216,7 @@ in a Mac.  On a PC, the Mac file system appears as a hidden file named
 'partishn.mac'.  You may erase it to reclaim the 50 Megs of space taken
 up by the Mac file system.
 
-4.27.1 Bugs
+4.26.1 Bugs
 -----------
 
 This command is a big kludge.  A proper implementation would take a
@@ -2482,12 +2472,12 @@ Concept index
 * Bad blocks:                            mbadblocks.           (line  6)
 * bigger sectors:                        bigger sectors.       (line  6)
 * blocksize:                             miscellaneous variables.
-                                                               (line 60)
+                                                               (line 66)
 * bugs:                                  Location.             (line  6)
 * Case sensitivity:                      case sensitivity.     (line  6)
 * Changing file attributes:              mattrib.              (line  6)
 * character devices:                     miscellaneous variables.
-                                                               (line 60)
+                                                               (line 66)
 * Checking configuration file:           mtoolstest.           (line  6)
 * Clusters of a file:                    mshowfat.             (line  6)
 * Command list:                          Commands.             (line  6)
@@ -2543,6 +2533,8 @@ Concept index
 * erasing an MS-DOS directory recursively: mdeltree.           (line  6)
 * erasing MS-DOS files:                  mdel.                 (line  6)
 * exclusive access to a drive:           open flags.           (line  6)
+* Executing commands after closing the device: miscellaneous variables.
+                                                               (line 61)
 * Executing commands before opening the device: miscellaneous variables.
                                                                (line 54)
 * Fat:                                   mshowfat.             (line  6)
@@ -2595,14 +2587,12 @@ Concept index
 * mcat:                                  mcat.                 (line  9)
 * mcd:                                   mcd.                  (line  6)
 * mcd (introduction):                    directory.            (line  6)
-* mclasserase:                           mclasserase.          (line  6)
 * mcopy:                                 mcopy.                (line  6)
 * Mcwd file:                             mcd.                  (line  6)
 * mdel:                                  mdel.                 (line  6)
 * mdeltree:                              mdeltree.             (line  6)
 * mdir:                                  mdir.                 (line  6)
 * mdu:                                   mdu.                  (line  6)
-* Memory Card:                           mclasserase.          (line  6)
 * mformat:                               mformat.              (line  6)
 * mformat (geometry used for):           geometry description. (line  6)
 * mformat parameters:                    minfo.                (line  6)
@@ -2643,14 +2633,13 @@ Concept index
 * partitions (creating):                 mpartition.           (line  6)
 * password protected Zip disks:          mzip.                 (line  6)
 * patches:                               Location.             (line  6)
-* Physically erase:                      mclasserase.          (line  6)
 * plain floppy: device xxx busy:         miscellaneous flags.  (line 11)
 * Porting:                               Porting mtools.       (line  6)
 * Primary file name (long names):        long names.           (line  6)
 * Primary file name (name clashes):      name clashes.         (line  6)
 * Ram disk:                              location information. (line 28)
 * raw device:                            miscellaneous variables.
-                                                               (line 60)
+                                                               (line 66)
 * Read errors:                           mbadblocks.           (line  6)
 * Read-only files (changing the attribute): mattrib.           (line  6)
 * Read-only files (listing them):        mdir.                 (line  6)
@@ -2723,71 +2712,75 @@ Concept index
 
 
 Tag Table:
-Node: Top868
-Node: Location3121
-Node: Common features4059
-Node: arguments4823
-Node: drive letters6484
-Node: directory7838
-Node: long names8284
-Node: name clashes10830
-Node: case sensitivity13114
-Node: high capacity formats14351
-Node: more sectors15396
-Node: bigger sectors16451
-Node: 2m17180
-Node: XDF18366
-Node: exit codes19709
-Node: bugs20347
-Node: Configuration20880
-Node: configuration file location22169
-Node: general syntax22622
-Node: default values23453
-Node: global variables23981
-Node: per drive variables26174
-Node: general information27009
-Node: location information27451
-Node: geometry description28980
-Node: open flags32841
-Node: miscellaneous variables33441
-Node: miscellaneous flags37031
-Node: multiple descriptions40661
-Node: parsing order42335
-Node: old style configuration43366
-Node: Commands44065
-Node: floppyd45987
-Node: floppyd_installtest50780
-Node: mattrib51411
-Node: mbadblocks53206
-Node: mcat54500
-Node: mcd55314
-Node: mclasserase56175
-Node: mcopy56851
-Node: mdel59869
-Node: mdeltree60208
-Node: mdir60627
-Node: mdu61903
-Node: mformat62409
-Node: mkmanifest70920
-Node: minfo72894
-Node: mlabel73464
-Node: mmd74617
-Node: mmount74966
-Node: mmove75569
-Node: mpartition76374
-Node: mrd81900
-Node: mren82258
-Node: mshortname83007
-Node: mshowfat83337
-Node: mtoolstest83746
-Node: mtype84318
-Node: mzip85169
-Ref: mzip-Footnote-187194
-Ref: mzip-Footnote-287275
-Node: Compiling mtools87562
-Node: Porting mtools88661
-Node: Command Index94569
-Node: Variable Index94697
-Node: Concept Index96520
+Node: Top869
+Node: Location3123
+Node: Common features4061
+Node: arguments4825
+Node: drive letters6590
+Node: directory7944
+Node: long names8390
+Node: name clashes10936
+Node: case sensitivity13220
+Node: high capacity formats14457
+Node: more sectors15502
+Node: bigger sectors16557
+Node: 2m17286
+Node: XDF18472
+Node: exit codes19815
+Node: bugs20453
+Node: Configuration20986
+Node: configuration file location22275
+Node: general syntax22728
+Node: default values23559
+Node: global variables24087
+Node: per drive variables26280
+Node: general information27115
+Node: location information27557
+Node: geometry description29086
+Node: open flags32947
+Node: miscellaneous variables33547
+Node: miscellaneous flags37417
+Node: multiple descriptions41047
+Node: parsing order42721
+Node: old style configuration43752
+Node: Commands44451
+Node: floppyd46332
+Node: floppyd_installtest51125
+Node: mattrib51756
+Node: mbadblocks53548
+Node: mcat54842
+Node: mcd55656
+Node: mcopy56511
+Node: mdel59521
+Node: mdeltree59860
+Node: mdir60277
+Node: mdu61553
+Node: mformat62059
+Node: mkmanifest70757
+Node: minfo72731
+Node: mlabel73301
+Node: mmd74454
+Node: mmount74803
+Node: mmove75406
+Node: mpartition76211
+Node: mrd81737
+Node: mren82095
+Node: mshortname82844
+Node: mshowfat83174
+Node: mtoolstest83583
+Node: mtype84155
+Node: mzip85006
+Ref: mzip-Footnote-187031
+Ref: mzip-Footnote-287112
+Node: Compiling mtools87399
+Node: Porting mtools88498
+Node: Command Index94406
+Node: Variable Index94534
+Node: Concept Index96357
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

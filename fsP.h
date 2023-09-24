@@ -19,30 +19,26 @@
  */
 #include "stream.h"
 #include "msdos.h"
-#include "fs.h"
 
 typedef enum fatAccessMode_t {
 	FAT_ACCESS_READ,
 	FAT_ACCESS_WRITE
 } fatAccessMode_t;
 
-typedef struct Fs_t {
-	Class_t *Class;
-	int refs;
-	Stream_t *Next;
-	Stream_t *Buffer;
+struct Fs_t {
+	struct Stream_t head;
 
 	int serialized;
 	unsigned long serial_number;
-	unsigned int cluster_size;
+	uint8_t cluster_size;
 	uint16_t sector_size;
+	
 	int fat_error;
 
 	unsigned int (*fat_decode)(struct Fs_t *This, unsigned int num);
 	void (*fat_encode)(struct Fs_t *This, unsigned int num,
 			   unsigned int code);
 
-	Stream_t *Direct;
 	int fat_dirty;
 	uint16_t fat_start;
 	uint32_t fat_len;
@@ -80,15 +76,19 @@ typedef struct Fs_t {
 	unsigned int sectorShift;
 
 	doscp_t *cp;
-} Fs_t;
+};
+
+#include "fs.h"
+
 
 #ifndef abs
 #define abs(x) ((unsigned int)((x)>0?(x):-(x)))
 #endif
 
+mt_off_t sectorsToBytes(Fs_t *This, uint32_t off);
 int fs_free(Stream_t *Stream);
 
-void set_fat(Fs_t *This);
+void set_fat(Fs_t *This,bool haveBigFatLen);
 unsigned int get_next_free_cluster(Fs_t *Fs, unsigned int last);
 unsigned int fatDecode(Fs_t *This, unsigned int pos);
 void fatAppend(Fs_t *This, unsigned int pos, unsigned int newpos);

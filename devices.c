@@ -22,20 +22,21 @@
 
 #define NO_TERMIO
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "devices.h"
 
 #define INIT_NOOP
 
-#define DEF_ARG1(x) (x), 0x2,0,(char *)0, 0, 0, 0, 0, 0, 0, NULL
+#define DEF_ARG1(x) (x), 0x2,0,(char *)0, 0, 0, 0, 0, 0, 0, 0, NULL
 #define DEF_ARG0(x) 0,DEF_ARG1(x)
 
 #define MDEF_ARG 0L,DEF_ARG0(MFORMAT_ONLY_FLAG)
 #define FDEF_ARG 0L,DEF_ARG0(0)
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-macros"
+#ifdef HAVE_PRAGMA_DIAGNOSTIC
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-macros"
+#endif
 
 #define VOLD_DEF_ARG 0L,DEF_ARG0(VOLD_FLAG|MFORMAT_ONLY_FLAG)
 
@@ -70,10 +71,62 @@
 #define ZIP(x)	 ZIPJAZ(x,96, 64, 32, 0)
 #define RZIP(x)	 ZIPJAZ(x,96, 64, 32, SCSI_FLAG|PRIV_FLAG)
 
-#pragma GCC diagnostic pop
+#ifdef HAVE_PRAGMA_DIAGNOSTIC
+# pragma GCC diagnostic pop
+#endif
 
 #define REMOTE    {"$DISPLAY", 'X', 0,0, 0,0, 0,0,0L, DEF_ARG0(FLOPPYD_FLAG)}
 
+#define devices const_devices
+
+#if (!defined(predefined_devices) && defined (CPU_m68000) && defined (OS_sysv))
+
+#undef F_LOCK
+/* F_LOCK is doubly defined!, both in unistd.h and sys/gdisk.h , with
+   different value! */
+
+#include <sys/gdioctl.h>
+
+#define predefined_devices
+struct device devices[] = {
+	{"/dev/rfp020",		'A', 0, O_NDELAY, 40, 2, 9, 0, FDEF_ARG },
+	{"/usr/bin/DOS/dvd000", 'C', GENFD },
+	REMOTE
+};
+
+#undef INIT_NOOP
+int init_geom(int fd, struct device *dev, struct device *orig_dev,
+	      struct MT_STAT *statbuf)
+{
+	struct gdctl gdbuf;
+
+	if (ioctl(fd, GDGETA, &gdbuf) == -1) {
+		ioctl(fd, GDDISMNT, &gdbuf);
+		return 1;
+	}
+	SET_INT(gdbuf.params.cyls,dev->tracks);
+	SET_INT(gdbuf.params.heads,dev->heads);
+	SET_INT(gdbuf.params.psectrk,dev->sectors);
+	dev->tracks = gdbuf.params.cyls;
+	dev->heads = gdbuf.params.heads;
+	dev->sectors = gdbuf.params.psectrk;
+
+	gdbuf.params.pseccyl = gdbuf.params.psectrk * gdbuf.params.heads;
+	gdbuf.params.flags = 1;		/* disk type flag */
+	gdbuf.params.step = 0;		/* step rate for controller */
+	gdbuf.params.sectorsz = 512;	/* sector size */
+
+	/* On AT&T UnixPC, the GDSETA needs to be performed unconditionally
+	 * even if parameters didn't actually change, or else the driver
+	 * forbids reading/writing to the device
+	 */
+	if (ioctl(fd, GDSETA, &gdbuf) < 0) {
+		ioctl(fd, GDDISMNT, &gdbuf);
+		return(1);
+	}
+	return(0);
+}
+#endif /* (defined (m68000) && defined (sysv))*/
 
 
 #if defined(INIT_GENERIC) || defined(INIT_NOOP)
@@ -89,7 +142,6 @@ static int compare_geom(struct device *dev, struct device *orig_dev)
 }
 #endif
 
-#define devices const_devices
 
 
 #ifdef __CYGWIN__
@@ -386,6 +438,7 @@ struct device devices[] = {
 
 
 
+#ifdef HAVE_SYS_FDIO_H
 /*
  * Ofer Licht <ofer@stat.Berkeley.EDU>, May 14, 1997.
  */
@@ -421,7 +474,7 @@ static inline int get_parameters(int fd, struct generic_floppy_struct *floppy)
 #define FD_SET_SECTSIZE(floppy,v) { floppy.fdchar.fdc_sec_size = v; }
 
 static inline int set_parameters(int fd, struct generic_floppy_struct *floppy,
-				 struct MT_STAT *buf)
+				 struct MT_STAT *buf UNUSEDP)
 {
 	if (ioctl(fd, FDIOSCHAR, &(floppy->fdchar)) != 0) {
 		ioctl(fd, FDEJECT, NULL);
@@ -430,7 +483,7 @@ static inline int set_parameters(int fd, struct generic_floppy_struct *floppy,
 	}
 	return 0;
 }
-#define INIT_GENERIC
+#endif
 #endif /* solaris */
 
 #ifdef OS_sunos3
@@ -609,7 +662,7 @@ static const char *error_msg[22]={
 "Seek end" };
 
 
-static __inline__ void print_message(RawRequest_t *raw_cmd,const char *message)
+static inline void print_message(RawRequest_t *raw_cmd,const char *message)
 {
 	int i, code;
 	if(!message)
@@ -764,7 +817,7 @@ struct device devices[] = {
 #define USE_2M(floppy) ((floppy.rate & FD_2M) ? 0xff : 0x80 )
 #define SSIZE(floppy) ((((floppy.rate & 0x38) >> 3 ) + 2) % 8)
 
-static __inline__ void set_2m(struct floppy_struct *floppy, unsigned int value)
+static inline void set_2m(struct floppy_struct *floppy, unsigned int value)
 {
 	uint8_t v;
 	if (value & 0x7f)
@@ -775,7 +828,7 @@ static __inline__ void set_2m(struct floppy_struct *floppy, unsigned int value)
 }
 #define SET_2M set_2m
 
-static __inline__ void set_ssize(struct floppy_struct *floppy, int value)
+static inline void set_ssize(struct floppy_struct *floppy, int value)
 {
 	uint8_t v = (uint8_t) ((( (value & 7) + 6 ) % 8) << 3);
 
@@ -784,7 +837,7 @@ static __inline__ void set_ssize(struct floppy_struct *floppy, int value)
 
 #define SET_SSIZE set_ssize
 
-static __inline__ int set_parameters(int fd, struct floppy_struct *floppy,
+static inline int set_parameters(int fd, struct floppy_struct *floppy,
 				     struct MT_STAT *buf)
 {
 	if ( ( MINOR(buf->st_rdev ) & 0x7f ) > 3 )
@@ -793,7 +846,7 @@ static __inline__ int set_parameters(int fd, struct floppy_struct *floppy,
 	return ioctl(fd, FDSETPRM, floppy);
 }
 
-static __inline__ int get_parameters(int fd, struct floppy_struct *floppy)
+static inline int get_parameters(int fd, struct floppy_struct *floppy)
 {
 	return ioctl(fd, FDGETPRM, floppy);
 }
@@ -935,52 +988,6 @@ struct device devices[] = {
 #endif /* OS_openbsd */
 
 
-
-#if (!defined(predefined_devices) && defined (CPU_m68000) && defined (OS_sysv))
-#include <sys/gdioctl.h>
-
-#define predefined_devices
-struct device devices[] = {
-	{"/dev/rfp020",		'A', 12,O_NDELAY,40,2, 9, 0, MDEF_ARG},
-	{"/usr/bin/DOS/dvd000", 'C', GENFD},
-	REMOTE
-};
-
-#undef INIT_NOOP
-int init_geom(int fd, struct device *dev, struct device *orig_dev,
-	      struct MT_STAT *statbuf)
-{
-	struct gdctl gdbuf;
-
-	if (ioctl(fd, GDGETA, &gdbuf) == -1) {
-		ioctl(fd, GDDISMNT, &gdbuf);
-		return 1;
-	}
-	if((dev->use_2m & 0x7f) || (dev->ssize & 0x7f))
-		return 1;
-
-	SET_INT(gdbuf.params.cyls,dev->ntracks);
-	SET_INT(gdbuf.params.heads,dev->nheads);
-	SET_INT(gdbuf.params.psectrk,dev->nsect);
-	dev->ntracks = gdbuf.params.cyls;
-	dev->nheads = gdbuf.params.heads;
-	dev->nsect = gdbuf.params.psectrk;
-	dev->use_2m = 0x80;
-	dev->ssize = 0x82;
-
-	gdbuf.params.pseccyl = gdbuf.params.psectrk * gdbuf.params.heads;
-	gdbuf.params.flags = 1;		/* disk type flag */
-	gdbuf.params.step = 0;		/* step rate for controller */
-	gdbuf.params.sectorsz = 512;	/* sector size */
-
-	if (ioctl(fd, GDSETA, &gdbuf) < 0) {
-		ioctl(fd, GDDISMNT, &gdbuf);
-		return(1);
-	}
-	return(0);
-}
-#endif /* (defined (m68000) && defined (sysv))*/
-
 #ifdef CPU_alpha
 #ifndef OS_osf4
 #ifdef __osf__
@@ -1054,7 +1061,7 @@ struct device devices[] = {
 #endif
 
 #ifndef SSIZE
-#define SSIZE(x) 0x82
+#define SSIZE(x) 0x02
 #endif
 
 #ifndef SET_2M
@@ -1143,7 +1150,7 @@ int init_geom(int fd, struct device *dev, struct device *orig_dev,
 	} else
 		dev->heads = (uint16_t) HEADS(floppy);
 
-	if(compare(dev->tracks, TRACKS(floppy))){
+	if(compare(dev->tracks, (unsigned int) TRACKS(floppy))){
 		TRACKS(floppy) = dev->tracks;
 		change = 1;
 	} else
@@ -1189,8 +1196,8 @@ int init_geom(int fd, struct device *dev, struct device *orig_dev,
 #endif /* INIT_GENERIC */
 
 #ifdef INIT_NOOP
-int init_geom(int fd, struct device *dev, struct device *orig_dev,
-			  struct MT_STAT *statbuf)
+int init_geom(int fd UNUSEDP, struct device *dev, struct device *orig_dev,
+	      struct MT_STAT *statbuf UNUSEDP)
 {
 	return compare_geom(dev, orig_dev);
 }

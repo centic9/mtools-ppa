@@ -16,7 +16,6 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 
 int noPrivileges=0;
@@ -61,7 +60,7 @@ int setresuid(int a, int b, int c)
 }
 #endif
 
-static __inline__ void print_privs(const char *message UNUSEDP)
+static inline void print_privs(const char *message UNUSEDP)
 {
 #ifdef PRIV_DEBUG
 	/* for debugging purposes only */
@@ -91,7 +90,7 @@ static uid_t ruid, euid;
  */
 
 
-static __inline__ void Setuid(uid_t uid)
+static inline void Setuid(uid_t uid)
 {
 #if defined HAVE_SETEUID || defined HAVE_SETRESUID
 	if(euid == 0) {
@@ -175,7 +174,9 @@ void init_privs(void)
 #endif
 
 	if(euid != ruid) {
+#ifdef HAVE_UNSETENV
 		unsetenv("SOURCE_DATE_EPOCH");
+#endif
 	}
 	if(euid == 0 && ruid != 0) {
 #ifdef HAVE_SETEUID

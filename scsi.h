@@ -1,5 +1,5 @@
-#ifndef __mtools_scsi_h
-#define __mtools_scsi_h
+#ifndef MTOOLS_SCSI_H
+#define MTOOLS_SCSI_H
 /*  Copyright 1997-1999,2001,2002,2009 Alain Knaff.
  *  This file is part of mtools.
  *
@@ -16,6 +16,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#ifdef HAVE_SCSI
 
 #define SCSI_READ 0x8
 #define SCSI_WRITE 0xA
@@ -34,4 +36,6 @@ int scsi_cmd(int fd, unsigned char cdb[6], uint8_t clen, scsi_io_mode_t mode,
 	     void *data, uint32_t len, void *extra_data);
 int scsi_open(const char *name, int flags, int mode, void **extra_data);
 
-#endif /* __mtools_scsi_h */
+#endif /* HAVE_SCSI */
+
+#endif /* MTOOLS_SCSI_H */

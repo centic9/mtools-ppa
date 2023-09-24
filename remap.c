@@ -18,7 +18,6 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "remap.h"
 
@@ -36,10 +35,7 @@ struct map {
 };
 
 typedef struct Remap_t {
-	struct Class_t *Class;
-	int refs;
-	struct Stream_t *Next;
-	struct Stream_t *Buffer;
+	struct Stream_t head;
 
 	struct map *map;
 	int mapSize;
@@ -49,39 +45,33 @@ typedef struct Remap_t {
 
 static enum map_type_t remap(Remap_t *This, mt_off_t *start, size_t *len) {
 	int i;
-	for(i=0; i <= This->mapSize; i++) {
-		mt_size_t maxLen;
-		if(i < This->mapSize && *start >= This->map[i+1].remapped)
-			continue;
-		if(i < This->mapSize) {
-			maxLen = (mt_size_t)(This->map[i+1].remapped - *start);
-			if(*len > maxLen)
-				*len = (size_t) maxLen;
+	for(i=0; i < This->mapSize - 1; i++)
+		if(*start < This->map[i+1].remapped) {
+			limitSizeToOffT(len, This->map[i+1].remapped - *start);
+			break;
 		}
-		*start = *start - This->map[i].remapped + This->map[i].orig;
-		return This->map[i].type;
-	}
-	return ZERO;
+	*start = *start - This->map[i].remapped + This->map[i].orig;
+	return This->map[i].type;
 }
 
-static ssize_t remap_read(Stream_t *Stream, char *buf,
+static ssize_t remap_pread(Stream_t *Stream, char *buf,
 			  mt_off_t start, size_t len)
 {
 	DeclareThis(Remap_t);
 	if(remap(This, &start, &len)==DATA)
-		return READS(This->Next, buf, start, len);
+		return PREADS(This->head.Next, buf, start, len);
 	else {
 		memset(buf, 0, len);
 		return (ssize_t) len;
 	}
 }
 
-static ssize_t remap_write(Stream_t *Stream, char *buf,
+static ssize_t remap_pwrite(Stream_t *Stream, char *buf,
 			   mt_off_t start, size_t len)
 {
 	DeclareThis(Remap_t);
 	if(remap(This, &start, &len)==DATA)
-		return WRITES(This->Next, buf, start, len);
+		return PWRITES(This->head.Next, buf, start, len);
 	else {
 		unsigned int i;
 		/* When writing to a "zero" sector, make sure that we
@@ -91,7 +81,7 @@ static ssize_t remap_write(Stream_t *Stream, char *buf,
 		for(i=0; i<len; i++) {
 			if(buf[i]) {
 				fprintf(stderr, "Bad data written to unmapped sectors\n");
-				errno = EBADR;
+				errno = EFAULT;
 				return -1;
 			}
 		}
@@ -108,8 +98,10 @@ static int remap_free(Stream_t *Stream)
 }
 
 static Class_t RemapClass = {
-	remap_read,
-	remap_write,
+	0,
+	0,
+	remap_pread,
+	remap_pwrite,
 	0, /* flush */
 	remap_free, /* free */
 	set_geom_pass_through, /* set_geom */
@@ -127,7 +119,7 @@ static int process_map(Remap_t *This, const char *ptr,
 	int atEnd=0;
 	char *eptr;
 	while(!atEnd) {
-		mt_size_t len;
+		mt_off_t len;
 		enum map_type_t type;
 		if(*ptr=='\0') {
 			type=DATA;
@@ -145,7 +137,7 @@ static int process_map(Remap_t *This, const char *ptr,
 			type=DATA;
 		}
 
-		len=str_to_size_with_end(ptr,&eptr);
+		len=str_to_off_with_end(ptr,&eptr);
 		ptr=eptr;
 		switch(*ptr) {
 		case '\0':
@@ -161,7 +153,7 @@ static int process_map(Remap_t *This, const char *ptr,
 		}
 
 		if(type == POS) {
-			orig = (mt_off_t)len;
+			orig = len;
 			continue;
 		}
 		if(type != SKIP) {
@@ -195,9 +187,7 @@ Stream_t *Remap(Stream_t *Next, struct device *dev, char *errmsg) {
 		return 0;
 	}
 	memset((void*)This, 0, sizeof(Remap_t));
-	This->Class = &RemapClass;
-	This->refs = 1;
-	This->Next = Next;
+	init_head(&This->head, &RemapClass, Next);
 
 	/* First count number of items */
 	nrItems=process_map(This, map, 1, errmsg);
@@ -206,7 +196,7 @@ Stream_t *Remap(Stream_t *Next, struct device *dev, char *errmsg) {
 		return NULL;
 	}
 
-	This->map = calloc((size_t)nrItems+1, sizeof(struct map));
+	This->map = calloc((size_t)nrItems, sizeof(struct map));
 	if(!This->map) {
 		printOom();
 		goto exit_0;
@@ -217,8 +207,8 @@ Stream_t *Remap(Stream_t *Next, struct device *dev, char *errmsg) {
 	if(adjust_tot_sectors(dev, This->net_offset, errmsg) < 0)
 		goto exit_1;
 
-	This->mapSize=nrItems-1;
-	return (Stream_t *) This;
+	This->mapSize=nrItems;
+	return &This->head;
  exit_1:
 	free(This->map);
  exit_0:

@@ -16,7 +16,6 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "sysincludes.h"
-#include "msdos.h"
 #include "stream.h"
 #include "mtools.h"
 #include "file.h"
@@ -32,9 +31,9 @@ struct directory *dir_read(direntry_t *entry, int *error)
 {
 	ssize_t n;
 	*error = 0;
-	if((n=force_read(entry->Dir, (char *) (&entry->dir),
-			 (mt_off_t) entry->entry * MDIR_SIZE,
-			 MDIR_SIZE)) != MDIR_SIZE) {
+	if((n=force_pread(entry->Dir, (char *) (&entry->dir),
+			  (mt_off_t) entry->entry * MDIR_SIZE,
+			  MDIR_SIZE)) != MDIR_SIZE) {
 		if (n < 0) {
 			*error = -1;
 		}
@@ -49,10 +48,10 @@ struct directory *dir_read(direntry_t *entry, int *error)
  * on error.
  */
 
-int dir_grow(Stream_t *Dir, int size)
+int dir_grow(Stream_t *Dir, unsigned int size)
 {
 	Stream_t *Stream = GetFs(Dir);
-	DeclareThis(FsPublic_t);
+	DeclareThis(Fs_t);
 	ssize_t ret;
 	unsigned int buflen;
 	char *buffer;
@@ -60,7 +59,7 @@ int dir_grow(Stream_t *Dir, int size)
 	if (!getfreeMinClusters(Dir, 1))
 		return -1;
 
-	buflen = This->cluster_size * This->sector_size;
+	buflen = getClusterBytes(This);
 
 	if(! (buffer=malloc(buflen)) ){
 		perror("dir_grow: malloc");
@@ -68,7 +67,7 @@ int dir_grow(Stream_t *Dir, int size)
 	}
 
 	memset((char *) buffer, '\0', buflen);
-	ret = force_write(Dir, buffer, (mt_off_t) size * MDIR_SIZE, buflen);
+	ret = force_pwrite(Dir, buffer, (mt_off_t) size * MDIR_SIZE, buflen);
 	free(buffer);
 	if(ret < (int) buflen)
 		return -1;
@@ -78,15 +77,15 @@ int dir_grow(Stream_t *Dir, int size)
 
 void low_level_dir_write(direntry_t *entry)
 {
-	force_write(entry->Dir,
-		    (char *) (&entry->dir),
-		    (mt_off_t) entry->entry * MDIR_SIZE, MDIR_SIZE);
+	force_pwrite(entry->Dir,
+		     (char *) (&entry->dir),
+		     (mt_off_t) entry->entry * MDIR_SIZE, MDIR_SIZE);
 }
 
 void low_level_dir_write_end(Stream_t *Dir, int entry)
 {
 	char zero = ENDMARK;
-	force_write(Dir, &zero, (mt_off_t) entry * MDIR_SIZE, 1);
+	force_pwrite(Dir, &zero, (mt_off_t) entry * MDIR_SIZE, 1);
 }
 
 /*
@@ -136,8 +135,11 @@ struct directory *mk_entry_from_base(const char *base, unsigned char attr,
 				     unsigned int fat, uint32_t size, time_t date,
 				     struct directory *ndir)
 {
+	struct directory *entry;
 	struct dos_name_t dn;
 	strncpy(dn.base, base, 8);
 	strncpy(dn.ext, "   ", 3);
-	return mk_entry(&dn, attr, fat, size, date, ndir);
+	entry = mk_entry(&dn, attr, fat, size, date, ndir);
+	entry->Case = 0;
+	return entry;
 }

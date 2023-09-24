@@ -26,7 +26,6 @@
 #include "sysincludes.h"
 #include "stream.h"
 #include "mtools.h"
-#include "msdos.h"
 #include "llong.h"
 
 #include "open_image.h"
@@ -34,22 +33,20 @@
 #include "scsi.h"
 #include "plain_io.h"
 #include "scsi_io.h"
-
+#ifdef HAVE_SCSI
 typedef struct ScsiDevice_t {
-	Class_t *Class;
-	int refs;
-	Stream_t *Next;
-	Stream_t *Buffer;
+	struct Stream_t head;
 
 	int fd;
 	int privileged;
 
 	uint32_t scsi_sector_size;
-	mt_size_t device_size;
+	mt_off_t device_size;
 	uint32_t tot_sectors;
 	void *extra_data; /* extra system dependent information for scsi.
 			     On some platforms, filled in by scsi_open, and to
 			     be supplied to scsi_cmd */
+	const char *postcmd;
 } ScsiDevice_t;
 
 /* ZIP or other scsi device on Solaris or SunOS system.
@@ -102,7 +99,7 @@ static int scsi_init(ScsiDevice_t *This)
 
 
 /**
- * Overflow-safe conversion of bytes to cluster
+ * Overflow-safe conversion of bytes to sectors
  */
 static uint32_t bytesToSectors(size_t bytes, uint32_t sector_size) {
 	size_t sectors = bytes / sector_size;
@@ -125,9 +122,9 @@ static ssize_t scsi_io(Stream_t *Stream, char *buf,
 	unsigned char cdb[10];
 	DeclareThis(ScsiDevice_t);
 
-	firstblock=truncMtOffTo32u(where/This->scsi_sector_size);
+	firstblock=truncMtOffTo32u(where/(mt_off_t)This->scsi_sector_size);
 	/* 512,1024,2048,... bytes/sector supported */
-	offset=where % This->scsi_sector_size;
+	offset=(smt_off_t) where % This->scsi_sector_size;
 	nsect=bytesToSectors(offset+len, This->scsi_sector_size);
 #if defined(OS_sun) && defined(OS_i386)
 	if (This->scsi_sector_size>512)
@@ -226,14 +223,14 @@ static ssize_t scsi_io(Stream_t *Stream, char *buf,
 	printf("zip: read or write OK\n");
 #endif
 	if (offset>0)
-		memmove(buf,buf+offset,
-			truncOffToSize(nsect*This->scsi_sector_size-offset));
+		memmove(buf,buf+offset,	nsect*This->scsi_sector_size-offset);
 	if (len==256) return 256;
 	else if (len==512) return 512;
-	else return truncOffToSsize(nsect*This->scsi_sector_size-offset);
+	else return (ssize_t)(nsect*This->scsi_sector_size-offset);
 }
 
-static ssize_t scsi_read(Stream_t *Stream, char *buf, mt_off_t where, size_t len)
+static ssize_t scsi_pread(Stream_t *Stream, char *buf,
+			  mt_off_t where, size_t len)
 {
 #ifdef JPD
 	printf("zip: to read %d bytes at %d\n", len, where);
@@ -241,8 +238,8 @@ static ssize_t scsi_read(Stream_t *Stream, char *buf, mt_off_t where, size_t len
 	return scsi_io(Stream, buf, where, len, SCSI_IO_READ);
 }
 
-static ssize_t scsi_write(Stream_t *Stream, char *buf,
-			  mt_off_t where, size_t len)
+static ssize_t scsi_pwrite(Stream_t *Stream, char *buf,
+			   mt_off_t where, size_t len)
 {
 #ifdef JPD
 	Printf("zip: to write %d bytes at %d\n", len, where);
@@ -250,7 +247,7 @@ static ssize_t scsi_write(Stream_t *Stream, char *buf,
 	return scsi_io(Stream, buf, where, len, SCSI_IO_WRITE);
 }
 
-static int scsi_get_data(Stream_t *Stream, time_t *date, mt_size_t *size,
+static int scsi_get_data(Stream_t *Stream, time_t *date, mt_off_t *size,
 			 int *type, uint32_t *address)
 {
 	DeclareThis(ScsiDevice_t);
@@ -262,13 +259,25 @@ static int scsi_get_data(Stream_t *Stream, time_t *date, mt_size_t *size,
 	return 0;
 }
 
+static int scsi_free(Stream_t *Stream)
+{
+	DeclareThis(ScsiDevice_t);
 
-
+	if(This->fd > 2) {
+		int ret = close(This->fd);
+		postcmd(This->postcmd);
+		return ret;
+	} else
+		return 0;
+}
+	
 static Class_t ScsiDeviceClass = {
-	scsi_read,
-	scsi_write,
 	0,
 	0,
+	scsi_pread,
+	scsi_pwrite,
+	0,
+	scsi_free,
 	set_geom_noop,
 	scsi_get_data, /* get_data */
 	0, /* pre-allocate */
@@ -279,7 +288,7 @@ static Class_t ScsiDeviceClass = {
 Stream_t *OpenScsi(struct device *dev,
 		   const char *name, int mode, char *errmsg,
 		   int mode2, int locked, int lockMode,
-		   mt_size_t *maxSize)
+		   mt_off_t *maxSize)
 {
 	int ret;
 	ScsiDevice_t *This;
@@ -292,8 +301,8 @@ Stream_t *OpenScsi(struct device *dev,
 		return 0;
 	}
 	memset((void*)This, 0, sizeof(ScsiDevice_t));
+	init_head(&This->head, &ScsiDeviceClass, NULL);
 	This->scsi_sector_size = 512;
-	This->Class = &ScsiDeviceClass;
 
 	if(dev) {
 		if(!(mode2 & NO_PRIV))
@@ -302,6 +311,8 @@ Stream_t *OpenScsi(struct device *dev,
 	}
 
 	precmd(dev);
+	if(dev)
+		This->postcmd = dev->postcmd;
 	if(IS_PRIVILEGED(dev) && !(mode2 & NO_PRIV))
 		reclaim_privs();
 
@@ -331,13 +342,9 @@ Stream_t *OpenScsi(struct device *dev,
 
 	if(LockDevice(This->fd, dev, locked, lockMode, errmsg) < 0)
 		goto exit_0;
-	This->refs = 1;
-	This->Next = 0;
-	This->Buffer = 0;
 
 	if(maxSize)
-		*maxSize = MAX_SIZE_T_B(31+log_2(This->scsi_sector_size));
-	This->Class = &ScsiDeviceClass;
+		*maxSize = MAX_OFF_T_B(31+log_2(This->scsi_sector_size));
 	if(This->privileged)
 		reclaim_privs();
 	ret=scsi_init(This);
@@ -346,10 +353,12 @@ Stream_t *OpenScsi(struct device *dev,
 	if(ret < 0)
 		goto exit_0;
 	dev->tot_sectors = This->tot_sectors;
-	return (Stream_t *) This;
+	return &This->head;
  exit_0:
 	close(This->fd);
+	postcmd(This->postcmd);
  exit_1:
 	Free(This);
 	return NULL;
 }
+#endif

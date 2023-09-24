@@ -18,7 +18,7 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sysincludes.h>
+#include "sysincludes.h"
 #include "mtools.h"
 
 /**
@@ -45,5 +45,29 @@ size_t wchar_to_native(const wchar_t *wchar, char *native,
 
 size_t native_to_wchar(const char *native, wchar_t *wchar, size_t len,
 		       const char *end, int *mangled);
+
+int match(const wchar_t *, const wchar_t *, wchar_t *, int,  int);
+wchar_t *unix_name(doscp_t *fromDos,
+		   const char *base, const char *ext, uint8_t Case,
+		   wchar_t *answer);
+
+/* Is this a "special" directory entry, such as . or .. ? */
+int isSpecial(const char *name);
+
+#ifdef HAVE_WCHAR_H
+int isSpecialW(const wchar_t *name);
+#else
+#define isSpecialW isSpecial
+#endif
+
+static inline wchar_t ch_towupper(wchar_t ch)
+{
+        return (wchar_t) towupper( (wint_t) ch);
+}
+
+static inline wchar_t ch_towlower(wchar_t ch)
+{
+        return (wchar_t) towlower( (wint_t) ch);
+}
 
 #endif

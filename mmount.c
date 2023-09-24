@@ -24,15 +24,14 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
+
+void mmount(int argc, char **argv, int type UNUSEDP) NORETURN;
 
 #ifdef OS_linux
 #include <sys/wait.h>
-#include "mainloop.h"
-#include "fs.h"
+#include "fat_device.h"
 
-void mmount(int argc, char **argv, int type UNUSEDP) NORETURN;
 void mmount(int argc, char **argv, int type UNUSEDP)
 {
 	char drive;
@@ -97,9 +96,7 @@ void mmount(int argc, char **argv, int type UNUSEDP)
 
 #else /* linux */
 
-#include "msdos.h"
-
-void mmount(int argc, char **argv, int type)
+void mmount(int argc UNUSEDP, char **argv UNUSEDP, int type UNUSEDP)
 {
   fprintf(stderr,"This command is only available for LINUX \n");
   exit(1);

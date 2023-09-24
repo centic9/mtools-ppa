@@ -17,10 +17,8 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
 #include "vfat.h"
-#include "codepage.h"
 #include "file_name.h"
 
 /* Write a DOS name + extension into a legal unix-style name.  */
@@ -192,35 +190,27 @@ wchar_t *unix_name(doscp_t *dosCp,
 	return ret;
 }
 
-/* If null encountered, set *end to 0x40 and write nulls rest of way
- * 950820: Win95 does not like this!  It complains about bad characters.
- * So, instead: If null encountered, set *end to 0x40, write the null, and
- * write 0xff the rest of the way (that is what Win95 seems to do; hopefully
- * that will make it happy)
- */
-/* Always return num */
-int unicode_write(wchar_t *in, struct unicode_char *out, int num, int *end_p)
+int isSpecial(const char *name)
 {
-	int j;
-
-	for (j=0; j<num; ++j) {
-		if (*end_p)
-			/* Fill with 0xff */
-			out->uchar = out->lchar = 0xff;
-		else {
-			/* TODO / FIXME : handle case where wchat has more
-			 * than 2 bytes (i.e. bytes 2 or 3 are set.
-			 * ==> generate surrogate pairs?
-			 */
-			out->uchar = (*in & 0xffff) >> 8;
-			out->lchar = *in & 0xff;
-			if (! *in) {
-				*end_p = VSE_LAST;
-			}
-		}
-
-		++out;
-		++in;
-	}
-	return num;
+	if(name[0] == '\0')
+		return 1;
+	if(!strcmp(name,"."))
+		return 1;
+	if(!strcmp(name,".."))
+		return 1;
+	return 0;
 }
+
+#ifdef HAVE_WCHAR_H
+int isSpecialW(const wchar_t *name)
+{
+	if(name[0] == '\0')
+		return 1;
+	if(!wcscmp(name,L"."))
+		return 1;
+	if(!wcscmp(name,L".."))
+		return 1;
+	return 0;
+}
+#endif
+

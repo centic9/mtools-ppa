@@ -165,14 +165,17 @@ All options use the @code{-} (minus) as their first character, not
 Most mtools commands allow multiple filename parameters, which
 doesn't follow MS-DOS conventions, but which is more user-friendly.
 
-Most mtools commands allow options that instruct them how to handle file
-name clashes. @xref{name clashes}, for more details on these. All
-commands accept the @code{-V} flags which prints the version, and most
-accept the @code{-v} flag, which switches on verbose mode. In verbose
-mode, these commands print out the name of the MS-DOS files upon which
-they act, unless stated otherwise. @xref{Commands}, for a description of
-the options which are specific to each command.
+Most mtools commands allow options that instruct them how to handle
+file name clashes. @xref{name clashes}, for more details on these.
 
+All commands accept the @code{-i} flag which allows to specify an
+image file (@xref{drive letters}).
+
+All commands accept the @code{-V} flag which prints the version, and
+most accept the @code{-v} flag, which switches on verbose mode. In
+verbose mode, these commands print out the name of the MS-DOS files
+upon which they act, unless stated otherwise. @xref{Commands}, for a
+description of the options which are specific to each command.
 
 @node drive letters, directory, arguments, Common features
 @section Drive letters
@@ -925,9 +928,9 @@ architectures, and for plain files it has no effect at all.
 @node miscellaneous variables, miscellaneous flags, open flags, per drive variables
 @subsection General Purpose Drive Variables
 
-The following general purpose drive variables are available.  Depending
-to their type, these variables can be set to a string (precmd) or
-an integer (all others)
+The following general purpose drive variables are available.
+Depending to their type, these variables can be set to a string
+(precmd, postcmd) or an integer (all others)
 
 @table @code
 @item fat_bits
@@ -978,10 +981,17 @@ FAT and root directory), then one sector from image is skipped
 @item precmd
 @cindex Solaris (volcheck)
 @cindex Executing commands before opening the device
+Executes the given command before opening the device.
 On some variants of Solaris, it is necessary to call 'volcheck -v'
 before opening a floppy device, in order for the system to notice that
 there is indeed a disk in the drive. @code{precmd="volcheck -v"} in the
 drive clause establishes the desired behavior.
+
+@item postcmd
+@cindex Executing commands after closing the device
+Executes the given command after closing the device.
+May be useful if mtools shares the image file with some other application,
+in order to release the image file to that application.
 
 @item blocksize
 @cindex raw device
@@ -1213,11 +1223,10 @@ description of those.
 @menu
 * floppyd::           floppy daemon to run on your X server box
 * floppyd_installtest:: small utility to check for the presence of floppyd
-* mattrib::           change MS-DOS file attribute flags
+* mattrib::           change MS-DOS file attribute bits
 * mbadblocks::        tests a floppy disk, and marks the bad blocks in the FAT
 * mcat::              same as cat. Only useful with floppyd.
 * mcd::               change MS-DOS directory
-* mclasserase::       erase memory card
 * mcopy::             copy MS-DOS files to/from Unix
 * mdel::              delete an MS-DOS file
 * mdeltree::          recursively delete an MS-DOS directory
@@ -1399,14 +1408,14 @@ The connect-String has the format described in the floppyd-section:
 @cindex System files
 @cindex Archive bit
 
-@code{Mattrib} is used to change MS-DOS file attribute flags. It has the
+@code{Mattrib} is used to change MS-DOS file attribute bits. It has the
 following syntax:
 
 @code{mattrib} [@code{-a|+a}] [@code{-h|+h}] [@code{-r|+r}]
 [@code{-s|+s}] [@code{-/}]  [@code{-p}] [@code{-X}] @var{msdosfile} [ @var{msdosfiles} @dots{} ]
 
-@code{Mattrib} adds attribute flags to an MS-DOS file (with the
-`@code{+}' operator) or remove attribute flags (with the `@code{-}'
+@code{Mattrib} adds attribute bits to an MS-DOS file (with the
+`@code{+}' operator) or remove attribute bits (with the `@code{-}'
 operator).
 
 @code{Mattrib} supports the following attribute bits:
@@ -1509,7 +1518,7 @@ stdin and writes it to the given device.
 command, it will happily destroy any data written before on the
 disk without warning!
 
-@node mcd, mclasserase, mcat, Commands
+@node mcd, mcopy, mcat, Commands
 @section Mcd
 @pindex mcd
 @cindex Directory (changing)
@@ -1539,38 +1548,7 @@ if the file is more than 6 hours old.
 Unlike MS-DOS versions of @code{CD}, @code{mcd} can be used to change to
 another device. It may be wise to remove old @file{.mcwd} files at logout.
 
-@node mclasserase, mcopy, mcd, Commands
-@section Mclasserase
-@pindex mclasserase
-@cindex Memory Card
-@cindex Physically erase
-
-The @code{mclasserase} command is used to wipe memory cards by
-overwriting it three times: first with @code{0xff}, then with
-@code{0x00}, then with @code{0xff} again. The command uses the following
-syntax:
-
-@example
-@code{mclasserase} [@code{-d}] @var{msdosdrive}
-@end example
-
-MS-DOS drive is optional, if none is specified, use @code{A:}. If more than
-one drive are specified, all but the last are ignored.
-
-@code{Mclasserase} accepts the following command line options:
-
-@table @code
-@item d
-Stop after each erase cycle, for testing purposes
-@item p
-Not yet implemented
-@end table
-
-
-@code{Mclasserase} returns 0 on success or -1 on failure.
-
-
-@node mcopy, mdel, mclasserase, Commands
+@node mcopy, mdel, mcd, Commands
 @section Mcopy
 @pindex mcopy
 @cindex Reading MS-DOS files
@@ -1943,6 +1921,11 @@ descriptor is stored at position 21 of the boot sector, and as first
 byte in each FAT copy. Using this option may confuse DOS or older mtools
 version, and may make the disk unreadable. Only use if you know what you
 are doing.
+
+@item b
+Use a non-standard bios disk number for this disk. By default, bios
+disk number is inferred from media descriptor: 0x80 for media
+descriptor 0xf8, or 0x00 otherwise.
 
 @end table
 

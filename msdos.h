@@ -33,8 +33,8 @@
 #define NEW		1
 #define OLD		0
 
-#define _WORD(x) ((uint16_t)((unsigned char)(x)[0] + (((unsigned char)(x)[1]) << 8)))
-#define _DWORD(x) ((uint32_t)(_WORD(x) + (_WORD((x)+2) << 16)))
+#define WORD(x) ((uint16_t)((unsigned char)(x)[0] + (((unsigned char)(x)[1]) << 8)))
+#define DWORD(x) ((uint32_t)(WORD(x) + (WORD((x)+2) << 16)))
 
 #define DELMARK ((char) 0xe5)
 #define ENDMARK ((char) 0x00)
@@ -62,12 +62,12 @@ struct directory {
 #define MAX32 0xffffffff
 #define MAX_SIZE 0x7fffffff
 
-#define FILE_SIZE(dir)  (_DWORD((dir)->size))
-#define START(dir) (_WORD((dir)->start))
-#define STARTHI(dir) (_WORD((dir)->startHi))
+#define FILE_SIZE(dir)  (DWORD((dir)->size))
+#define START(dir) (WORD((dir)->start))
+#define STARTHI(dir) (WORD((dir)->startHi))
 
 /* ASSUMPTION: long is at least 32 bits */
-UNUSED(static __inline__ void set_dword(unsigned char *data, uint32_t value))
+static inline void set_dword(unsigned char *data, uint32_t value)
 {
 	data[3] = (value >> 24) & 0xff;
 	data[2] = (value >> 16) & 0xff;
@@ -77,7 +77,7 @@ UNUSED(static __inline__ void set_dword(unsigned char *data, uint32_t value))
 
 
 /* ASSUMPTION: short is at least 16 bits */
-UNUSED(static __inline__ void set_word(unsigned char *data, unsigned short value))
+static inline void set_word(unsigned char *data, unsigned short value)
 {
 	data[1] = (value >>  8) & 0xff;
 	data[0] = (value >>  0) & 0xff;
@@ -193,11 +193,11 @@ union bootsector {
 };
 
 #define CHAR(x) (boot->x[0])
-#define WORD(x) (_WORD(boot->boot.x))
-#define DWORD(x) (_DWORD(boot->boot.x))
+#define BOOT_WORD(x) (WORD(boot->boot.x))
+#define BOOT_DWORD(x) (DWORD(boot->boot.x))
 
-#define WORD_S(x) (_WORD(boot.boot.x))
-#define DWORD_S(x) (_DWORD(boot.boot.x))
+#define WORD_S(x) (WORD(boot.boot.x))
+#define DWORD_S(x) (DWORD(boot.boot.x))
 
 #define OFFSET(x) (((char *) (boot->x)) - ((char *)(boot->jump)))
 
@@ -250,19 +250,6 @@ union bootsector {
 	 (clusters) * (cluster_size))
 
 /* approx. total disk size: assume 1 boot sector and one directory sector */
-
-extern const char *mversion;
-extern const char *mdate;
-extern const char *mformat_banner;
-
-extern char *Version;
-extern char *Date;
-
-
-int init(char drive, int mode);
-
-#define MT_READ 1
-#define MT_WRITE 2
 
 #endif
 

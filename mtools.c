@@ -16,10 +16,7 @@
  */
 
 #include "sysincludes.h"
-#include "msdos.h"
 #include "mtools.h"
-#include "partition.h"
-#include "vfat.h"
 
 const char *progname;
 
@@ -32,7 +29,6 @@ static const struct dispatch {
 	{"mbadblocks",mbadblocks, 0},
 	{"mcat",mcat, 0},
 	{"mcd",mcd, 0},
-	{"mclasserase",mclasserase, 0},
 	{"mcopy",mcopy, 0},
 	{"mdel",mdel, 0},
 	{"mdeltree",mdel, 2},
@@ -106,16 +102,6 @@ int main(int argc,char **argv)
 #ifdef __EMX__
        _wildcard(&argc,&argv);
 #endif
-
-
-	/* check whether the compiler lays out structures in a sane way */
-	if(sizeof(struct partition) != 16 ||
-	   sizeof(struct directory) != 32 ||
-	   sizeof(struct vfat_subentry) !=32) {
-		fprintf(stderr,"Mtools has not been correctly compiled\n");
-		fprintf(stderr,"Recompile it using a more recent compiler\n");
-		return 137;
-	}
 
 #ifdef __EMX__
        argv[0] = _getname(argv[0]); _remext(argv[0]); name = argv[0];
