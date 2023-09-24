@@ -4224,7 +4224,6 @@ _ACEOF
 esac
 
 
-
 # Check whether --enable-xdf was given.
 if test "${enable_xdf+set}" = set; then :
   enableval=$enable_xdf; if test x$enableval = xyes; then
@@ -4377,6 +4376,51 @@ if test "x$ac_cv_lib_cam_cam_open_device" = xyes; then :
 _ACEOF
 
   LIBS="-lcam $LIBS"
+
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for iconv in -liconv" >&5
+$as_echo_n "checking for iconv in -liconv... " >&6; }
+if ${ac_cv_lib_iconv_iconv+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-liconv  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char iconv ();
+int
+main ()
+{
+return iconv ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_iconv_iconv=yes
+else
+  ac_cv_lib_iconv_iconv=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_iconv_iconv" >&5
+$as_echo "$ac_cv_lib_iconv_iconv" >&6; }
+if test "x$ac_cv_lib_iconv_iconv" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBICONV 1
+_ACEOF
+
+  LIBS="-liconv $LIBS"
 
 fi
 
@@ -4538,7 +4582,7 @@ for ac_header in getopt.h sys/stat.h stdlib.h unistd.h linux/unistd.h \
 libc.h fcntl.h limits.h sys/file.h sys/ioctl.h sys/time.h strings.h string.h \
 sys/param.h memory.h malloc.h io.h signal.h sys/signal.h utime.h sgtty.h \
 sys/floppy.h mntent.h sys/sysmacros.h netinet/in.h netinet/tcp.h assert.h \
-iconv.h wctype.h wchar.h locale.h linux/fs.h
+iconv.h wctype.h wchar.h locale.h xlocale.h linux/fs.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
@@ -5413,10 +5457,10 @@ _ACEOF
 
 for ac_func in strerror random srandom strchr strrchr lockf flock \
 strcasecmp strncasecmp strnlen atexit on_exit getpass memmove \
-strdup strndup strcspn strspn strtoul strtol strtoll memcpy strpbrk memset \
-setenv seteuid setresuid setpgrp \
+strdup strndup strcspn strspn strtoul strtol strtoll strtoi strtoui \
+memcpy strpbrk memset setenv seteuid setresuid setpgrp \
 tcsetattr tcflush basename fchdir media_oldaliases llseek lseek64 \
-snprintf stat64 setlocale \
+snprintf stat64 setlocale toupper_l strncasecmp_l \
 wcsdup wcscasecmp wcsnlen putwc \
 getuserid getgroupid \
 alarm sigaction usleep

@@ -1,5 +1,5 @@
 '\" t
-.TH mattrib 1 "22Mar20" mtools-4.0.24
+.TH mattrib 1 "28Nov20" mtools-4.0.26
 .SH Name
 mattrib - change MSDOS file attribute flags
 '\" t
@@ -58,13 +58,13 @@ line, only the attribute is printed, and not the filename.  This option
 is convenient for scripts
 .TP
 \&\fR\&\f(CWp\fR\ 
-Replay mode.  Outputs a series of mformat commands that will reproduce
-the current situation, starting from a situation as left by untarring
-the MS-DOS file system.  Commands are only output for attribute settings
-that differ from the default (archive bit set for files, unset for
-directories).  This option is intended to be used in addition to
-tar. The \fR\&\f(CWreadonly\fR attribute is not taken into account, as tar can
-set that one itself.
+Replay mode.  Outputs a series of \fR\&\f(CWmformat\fR commands that will
+reproduce the current situation, starting from a situation as left by
+untarring the MS-DOS file system.  Commands are only output for
+attribute settings that differ from the default (archive bit set for
+files, unset for directories).  This option is intended to be used in
+addition to tar. The \fR\&\f(CWreadonly\fR attribute is not taken into
+account, as tar can set that one itself.
 .PP
 .SH See\ Also
 Mtools' texinfo doc

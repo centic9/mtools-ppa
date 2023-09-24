@@ -1,5 +1,5 @@
 '\" t
-.TH mpartition 1 "22Mar20" mtools-4.0.24
+.TH mpartition 1 "28Nov20" mtools-4.0.26
 .SH Name
 mpartition - partition an MSDOS hard disk
 '\" t
@@ -84,17 +84,17 @@ The number of cylinders of the partition (not the number of cylinders of
 the whole drive.
 .TP
 \&\fR\&\f(CWb\ \fIbegin\fR\&\f(CW\fR\ 
-The starting offset of the partition, expressed in sectors. If begin is
-not given, mpartition lets the partition begin at the start of the disk
-(partition number 1), or immediately after the end of the previous
-partition.
+The starting offset of the partition, expressed in sectors. If begin
+is not given, \fR\&\f(CWmpartition\fR lets the partition begin at the start
+of the disk (partition number 1), or immediately after the end of the
+previous partition.
 .TP
 \&\fR\&\f(CWl\ \fIlength\fR\&\f(CW\fR\ 
-The size (length) of the partition, expressed in sectors.  If end is not
-given, mpartition figures out the size from the number of sectors, heads
-and cylinders.  If these are not given either, it gives the partition
-the biggest possible size, considering disk size and start of the next
-partition.
+The size (length) of the partition, expressed in sectors.  If end is
+not given, \fR\&\f(CWmpartition\fR figures out the size from the number of
+sectors, heads and cylinders.  If these are not given either, it gives
+the partition the biggest possible size, considering disk size and
+start of the next partition.
 .PP
 The following option is available for all operation which modify the
 partition table:
@@ -103,7 +103,7 @@ partition table:
 Usually, before writing back any changes to the partition, mpartition
 performs certain consistency checks, such as checking for overlaps and
 proper alignment of the partitions.  If any of these checks fails, the
-partition table is not changes.  The \fR\&\f(CW-f\fR allows you to override
+partition table is not changed.  The \fR\&\f(CW-f\fR allows you to override
 these safeguards.
 .PP
 The following options are available for all operations:
@@ -113,9 +113,9 @@ Together with \fR\&\f(CW-p\fR prints the partition table as it is now (no
 change operation), or as it is after it is modified.
 .TP
 \&\fR\&\f(CWvv\fR\ 
-If the verbosity flag is given twice, mpartition will print out a
-hexdump of the partition table when reading it from and writing it to
-the device.
+If the verbosity flag is given twice, \fR\&\f(CWmpartition\fR will print out
+a hexdump of the partition table when reading it from and writing it
+to the device.
 .PP
 The following option is available for partition table initialization:
 .TP
@@ -130,7 +130,9 @@ Mpartition proceeds as follows to pick a type for the partition:
 FAT32 partitions are assigned type 0x0C (``\fR\&\f(CWWin95 FAT32, LBA\fR'')
 .TP
 -\ \ 
-For all others, if the partition fits entirely within the 65536 sector of the disk, assign 0x01 (``\fR\&\f(CWDOS FAT12, CHS\fR'') for FAT12 partition and 0x04 (``\fR\&\f(CWDOS FAT16, CHS\fR'') for FAT16 partitions
+For all others, if the partition fits entirely within the first 65536
+sectors of the disk, assign 0x01 (``\fR\&\f(CWDOS FAT12, CHS\fR'') for FAT12
+partition and 0x04 (``\fR\&\f(CWDOS FAT16, CHS\fR'') for FAT16 partitions
 .TP
 -\ \ 
 If not covered by the above, assign 0x06 (``\fR\&\f(CWDOS BIG FAT16 CHS\fR'') if partition fits entirely within the first 1024 cylinders (CHS mode)
