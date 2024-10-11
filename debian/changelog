@@ -1,3 +1,9 @@
+mtools (4.0.43-1ubuntu0~ppa2) noble; urgency=medium
+
+  * Upload for noble
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Fri, 11 Oct 2024 15:12:44 +0200
+
 mtools (4.0.43-1ubuntu0~ppa1) jammy; urgency=medium
 
   * Backport to Jammy
