@@ -180,7 +180,7 @@ void mbadblocks(int argc, char **argv, int type UNUSEDP)
 		}
 		init_random();
 		for(i=0; i < in_len * N_PATTERN; i++) {
-			pat_buf[i] = (char) random();
+			pat_buf[i] = (char) lrand48();
 		}
 	}
 	for(i=0; i < Fs->clus_start; i++ ){

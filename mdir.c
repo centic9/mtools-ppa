@@ -137,7 +137,7 @@ static const char *dotted_num(mt_off_t num, size_t width, char **buf)
 	 * length is not exceeded (in %6ld, the result can be longer than 6!)
 	 */
 
-	numlo = num % 1000000000;
+	numlo = (unsigned long) (num % 1000000000);
 	numhi = (unsigned long) (num / 1000000000);
 
 	if(numhi && size > 9) {
@@ -506,7 +506,7 @@ static int test_directory(direntry_t *entry, MainParam_t *mp)
 {
 	Stream_t *File=mp->File;
 	Stream_t *Target;
-	char errmsg[80];
+	char errmsg[200];
 
 	if ((Target = SimpleFileOpen(0, 0, "-",
 				     O_WRONLY,
@@ -537,8 +537,7 @@ void mdir(int argc, char **argv, int type UNUSEDP)
 	int ret;
 	MainParam_t mp;
 	int c;
-	const char *fakedArgv[] = { "." };
-
+	
 	concise = 0;
 	recursive = 0;
 	wide = all = 0;
@@ -581,13 +580,6 @@ void mdir(int argc, char **argv, int type UNUSEDP)
 			default:
 				usage(1);
 		}
-	}
-
-	/* fake an argument */
-	if (optind == argc) {
-		argv = (char **)fakedArgv;
-		argc = 1;
-		optind = 0;
 	}
 
 	init_mp(&mp);

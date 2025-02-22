@@ -25,12 +25,12 @@ typedef struct Buffer_t {
 	struct Stream_t head;
 
 	size_t size;     	/* size of read/write buffer */
-	int dirty;	       	/* is the buffer dirty? */
 
 	size_t sectorSize;	/* sector size: all operations happen
 				 * in multiples of this */
 	size_t cylinderSize;	/* cylinder size: preferred alignment,
 				 * but for efficiency, less data may be read */
+	int dirty;	       	/* is the buffer dirty? */
 	int ever_dirty;	       	/* was the buffer ever dirty? */
 	size_t dirty_pos;
 	size_t dirty_end;
@@ -61,7 +61,7 @@ static size_t pos_to_next_full_cyl(Buffer_t *Buffer, mt_off_t pos) {
  * All errors are fatal.
  */
 
-static int _buf_flush(Buffer_t *Buffer)
+static int mt_buf_flush(Buffer_t *Buffer)
 {
 	ssize_t ret;
 
@@ -72,11 +72,11 @@ static int _buf_flush(Buffer_t *Buffer)
 	if (!Buffer->dirty)
 		return 0;
 #ifdef DEBUG
-	fprintf(stderr, "write %08x -- %02x %08x %08x\n",
-		Buffer,
+	fprintf(stderr, "write %p -- %02x %08lx %08lx\n",
+		(void *)Buffer,
 		(unsigned char) Buffer->buf[0],
-		Buffer->current + Buffer->dirty_pos,
-		Buffer->dirty_end - Buffer->dirty_pos);
+		(unsigned long) Buffer->current + Buffer->dirty_pos,
+		(unsigned long) Buffer->dirty_end - Buffer->dirty_pos);
 #endif
 
 	ret = force_pwrite(Buffer->head.Next,
@@ -100,7 +100,7 @@ static int _buf_flush(Buffer_t *Buffer)
 
 static int invalidate_buffer(Buffer_t *Buffer, mt_off_t start)
 {
-	if(_buf_flush(Buffer) < 0)
+	if(mt_buf_flush(Buffer) < 0)
 		return -1;
 
 	/* start reading at the beginning of start's sector
@@ -208,13 +208,19 @@ static ssize_t buf_pwrite(Stream_t *Stream, char *buf,
 	This->ever_dirty = 1;
 
 #ifdef DEBUG
-	fprintf(stderr, "buf write %x   %02x %08x %08x -- %08x %08x -- %08x\n",
-		Stream, (unsigned char) This->buf[0],
-		start, len, This->current, This->cur_size, This->size);
-	fprintf(stderr, "%d %d %d %x %x\n",
-		start == This->current + This->cur_size,
+	fprintf(stderr, "buf write %p   %02x %08lx %08lx -- %08lx %08lx -- %08lx\n",
+		(void*)Stream, (unsigned char) This->buf[0],
+		(unsigned long) start,
+		(unsigned long) len,
+		(unsigned long) This->current,
+		(unsigned long) This->cur_size,
+		(unsigned long) This->size);
+	fprintf(stderr, "%d %d %d %lx %lx\n",
+		(unsigned long) start == (unsigned long) This->current + This->cur_size,
 		This->cur_size < This->size,
-		len >= This->sectorSize, len, This->sectorSize);
+		len >= This->sectorSize,
+		(unsigned long) len,
+		(unsigned long) This->sectorSize);
 #endif
 	switch(isInBuffer(This, start, &len)) {
 		case OUTSIDE:
@@ -253,7 +259,7 @@ static ssize_t buf_pwrite(Stream_t *Stream, char *buf,
 				offset = OFFSET;
 				break;
 			}
-			/* FALL THROUGH */
+			FALLTHROUGH
 		case APPEND:
 #ifdef DEBUG
 			fprintf(stderr, "append\n");
@@ -276,9 +282,16 @@ static ssize_t buf_pwrite(Stream_t *Stream, char *buf,
 		case ERROR:
 			return -1;
 #ifdef DEBUG
+# if defined HAVE_PRAGMA_DIAGNOSTIC && defined __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wcovered-switch-default"
+# endif
 		default:
 			fprintf(stderr, "Should not happen\n");
 			exit(1);
+# if defined HAVE_PRAGMA_DIAGNOSTIC && defined __clang__
+#  pragma clang diagnostic pop
+# endif
 #endif
 	}
 
@@ -323,7 +336,7 @@ static int buf_flush(Stream_t *Stream)
 
 	if (!This->ever_dirty)
 		return 0;
-	ret = _buf_flush(This);
+	ret = mt_buf_flush(This);
 	if(ret == 0)
 		This->ever_dirty = 0;
 	return ret;

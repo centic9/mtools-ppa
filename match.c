@@ -93,9 +93,9 @@ static int parse_range(const wchar_t **p, const wchar_t *s, wchar_t *out,
 }
 
 
-static int _match(const wchar_t *s, const wchar_t *p, wchar_t *out, int Case,
-		  int length,
-		  int (*compfn) (wchar_t a, wchar_t b))
+static int mt_match(const wchar_t *s, const wchar_t *p, wchar_t *out, int Case,
+		    int length,
+		    int (*compfn) (wchar_t a, wchar_t b))
 {
 	for (; *p != '\0' && length; ) {
 		switch (*p) {
@@ -113,8 +113,8 @@ static int _match(const wchar_t *s, const wchar_t *p, wchar_t *out, int Case,
 
 					/* search for next char in pattern */
 				while(*s) {
-					if(_match(s, p, out, Case, length,
-						  compfn))
+					if(mt_match(s, p, out, Case, length,
+						    compfn))
 						return 1;
 					if(out)
 						*out++ = *s;
@@ -130,7 +130,7 @@ static int _match(const wchar_t *s, const wchar_t *p, wchar_t *out, int Case,
 			case '\\':	/* Literal match with next character */
 				p++;
 				length--;
-				/* fall thru */
+				FALLTHROUGH
 			default:
 				if (!compfn(*s,*p))
 					return(0);
@@ -162,6 +162,6 @@ int match(const wchar_t *s, const wchar_t *p, wchar_t *out, int Case, int length
 	else
 		/*compfn = exactcmp;*/
 		compfn = casecmp;
-	return _match(s, p, out, Case, length, compfn);
+	return mt_match(s, p, out, Case, length, compfn);
 }
 

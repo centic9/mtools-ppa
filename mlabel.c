@@ -25,8 +25,9 @@
 #include "vfat.h"
 #include "stream.h"
 
-static void _label_name(doscp_t *cp, const char *filename, int verbose UNUSEDP,
-			int *mangled, dos_name_t *ans, int preserve_case)
+static void mt_label_name(doscp_t *cp, const char *filename,
+			  int verbose UNUSEDP, int *mangled, dos_name_t *ans,
+			  int preserve_case)
 {
 	size_t len;
 	size_t i;
@@ -69,13 +70,13 @@ static void _label_name(doscp_t *cp, const char *filename, int verbose UNUSEDP,
 void label_name_uc(doscp_t *cp, const char *filename, int verbose,
 		   int *mangled, dos_name_t *ans)
 {
-	_label_name(cp, filename, verbose, mangled, ans, 0);
+	mt_label_name(cp, filename, verbose, mangled, ans, 0);
 }
 
 void label_name_pc(doscp_t *cp, const char *filename, int verbose,
 		   int *mangled, dos_name_t *ans)
 {
-	_label_name(cp, filename, verbose, mangled, ans, 1);
+	mt_label_name(cp, filename, verbose, mangled, ans, 1);
 }
 
 int labelit(struct dos_name_t *dosname,
@@ -156,7 +157,7 @@ void mlabel(int argc, char **argv, int type UNUSEDP)
 			case 'n':
 				set_serial = SER_RANDOM;
 				init_random();
-				serial=(uint32_t) random();
+				serial=(uint32_t) lrand48();
 				break;
 			case 'N':
 				set_serial = SER_SET;

@@ -15,7 +15,7 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  *
  * mshortname.c
- * Change MSDOS file attribute flags
+ * shows short name of a file
  */
 
 #include "sysincludes.h"

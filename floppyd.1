@@ -1,5 +1,5 @@
 '\" t
-.TH floppyd 1 "21Mar23" mtools-4.0.43
+.TH floppyd 1 "22Feb25" mtools-4.0.48
 .SH Name
 floppyd - floppy daemon for remote access to floppy drive
 '\" t
@@ -24,7 +24,7 @@ end of this man page for details.
 to clients running on a remote machine, just as an X server grants
 access to the display to remote clients.  It has the following syntax:
 .PP
-\&\fR\&\f(CWfloppyd\fR [\fR\&\f(CW-d\fR] [\fR\&\f(CW-l\fR] [\fR\&\f(CW-s\fR \fIport\fR] [\fR\&\f(CW-r\fR
+\&\fR\&\f(CWfloppyd\fR [\fR\&\f(CW-d\fR] [\fR\&\f(CW-D\fR] [\fR\&\f(CW-l\fR] [\fR\&\f(CW-s\fR \fIport\fR] [\fR\&\f(CW-r\fR
 \&\fIuser\fR] [\fR\&\f(CW-b\fR \fIipaddr\fR] [\fR\&\f(CW-x\fR \fIdisplay\fR] \fIdevicenames\fR
 .PP
 \&\fR\&\f(CWfloppyd\fR is always associated with an X server.  It runs on the
@@ -57,8 +57,12 @@ probing those display names with the \fR\&\f(CW-l\fR option.
 .SH Command\ line\ options
 .TP
 \&\fR\&\f(CWd\fR\ 
-Daemon mode. Floppyd runs its own server loop.  Do not supply this if
+Server mode. Floppyd runs its own server loop.  Do not supply this if
 you start floppyd from \fR\&\f(CWinetd.conf\fR
+.TP
+\&\fR\&\f(CWD\fR\ 
+Do not daemonize. Floppyd will not put itself into the background even
+if started in server mode.
 .TP
 \&\fR\&\f(CWs\ \ \fIport\fR\&\f(CW\fR\ 
 Port number for daemon mode.  Default is 5703 + \fIdisplaynumber\fR.

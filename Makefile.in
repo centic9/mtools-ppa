@@ -50,12 +50,11 @@ sysconfdir  = @sysconfdir@
 datarootdir = @datarootdir@
 
 CC         = @CC@
-CXX        = @CXX@
 MYCFLAGS   = @CFLAGS@
-MYCXXFLAGS = @CXXFLAGS@
 CPPFLAGS   = @CPPFLAGS@
 HOST_ID    = @HOST_ID@
 DEFS       = @DEFS@ -DSYSCONFDIR=\"$(sysconfdir)\" $(HOST_ID)
+EXEEXT	   = @EXEEXT@
 
 LDFLAGS     = @LDFLAGS@
 LIBS        = @LIBS@
@@ -72,11 +71,13 @@ INSTALL_INFO	= @INSTALL_INFO@
 .SUFFIXES: .o .c
 .SUFFIXES: .o .c
 
-MAN1 = floppyd.1 floppyd_installtest.1 mattrib.1 mbadblocks.1 mcat.1	\
-mcd.1 mcopy.1 mdel.1 mdeltree.1 mdir.1 mdu.1 mformat.1	\
+MAN1A = floppyd.1 floppyd_installtest.1 mattrib.1 mbadblocks.1 mcat.1	\
+mcd.1 mcopy.1 mdel.1 mdeltree.1 mdir.1 mdoctorfat.1 mdu.1 mformat.1	\
 minfo.1 mkmanifest.1 mlabel.1 mmd.1 mmount.1 mmove.1 mpartition.1	\
-mrd.1 mren.1 mshortname.1 mshowfat.1 mtoolstest.1 mtools.1 mtype.1	\
+mrd.1 mren.1 mshortname.1 mshowfat.1 mtoolstest.1 mtype.1	\
 mzip.1
+
+MAN1 = ${MAN1A} mtools.1 
 
 MAN1EXT = 1
 MAN1DIR	= $(DESTDIR)$(mandir)/man${MAN1EXT}
@@ -121,33 +122,32 @@ swap.c unix2dos.s unixdir.c tty.c vfat.c mkmanifest.c			\
 
 SCRIPTS = mcheck mxtar uz tgz mcomp amuFormat.sh
 
-LINKS=mattrib mcat mcd mcopy mdel mdeltree mdir mdu	\
-mformat minfo mlabel mmd mmount mmove mpartition mrd mren mtype	\
-mtoolstest mshortname mshowfat mbadblocks mzip
+LINKS=mattrib$(EXEEXT) mcat$(EXEEXT) mcd$(EXEEXT) mcopy$(EXEEXT) mdel$(EXEEXT) \
+mdeltree$(EXEEXT) mdir$(EXEEXT) mdoctorfat$(EXEEXT) mdu$(EXEEXT) \
+mformat$(EXEEXT) minfo$(EXEEXT) mlabel$(EXEEXT) mmd$(EXEEXT) mmount$(EXEEXT) \
+mmove$(EXEEXT) mpartition$(EXEEXT) mrd$(EXEEXT) mren$(EXEEXT) mtype$(EXEEXT) \
+mtoolstest$(EXEEXT) mshortname$(EXEEXT) mshowfat$(EXEEXT) mbadblocks$(EXEEXT) \
+mzip$(EXEEXT)
 
 X_CFLAGS = @X_CFLAGS@
 X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 CFLAGS = $(CPPFLAGS) $(DEFS) $(MYCFLAGS) -I. @extraincludedir@ -I@srcdir@ $(USERCFLAGS)
-CXXFLAGS  = $(CPPFLAGS) $(DEFS) $(MYCXXFLAGS) -I. @extraincludedir@ -I@srcdir@ $(USERCFLAGS)
 LINK      = $(CC) $(LDFLAGS) $(USERLDFLAGS) @extralibdir@
 ALLLIBS   = $(USERLDLIBS) $(MACHDEPLIBS) $(SHLIB) $(X_EXTRA_LIBS) $(LIBS)
 X_LDFLAGS = $(X_EXTRA_LIBS) $(X_LIBS) @FLOPPYD_LIBS@ $(LIBS)
 X_CCFLAGS = $(X_CFLAGS) $(CFLAGS)
 
-all:    mtools $(LINKS) mkmanifest @FLOPPYD@ mtools.1 mtools.5
+all:    mtools$(EXEEXT) $(LINKS) mkmanifest$(EXEEXT) @FLOPPYD@ mtools.1 mtools.5
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
-#%.o: %.cpp
-#	$(CXX) $(CXXFLAGS) -c $<
-
-mtools: $(OBJS_MTOOLS)
+mtools$(EXEEXT): $(OBJS_MTOOLS)
 	$(LINK) $(OBJS_MTOOLS) -o $@ $(ALLLIBS)
 
-mkmanifest: $(OBJS_MKMANIFEST)
+mkmanifest$(EXEEXT): $(OBJS_MKMANIFEST)
 	$(LINK) $(OBJS_MKMANIFEST) -o $@ $(ALLLIBS)
 
 floppyd.o: floppyd.c
@@ -159,14 +159,14 @@ floppyd_installtest: $(OBJS_FLOPPYD_INSTALLTEST)
 	$(LINK) $(OBJS_FLOPPYD_INSTALLTEST) -o $@ $(ALLLIBS)
 
 
-$(LINKS): mtools
-	rm -f $@ && $(LN_S) mtools $@
+$(LINKS): mtools$(EXEEXT)
+	rm -f $@ && $(LN_S) $< $@
 
 mostlyclean:
 	-rm -f *~ *.orig *.o a.out core 2>/dev/null
 
 clean:	mostlyclean
-	-rm -f mtools $(LINKS) floppyd floppyd_installtest mkmanifest *.info* *.dvi *.html 2>/dev/null
+	-rm -f mtools$(EXEEXT) $(LINKS) floppyd floppyd_installtest mkmanifest$(EXEEXT) *.info* *.dvi *.html 2>/dev/null
 
 
 texclean:
@@ -192,10 +192,13 @@ pdf: mtools.pdf
 	$(TEXI2PDF) $<
 
 mtools.1: mtools.tmpl.1 Makefile
-	sed "s%SYSCONFDIR%$(sysconfdir)/%g" $(srcdir)/mtools.tmpl.1 >mtools.1
+	sed "s%SYSCONFDIR%$(sysconfdir)/%g" $< >mtools.1
 
 mtools.5: mtools.tmpl.5 Makefile
-	sed "s%SYSCONFDIR%$(sysconfdir)/%g" $(srcdir)/mtools.tmpl.5 >mtools.5
+	sed "s%SYSCONFDIR%$(sysconfdir)/%g" $< >mtools.5
+
+mtools.tmpl.1 mtools.tmpl.5 ${MAN1A}: mkmanpages mtools.texi
+	sh $<
 
 sysconfdir.texi:
 	echo "@set SYSCONFDIR $(sysconfdir)/" >sysconfdir.texi
@@ -223,8 +226,8 @@ install-info: info
 uninstall-info:
 	cd $(DESTDIR)$(infodir) && rm -f mtools.info*
 
-install:	$(DESTDIR)$(bindir)/mtools @BINFLOPPYD@ install-man install-links \
-		$(DESTDIR)$(bindir)/mkmanifest install-scripts install-info
+install:	$(DESTDIR)$(bindir)/mtools$(EXEEXT) @BINFLOPPYD@ install-man install-links \
+		$(DESTDIR)$(bindir)/mkmanifest$(EXEEXT) install-scripts install-info
 
 uninstall:	uninstall-bin uninstall-man uninstall-links \
 		uninstall-scripts
@@ -242,26 +245,26 @@ $(DESTDIR)$(bindir)/floppyd_installtest: floppyd_installtest
 	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) floppyd_installtest $(DESTDIR)$(bindir)/floppyd_installtest
 
-$(DESTDIR)$(bindir)/mtools: mtools
+$(DESTDIR)$(bindir)/mtools$(EXEEXT): mtools$(EXEEXT)
 	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
-	$(INSTALL_PROGRAM) mtools $(DESTDIR)$(bindir)/mtools
+	$(INSTALL_PROGRAM) mtools$(EXEEXT) $(DESTDIR)$(bindir)/mtools$(EXEEXT)
 
-$(DESTDIR)$(bindir)/mkmanifest: mkmanifest
+$(DESTDIR)$(bindir)/mkmanifest$(EXEEXT): mkmanifest$(EXEEXT)
 	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
-	$(INSTALL_PROGRAM) mkmanifest $(DESTDIR)$(bindir)/mkmanifest
+	$(INSTALL_PROGRAM) mkmanifest$(EXEEXT) $(DESTDIR)$(bindir)/mkmanifest$(EXEEXT)
 
 #$(ETCDIR)/mtools: mtools.etc
 #	cp mtools.etc $(ETCDIR)/mtools
 
-install-links: $(DESTDIR)$(bindir)/mtools
+install-links: $(DESTDIR)$(bindir)/mtools$(EXEEXT)
 	@for j in $(LINKS); do \
 		rm -f $(DESTDIR)$(bindir)/$$j ; \
-		$(LN_S) mtools $(DESTDIR)$(bindir)/$$j ; \
+		$(LN_S) mtools$(EXEEXT) $(DESTDIR)$(bindir)/$$j ; \
 		echo $(DESTDIR)$(bindir)/$$j ; \
 	done
 
 ## "z" is the older version of "gz"; the name is just *too* short
-install-scripts: $(DESTDIR)$(bindir)/mtools
+install-scripts: $(DESTDIR)$(bindir)/mtools$(EXEEXT)
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
 	@for j in $(SCRIPTS) ; do \
 		$(INSTALL_PROGRAM) $(srcdir)/scripts/$$j $(DESTDIR)$(bindir)/$$j ; \
@@ -283,7 +286,7 @@ install-man:
 	done
 
 uninstall-bin:
-	@for j in mtools mkmanifest; do \
+	@for j in mtools$(EXEEXT) mkmanifest$(EXEEXT); do \
 		rm -f $(DESTDIR)$(bindir)/$$j ; \
 		echo $(DESTDIR)$(bindir)/$$j ; \
 	done

@@ -3,7 +3,6 @@
 @setfilename mtools.info
 @include version.texi
 @settitle Mtools @value{VERSION}
-@syncodeindex pg cp
 @comment %**end of header
 
 @comment MANskip 5
@@ -130,6 +129,7 @@ list is archived at http://lists.gnu.org/pipermail/info-mtools/
 * arguments::              What the command line parameters of mtools
                            mean
 * drive letters::          Which drives are defined by default
+* sizes and offsets::      How can a disk size or offset be specified
 * directory::              Current working directory
 * long names::             VFAT-style long filenames
 * name clashes::           Name clash handling, and associated command
@@ -177,7 +177,7 @@ verbose mode, these commands print out the name of the MS-DOS files
 upon which they act, unless stated otherwise. @xref{Commands}, for a
 description of the options which are specific to each command.
 
-@node drive letters, directory, arguments, Common features
+@node drive letters, sizes and offsets, arguments, Common features
 @section Drive letters
 
 The meaning of the drive letters depends on the target architectures.
@@ -213,7 +213,45 @@ Example:
 This looks for the image at the offset of 1M in the file, rather than
 at its beginning.
 
-@node directory, long names, drive letters, Common features
+
+@node sizes and offsets, directory, drive letters, Common features
+@section Sizes and offsets
+
+Certain commands, such as @code{mformat}, allow you to specify a hard
+disk size.
+
+The size is a number, followed by an optional unit suffix.
+
+The number is interpreted as a hexadecimal number if it starts with
+@code{0x}, as an octal number if it starts with the digit @code{0}, or
+as a decimal number if it starts with any other digit.
+
+The following units are supported:
+
+@itemize @bullet
+@item
+@code{S} sectors (of 512 bytes)
+
+@item
+@code{K} Kilobytes
+
+@item
+@code{M} Megabytes
+
+@item
+@code{G} Gigabytes
+
+@item
+@code{T} Terabytes
+@end itemize
+
+If no unit is specified, the default depends on context. Mformat's
+@code{T} option, and mpartition's @code{l} option assume sectors,
+whereas all other places (mshowfat's @code{o} option, @code{offset}
+drive config option and @code{data_map} drive config option) assume
+bytes.
+
+@node directory, long names, sizes and offsets, Common features
 @section Current working directory
 @pindex mcd (introduction)
 @cindex Directory
@@ -225,7 +263,9 @@ The @code{mcd} command (@ref{mcd}) is used to establish the device and
 the current working directory (relative to the MS-DOS file system),
 otherwise the default is assumed to be @code{A:/}. However, unlike
 MS-DOS, there is only one working directory for all drives, and not one
-per drive.
+per drive. Moreover, if you set drive @code{::/}, mtools does not
+remember the associated image file, but only the fact that you are
+working on an image file at all.
 
 @node long names, name clashes, directory, Common features
 @section VFAT-style long file names
@@ -545,6 +585,17 @@ The fat checking code chokes on 1.72 Mb disks mformatted with pre-2.0.7
 mtools. Set the environmental variable MTOOLS_FAT_COMPATIBILITY (or the
 corresponding configuration file variable, @ref{global variables}) to
 bypass the fat checking.
+
+@section Credits
+
+Original code (versions through 2.0.7?) of mtools was developped by
+Emmet P. Gray (Texas, USA).
+
+David C. Niemi contributed VFAT support and helped maintain mtools.
+
+The packaging process of mtools uses a modified version of Beverly
+A. Erlebacher's texi2roff tool to convert the texi documentation into
+man pages.
 
 @comment MANskip 1
 
@@ -1231,6 +1282,7 @@ description of those.
 * mdel::              delete an MS-DOS file
 * mdeltree::          recursively delete an MS-DOS directory
 * mdir::              display an MS-DOS directory
+* mdoctorfat::        ``doctors'' the FAT map of a file
 * mdu::               list space occupied by directory and its contents
 * mformat::           add an MS-DOS file system to a low-level formatted floppy disk
 * minfo::             get information about an MS-DOS file system.
@@ -1259,7 +1311,7 @@ description of those.
 to clients running on a remote machine, just as an X server grants
 access to the display to remote clients.  It has the following syntax:
 
-@code{floppyd} [@code{-d}] [@code{-l}] [@code{-s} @var{port}] [@code{-r}
+@code{floppyd} [@code{-d}] [@code{-D}] [@code{-l}] [@code{-s} @var{port}] [@code{-r}
 @var{user}] [@code{-b} @var{ipaddr}] [@code{-x} @var{display}] @var{devicenames}
 
 
@@ -1294,8 +1346,11 @@ probing those display names with the @code{-l} option.
 
 @table @code
 @item d
-Daemon mode. Floppyd runs its own server loop.  Do not supply this if
+Server mode. Floppyd runs its own server loop.  Do not supply this if
 you start floppyd from @code{inetd.conf}
+@item D
+Do not daemonize. Floppyd will not put itself into the background even
+if started in server mode.
 @item s  @var{port}
 Port number for daemon mode.  Default is 5703 + @var{displaynumber}.
 This flag implies daemon mode.  For example, for display
@@ -1592,7 +1647,9 @@ on its position on the command line.
 @item t
 Text file transfer.  Mcopy translates incoming carriage return/line
 feeds to line feeds when copying from MS-DOS to Unix, and vice-versa when
-copying from Unix to MS-DOS.
+copying from Unix to MS-DOS. Moreover copying stops at Control-Z
+characters when copying from MS-DOS to Unix, and Control-Z is added at
+end when copying from Unix to MS-DOS.
 @item b
 Batch mode. Optimized for huge recursive copies, but less secure if a
 crash happens during the copy.
@@ -1604,8 +1661,7 @@ Preserves the attributes of the copied files
 When mcopying multiple files, quits as soon as one copy fails (for
 example due to lacking storage space on the target disk)
 @item a
-Text (ASCII) file transfer.  @code{ASCII} translates incoming carriage
-return/line feeds to line feeds.
+Text (ASCII) file transfer. Same as t above.
 @item T
 Text (ASCII) file transfer with character set conversion.  Differs from
 @code{-a} in the @code{ASCII} also translates incoming PC-8 characters
@@ -1617,7 +1673,7 @@ No confirmation when overwriting Unix files.  @code{ASCII} doesn't
 warn the user when overwriting an existing Unix file. If the target
 file already exists, and the @code{-n} option is not in effect,
 @code{mcopy} asks whether to overwrite the file or to rename the new
-file (see @ref{name clashes}) for details).  In order to switch off
+file (see @ref{name clashes} for details).  In order to switch off
 confirmation for DOS files, use @code{-o}.
 @item m
 Preserve the file modification time.
@@ -1670,7 +1726,7 @@ is:
 it contains from an MS-DOS file system. An error occurs if the directory
 to be removed does not exist.
 
-@node mdir, mdu, mdeltree, Commands
+@node mdir, mdoctorfat, mdeltree, Commands
 @section Mdir
 @pindex mdir
 @cindex Read-only files (listing them)
@@ -1711,7 +1767,44 @@ is displayed.
 
 An error occurs if a component of the path is not a directory.
 
-@node mdu, mformat, mdir, Commands
+
+@node mdoctorfat, mdu, mdir, Commands
+@section Mdoctorfat
+@pindex mdoctorfat
+@cindex Clusters of a file
+@cindex Fat
+
+The @code{mdoctorfat} command was initially intended as a
+test/debugging tool. It allows to flag FAT clusters as bad blocks, and
+also to change the clusters allocated to a file. No consistency check
+is done, clusters previously allocated to the file are not freed. Use
+at your own risk.
+
+Syntax:
+
+@display
+@code{mdoctorfat} [@code{-o} @var{offset}] @code{-b} @var{drive} @var{clusters}
+@code{mdoctorfat} [@code{-o} @var{offset}] [@code{-s} @var{size}] @var{file} @var{clusters}
+@end display
+
+If flag @code{-b} is present, the command marks the clusters as bad blocks
+rather than change the allocation of a file.
+
+If flag @code{-b} is not present, the commands sets the clusters to
+allocated to the file.
+
+If option @code{-s} is given in addition to the @code{-b}, this also
+changes the size in bytes of the file.
+
+The cluster list is represented as a sequence of clusters or cluster
+ranges. Example: @code{7-10 20 21-24}. Each range needs to be a
+different parameter.
+
+If @code{-o} is given, this specifies an offset to be added to each
+cluster (offset is expressed in number of clusters).
+
+
+@node mdu, mformat, mdoctorfat, Commands
 @section Mdu
 @pindex mdu
 @cindex Space occupied by directories and files
@@ -2389,7 +2482,7 @@ file.  Syntax:
 
 If no offset is given, a list of all clusters occupied by the file is
 printed. If an offset is given, only the number of the cluster
-containing that offset is printed.
+containing that offset (in bytes) is printed.
 
 @node mtoolstest, mtype, mshowfat, Commands
 @section Mtoolstest
@@ -2424,7 +2517,7 @@ command line options:
 @table @code
 @item t
 Text file viewing.  @code{Mtype} translates incoming carriage
-return/line feeds to line feeds.
+return/line feeds to line feeds. Typing stops at Control-Z character.
 @item s
 @code{Mtype} strips the high bit from the data.
 @end table

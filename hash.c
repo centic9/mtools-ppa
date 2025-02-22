@@ -104,7 +104,7 @@ int free_ht(T_HashTable *H, T_HashFunc entry_free)
 }
 
 /* add into hash table without checking for repeats */
-static int _hash_add(T_HashTable *H,void *E, size_t *hint)
+static int mt_hash_add(T_HashTable *H,void *E, size_t *hint)
 {
   size_t f2, pos;
   int ctr;
@@ -142,7 +142,7 @@ static int rehash(T_HashTable *H)
 
   for(i=0; i < size; i++){
     if(oldentries[i] != &unallocated && oldentries[i] != &deleted)
-      _hash_add(H, oldentries[i], 0);
+      mt_hash_add(H, oldentries[i], 0);
   }
   Free(oldentries);
   return 0;
@@ -154,13 +154,13 @@ int hash_add(T_HashTable *H, void *E, size_t *hint)
     rehash(H);
   if (H->fill == H->size)
     return -1; /*out of memory error */
-  return _hash_add(H,E, hint);
+  return mt_hash_add(H,E, hint);
 }
 
 
 /* add into hash table without checking for repeats */
-static int _hash_lookup(T_HashTable *H,void *E, void **E2,
-			size_t *hint, int isIdentity)
+static int mt_hash_lookup(T_HashTable *H,void *E, void **E2,
+			  size_t *hint, int isIdentity)
 {
 	size_t f2, pos, upos, ttl;
 
@@ -197,7 +197,7 @@ static int _hash_lookup(T_HashTable *H,void *E, void **E2,
 int hash_lookup(T_HashTable *H,void *E, void **E2,
 		size_t *hint)
 {
-	return _hash_lookup(H, E, E2, hint, 0);
+	return mt_hash_lookup(H, E, E2, hint, 0);
 }
 
 /* add into hash table without checking for repeats */
@@ -211,7 +211,7 @@ int hash_remove(T_HashTable *H,void *E, size_t hint)
     return 0;
   }
 
-  if(_hash_lookup(H, E, &E2, &hint, 1)) {
+  if(mt_hash_lookup(H, E, &E2, &hint, 1)) {
 	  fprintf(stderr, "Removing non-existent entry\n");
 	  exit(1);
   }

@@ -9,4 +9,4 @@ This manpage has been automatically generated from mtools's texinfo
 documentation, and may not be entirely accurate or complete.  See the
 end of this man page for details.
 
-@c skipskipskip
+@comment skipskipskip

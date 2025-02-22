@@ -112,7 +112,7 @@ static char *sprintPwd(direntry_t *entry, char *ptr, size_t *len_available)
 #define NEED_ESCAPE "\"$\\"
 #endif
 
-static void _fprintPwd(FILE *f, direntry_t *entry, int recurs, int escape)
+static void mt_fprintPwd(FILE *f, direntry_t *entry, int recurs, int escape)
 {
 	if(isRootEntry(entry)) {
 		putc(getDrive(entry->Dir), f);
@@ -120,7 +120,7 @@ static void _fprintPwd(FILE *f, direntry_t *entry, int recurs, int escape)
 		if(!recurs)
 			putc('/', f);
 	} else {
-		_fprintPwd(f, getDirentry(entry->Dir), 1, escape);
+		mt_fprintPwd(f, getDirentry(entry->Dir), 1, escape);
 		if (escape && wcspbrk(entry->name, NEED_ESCAPE)) {
 			wchar_t *ptr;
 			putc('/', f);
@@ -141,12 +141,12 @@ void fprintPwd(FILE *f, direntry_t *entry, int escape)
 {
 	if (escape)
 		putc('"', f);
-	_fprintPwd(f, entry, 0, escape);
+	mt_fprintPwd(f, entry, 0, escape);
 	if(escape)
 		putc('"', f);
 }
 
-static void _fprintShortPwd(FILE *f, direntry_t *entry, int recurs)
+static void mt_fprintShortPwd(FILE *f, direntry_t *entry, int recurs)
 {
 	if(isRootEntry(entry)) {
 		putc(getDrive(entry->Dir), f);
@@ -155,7 +155,7 @@ static void _fprintShortPwd(FILE *f, direntry_t *entry, int recurs)
 			putc('/', f);
 	} else {
 		int i,j;
-		_fprintShortPwd(f, getDirentry(entry->Dir), 1);
+		mt_fprintShortPwd(f, getDirentry(entry->Dir), 1);
 		putc('/',f);
 		for(i=7; i>=0 && entry->dir.name[i] == ' ';i--);
 		for(j=0; j<=i; j++)
@@ -170,7 +170,7 @@ static void _fprintShortPwd(FILE *f, direntry_t *entry, int recurs)
 
 void fprintShortPwd(FILE *f, direntry_t *entry)
 {
-	_fprintShortPwd(f, entry, 0);
+	mt_fprintShortPwd(f, entry, 0);
 }
 
 char *getPwd(direntry_t *entry)

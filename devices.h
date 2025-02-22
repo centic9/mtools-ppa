@@ -130,7 +130,7 @@ static inline void RR_SETDIRECTION(struct floppy_raw_cmd *request,
 
 
 static inline void RR_SETDATA(struct floppy_raw_cmd *request,
-				  caddr_t data)
+			      void * data)
 {
 	request->data = data;
 }

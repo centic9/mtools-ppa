@@ -60,7 +60,7 @@ void setup_signal(void)
 }
 
 #ifdef HAVE_SIGACTION
-static void _allow_interrupt(saved_sig_state *ss, int sig, int slot)
+static void mt_allow_interrupt(saved_sig_state *ss, int sig, int slot)
 {
   struct sigaction new;
 
@@ -81,26 +81,26 @@ void allow_interrupts(saved_sig_state *ss)
 #ifdef HAVE_SIGACTION
 
 # ifdef SIGHUP
-  _allow_interrupt(ss, SIGINT, 0);
+  mt_allow_interrupt(ss, SIGINT, 0);
 # endif
 
 # ifdef SIGINT
-  _allow_interrupt(ss, SIGINT, 1);
+  mt_allow_interrupt(ss, SIGINT, 1);
 # endif
 
 # ifdef SIGTERM
-  _allow_interrupt(ss, SIGINT, 2);
+  mt_allow_interrupt(ss, SIGINT, 2);
 # endif
 
 # ifdef SIGQUIT
-  _allow_interrupt(ss, SIGINT, 3);
+  mt_allow_interrupt(ss, SIGINT, 3);
 # endif
 
 #endif
 }
 
 #ifdef HAVE_SIGACTION
-static void _restore_interrupt(saved_sig_state *ss, int sig, int slot)
+static void mt_restore_interrupt(saved_sig_state *ss, int sig, int slot)
 {
   if(sigaction(sig, &ss->sa[slot], NULL) < 0) {
     perror("restore sigaction");
@@ -115,19 +115,19 @@ void restore_interrupts(saved_sig_state *ss)
 #ifdef HAVE_SIGACTION
 
 # ifdef SIGHUP
-  _restore_interrupt(ss, SIGINT, 0);
+  mt_restore_interrupt(ss, SIGINT, 0);
 # endif
 
 # ifdef SIGINT
-  _restore_interrupt(ss, SIGINT, 1);
+  mt_restore_interrupt(ss, SIGINT, 1);
 # endif
 
 # ifdef SIGTERM
-  _restore_interrupt(ss, SIGINT, 2);
+  mt_restore_interrupt(ss, SIGINT, 2);
 # endif
 
 # ifdef SIGQUIT
-  _restore_interrupt(ss, SIGINT, 3);
+  mt_restore_interrupt(ss, SIGINT, 3);
 # endif
 
 #endif

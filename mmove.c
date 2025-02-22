@@ -303,7 +303,7 @@ void mmove(int argc, char **argv, int oldsyntax)
 		arg.fromname = argv[optind];
 		if(arg.fromname[0] && arg.fromname[1] == ':')
 			arg.fromname += 2;
-		arg.fromname = _basename(arg.fromname);
+		arg.fromname = mt_basename(arg.fromname);
 		arg.mp.targetName = strdup(argv[argc-1]);
 		arg.mp.callback = rename_oldsyntax;
 	}

@@ -20,7 +20,20 @@
 #ifndef SYSINCLUDES_H
 #define SYSINCLUDES_H
 
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || defined(__clang__)
+# define HAVE_PRAGMA_DIAGNOSTIC 1
+#endif
+
+#if defined HAVE_PRAGMA_DIAGNOSTIC && defined __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wreserved-macro-identifier"
+#endif
+
 #include "config.h"
+
+#if defined HAVE_PRAGMA_DIAGNOSTIC && defined __clang__
+# pragma clang diagnostic pop
+#endif
 
 
 /* OS/2 needs __inline__, but for some reason is not autodetected */
@@ -50,14 +63,6 @@
 #endif
 
 
-/* On AIX, we have to prefer strings.h, as string.h lacks a prototype
- * for strcasecmp. On Solaris, string.h lacks a prototype for strncasecmp_l.
- * On most other architectures, it's string.h which seems to be more complete */
-#if ((defined OS_aix || defined OS_solaris) && defined HAVE_STRINGS_H)
-# undef HAVE_STRING_H
-#endif
-
-
 #ifdef OS_ultrix
 /* on ultrix, if termios present, prefer it instead of termio */
 # ifdef HAVE_TERMIOS_H
@@ -83,11 +88,6 @@ ac_cv_func_setpgrp_void=yes ../mtools/configure --build=i386-linux-gnu --host=i3
 #endif
 #endif
 
-#ifndef HAVE_CADDR_T
-typedef void *caddr_t;
-#endif
-
-
 /***********************************************************************/
 /*                                                                     */
 /* Compiler dependencies                                               */
@@ -107,6 +107,13 @@ typedef void *caddr_t;
 # if __GNUC__ >= 8
 #  define NONULLTERM __attribute__ ((nonstring))
 # endif
+# if __GNUC__ >= 7
+#  define FALLTHROUGH __attribute__ ((fallthrough));
+# endif
+#endif
+
+#if defined(__clang__) && __clang_major__ >= 12
+#  define FALLTHROUGH __attribute__ ((fallthrough));
 #endif
 
 #ifndef UNUSED
@@ -126,6 +133,11 @@ typedef void *caddr_t;
 # define NONULLTERM /* */
 #endif
 
+#ifndef FALLTHROUGH
+# define FALLTHROUGH /* FALL THROUGH */
+#endif
+
+
 /***********************************************************************/
 /*                                                                     */
 /* Include files                                                       */
@@ -140,12 +152,38 @@ typedef void *caddr_t;
 # include <features.h>
 #endif
 
+#include <stdio.h>
 #ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
 #endif
-
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_STRING_H
+# if !defined STDC_HEADERS && defined HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+# include <strings.h>
+#endif
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
+#endif
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
+#endif
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
 #endif
 
 #ifdef HAVE_STDARG_H
@@ -168,20 +206,7 @@ typedef unsigned char _Bool;
 # define __bool_true_false_are_defined 1
 #endif
 
-#ifdef HAVE_INTTYPES_H
-# include <inttypes.h>
-#endif
-
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-
-#include <stdio.h>
 #include <ctype.h>
-
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
 
 #ifdef HAVE_LIBC_H
 # include <libc.h>
@@ -283,30 +308,13 @@ extern int ioctl(int fildes, int request, void *arg);
 # endif
 #endif
 
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#endif
-
 #include <errno.h>
-#ifndef errno
+#if !HAVE_DECL_ERRNO
 extern int errno;
 #endif
 
 #ifndef OS_mingw32msvc
 #include <pwd.h>
-#endif
-
-
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
-
-#ifdef HAVE_MEMORY_H
-# include <memory.h>
 #endif
 
 #ifdef HAVE_MALLOC_H
@@ -404,12 +412,12 @@ size_t wcsnlen(const wchar_t *wcs, size_t l);
 # endif
 #endif
 
-#ifndef HAVE_RANDOM
-# ifdef OS_mingw32msvc
-#  define random (long)rand
-# else
-#  define random (long)lrand48
-# endif
+#ifndef HAVE_SRAND48
+#  define srand48 srand
+#endif
+
+#ifndef HAVE_LRAND48
+#  define lrand48 rand
 #endif
 
 #ifndef HAVE_STRCHR
@@ -496,9 +504,9 @@ const char *basename(const char *filename);
 #endif
 #endif
 
-const char *_basename(const char *filename);
+const char *mt_basename(const char *filename);
 
-void _stripexe(char *filename);
+void mt_stripexe(char *filename);
 
 #ifndef __STDC__
 # ifndef signed
@@ -709,11 +717,9 @@ unsigned int sleep(unsigned int seconds);
 #define O_LARGEFILE 0
 #endif
 
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || defined(__clang__)
-# define HAVE_PRAGMA_DIAGNOSTIC 1
-#endif
-
-
+/* printf formatting strings for size_t type. We could use %z here,
+   but it is hard to autodetect whether this will work. Compiler may
+   well be C99, but not the libc (such as unixpc with gcc -std=gnu99) */
 #if SIZEOF_SIZE_T > SIZEOF_LONG
 # define SZF "%llu"
 # define SSZF "%lld"
@@ -724,6 +730,14 @@ unsigned int sleep(unsigned int seconds);
 # else
 #  define SZF "%u"
 #  define SSZF "%d"
+# endif
+#endif
+
+#ifndef PRIu32
+# if SIZEOF_INT >= 32
+#  define PRIu32 "%u"
+# else
+#  define PRIu32 "%lu"
 # endif
 #endif
 
