@@ -15,19 +15,22 @@ jobs:
         # , arm64, armhf
         arch: [amd64]
     steps:
-      - name: checkout
+      - name: checkout package sources
+        uses: actions/checkout@v4
         with:
           # this is required for gbp to work properly
-          fetch-depth: 0
           fetch-tags: true
+      
+      - name: checkout debcraft
         uses: actions/checkout@v4
-
+        with:
+          # https://github.com/ottok/debcraft
+          repository: ottok/debcraft
+          path: /tmp/debcraft
+          ref: 512b4c356c842ecf7aecb81d23cb4947a910942a
+    
       - name: install required software
-        run: sudo apt install -y git make podman
-
-      - name: fetch debcraft
-        working-directory: /tmp
-        run: git clone https://github.com/ottok/debcraft.git
+        run: sudo apt install -y make podman
 
       - name: install debcraft
         working-directory: /tmp/debcraft
