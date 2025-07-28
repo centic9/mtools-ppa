@@ -16,6 +16,9 @@ jobs:
         arch: [amd64]
     steps:
       - name: checkout
+        with:
+          # this is required for gbp to work properly
+          fetch-tags: true
         uses: actions/checkout@v4
 
       - name: install required software
