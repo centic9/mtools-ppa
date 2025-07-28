@@ -1,7 +1,7 @@
 name: Build Debian Packages with Debcraft
 run-name: Build Debian Packages with Debcraft
 on:
-  workflow_call:
+  workflow_dispatch:
 
 jobs:
   build-debs:
