@@ -18,6 +18,7 @@ jobs:
       - name: checkout
         with:
           # this is required for gbp to work properly
+          fetch-depth: 0
           fetch-tags: true
         uses: actions/checkout@v4
 
