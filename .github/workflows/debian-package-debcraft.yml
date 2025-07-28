@@ -29,6 +29,9 @@ jobs:
         working-directory: /tmp/debcraft
         run: make install-local
         
+      - name: make files owned by root for debcraft to work
+        run: 'sudo chown -R root: .'
+
       - name: run build
         run: sudo $HOME/.local/bin/debcraft build --distribution ${{ matrix.codename }}
 
