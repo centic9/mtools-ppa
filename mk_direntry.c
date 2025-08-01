@@ -530,12 +530,12 @@ static void stripspaces(char *name)
 }
 
 
-static int _mwrite_one(Stream_t *Dir,
-		       char *argname,
-		       char *shortname,
-		       write_data_callback *cb,
-		       void *arg,
-		       ClashHandling_t *ch)
+static int mt_mwrite_one(Stream_t *Dir,
+			 char *argname,
+			 char *shortname,
+			 write_data_callback *cb,
+			 void *arg,
+			 ClashHandling_t *ch)
 {
 	char longname[VBUFSIZE];
 	const char *dstname;
@@ -662,7 +662,7 @@ int mwrite_one(Stream_t *Dir,
 		shortname = strdup(_shortname);
 	else
 		shortname = 0;
-	ret = _mwrite_one(Dir, argname, shortname, cb, arg, ch);
+	ret = mt_mwrite_one(Dir, argname, shortname, cb, arg, ch);
 	if(argname)
 		free(argname);
 	if(shortname)

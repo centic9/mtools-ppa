@@ -203,9 +203,20 @@ static int short_command(int priv, int fd, uint8_t cmd1, uint8_t cmd2,
 	cdb[1] = cmd2;
 	cdb[4] = cmd3;
 
+#if defined HAVE_PRAGMA_DIAGNOSTIC
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wcast-qual"
+#endif
+	/* zip_cmd can either write or read the data, depending
+	   depending on cmd2. Due to this, zip_cmd cannot declare its data
+	   attribute const, but with SCSI_IO_WRITE we know that it is
+	   indeed const in this particular case */
 	return zip_cmd(priv, fd, cdb, 6, SCSI_IO_WRITE,
-		       (char *) data, data ? (uint32_t) strlen(data) : 0,
+		       (char*) data, data ? (uint32_t) strlen(data) : 0,
 		       extra_data);
+#if defined HAVE_PRAGMA_DIAGNOSTIC
+# pragma GCC diagnostic pop
+#endif
 }
 
 

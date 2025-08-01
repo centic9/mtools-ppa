@@ -218,7 +218,7 @@ static int add_to_request(Xdf_t *This, unsigned char ptr,
 		RR_SETSIZECODE(request+(*nr), REC.sizecode);
 		RR_SETDIRECTION(request+(*nr), direction);
 		RR_SETDATA(request+(*nr),
-			   (caddr_t) This->buffer + ptr * This->sector_size);
+			   This->buffer + ptr * This->sector_size);
 		(*nr)++;
 	}
 	compactify->ptr = ptr;
@@ -428,7 +428,7 @@ static int decompose(Xdf_t *This, mt_off_t iwhere, size_t len,
 	uint32_t track_size = This->track_size * 1024;
 
 	smt_off_t track = (smt_off_t) iwhere / track_size;
-	uint32_t where = (smt_off_t) iwhere % track_size;
+	uint32_t where = (uint32_t) ((smt_off_t) iwhere % track_size);
 
 	*begin = where;
 	if(where + len > track_size)

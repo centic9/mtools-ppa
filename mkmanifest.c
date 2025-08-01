@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 
 	for (i=1; i<argc; i++) {
 		/* zap the leading path */
-		name = _basename(argv[i]);
+		name = mt_basename(argv[i]);
 		/* create new name */
 		new_name = dos_name2(name);
 

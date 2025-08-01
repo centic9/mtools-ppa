@@ -1,7 +1,7 @@
 %define _binary_payload w9.gzdio
 Name:           mtools
 Summary:        mtools, read/write/list/format DOS disks under Unix
-Version:        4.0.43
+Version:        4.0.48
 Release:        1
 License:        GPLv3+
 Group:          Utilities/System
@@ -52,6 +52,7 @@ rm %{buildroot}%{_infodir}/dir
 %{_mandir}/man1/mcopy.1*
 %{_mandir}/man1/mdel.1*
 %{_mandir}/man1/mdeltree.1*
+%{_mandir}/man1/mdoctorfat.1*
 %{_mandir}/man1/mdir.1*
 %{_mandir}/man1/mdu.1*
 %{_mandir}/man1/mformat.1*
@@ -80,6 +81,7 @@ rm %{buildroot}%{_infodir}/dir
 %{_bindir}/mdel
 %{_bindir}/mdeltree
 %{_bindir}/mdir
+%{_bindir}/mdoctorfat
 %{_bindir}/mdu
 %{_bindir}/mformat
 %{_bindir}/minfo
@@ -133,6 +135,44 @@ if [ -f %{_bindir}/install-info ] ; then
 fi
 
 %changelog
+* Sat Feb 22 2025 Alain Knaff <alain@knaff.lu>
+- portability fixes, mostly for Watcom compiler
+- cleaned up some other warnings
+- various runtime fixes for windows (/dev/tty vs CONIN$)
+- use correct mtools (sub)command name in usage() when using -c
+- other usage() spelling/wording fixes
+- fix mtype'ing multiple files at once
+- integrate mkmanpages into make system, clean it, and credit
+  texi2roff's original developer and others
+- document compilation on less usual environments in INSTALL
+- uninitialized buffer fix in mformat
+- fix parameter counting error in mcd, and document that image
+  file name is not remembered
+* Sun Jan 19 2025 Alain Knaff <alain@knaff.lu>
+- fixed some of the manpage issues reported by manpage-l10n
+- unix-dir copying on Windows fix
+- new no-daemon mode for floppyd to make testing easier
+- make floppyd independant of XauFileName (portability)
+- autoconf fixes
+* Thu Nov 21 2024 Alain Knaff <alain@knaff.lu>
+- iconv buffer overflow fixes
+- removed references to mread and mwrite (obsolete subcommands
+  from mcopy)
+- documented mdoctorfat, and addressed 2 bugs/oversights
+- removed references to obsolete mread and mwrite
+- portability fixes (dietlibc and MacOS X) & simplification
+* Sat Sep 28 2024 Alain Knaff <alain@knaff.lu>
+- Fixed iconv descriptor leak
+- Fixed size of error message buffer
+* Sun Jun 02 2024 Alain Knaff <alain@knaff.lu>
+- Added documentation for size parameters
+- Fix parsing of fat_start (reserved sectors) in mformat.c so
+  as to allow more than 255
+- Rewrite autorename in vfat.c such that it doesn't
+  (temporarily) overwrite byte after name string
+- Switch statement fall-through fixes (size parsing, and bios disk in
+  mformat.c)
+- Compilation warning fixes, mostly for CLANG
 * Tue Mar 21 2023 Alain Knaff <alain@knaff.lu>
 - Fix root directory test in mattrib
 - -b BiosDisk flag for mformat to allow setting physdrive to a user-specified

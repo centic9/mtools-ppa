@@ -311,7 +311,11 @@ struct device devices[] = {
 };
 
 #include <sys/vtoc.h>
-#include <sys/sysmacros.h>
+#ifdef MAJOR_IN_MKDEV
+# include <sys/mkdev.h>
+#elif defined MAJOR_IN_SYSMACROS
+# include <sys/sysmacros.h>
+#endif
 #undef SSIZE
 #define BLOCK_MAJOR 1
 #define CHAR_MAJOR  1
@@ -446,7 +450,11 @@ struct device devices[] = {
 #define INIT_GENERIC
 
 #include <sys/fdio.h>
-#include <sys/mkdev.h>	/* for major() */
+#ifdef MAJOR_IN_MKDEV
+# include <sys/mkdev.h>
+#elif defined MAJOR_IN_SYSMACROS
+# include <sys/sysmacros.h>
+#endif
 
 struct generic_floppy_struct
 {

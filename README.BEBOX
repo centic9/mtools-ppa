@@ -73,7 +73,7 @@ To create links, open a shell, and type the following commands
 (assuming you copied the mtools executable to /bin):
 
 cd /bin
-rm mattrib mcd mcopy mdel mdir mformat mkmanifest mlabel mmd mrd mread mren mtype mwrite
+rm mattrib mcd mcopy mdel mdir mformat mkmanifest mlabel mmd mrd mren mtype
 ln -s mtools mattrib
 ln -s mtools mbadblocks
 ln -s mtools mcd
@@ -87,14 +87,12 @@ ln -s mtools mlabel
 ln -s mtools mmd
 ln -s mtools mmount
 ln -s mtools mrd
-ln -s mtools mread
 ln -s mtools mmove
 ln -s mtools mpartition
 ln -s mtools mren
 ln -s mtools mtoolstest
 ln -s mtools mtest
 ln -s mtools mtype
-ln -s mtools mwrite
 ln -s mtools mzip
 
 

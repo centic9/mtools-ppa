@@ -52,7 +52,7 @@ char *strndup( const char *s, size_t n )
     if ( !s )
         return 0;
 
-    nAvail = min( strlen(s) + 1, n + 1 );
+    nAvail = mt_min( strlen(s) + 1, n + 1 );
     p      = malloc( nAvail );
     if ( !p )
 	    return 0;
@@ -217,6 +217,30 @@ char *strpbrk(const char *string, const char *brkset)
 	return(0);
 }
 #endif /* HAVE_STRPBRK */
+
+#ifdef HAVE_WCHAR_H
+#ifndef HAVE_WCSPBRK
+/*
+ * Return ptr to first occurrence of any character from `brkset'
+ * in the character string `string'; NULL if none exists.
+ */
+wchar_t *wcspbrk(const wchar_t *string, const wchar_t *brkset)
+{
+	register const wchar_t *p;
+
+	if (!string || !brkset)
+		return(0);
+	do {
+		for (p = brkset; *p != '\0' && *p != *string; ++p)
+			;
+		if (*p != '\0')
+			return((wchar_t *)string);
+	}
+	while (*string++);
+	return(0);
+}
+#endif /* HAVE_WCSPBRK */
+#endif
 
 
 #ifndef HAVE_STRTOUL
@@ -494,7 +518,7 @@ void myexit(int code)
 static const char PATH_SEP = '/';
 
 /*#ifndef HAVE_BASENAME*/
-const char *_basename(const char *filename)
+const char *mt_basename(const char *filename)
 {
 	char *ptr;
 
@@ -513,7 +537,7 @@ const char *_basename(const char *filename)
 /*#endif*/
 
 /* Strip the suffix ".exe" from the argument, if present. */
-void _stripexe(char *filename)
+void mt_stripexe(char *filename)
 {
 	char *ptr;
 	ptr = strrchr(filename, '.');

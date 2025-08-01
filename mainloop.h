@@ -18,7 +18,9 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
+#endif
 #include "mtoolsDirentry.h"
 
 typedef struct bounded_string {
@@ -57,9 +59,9 @@ typedef struct MainParam_t {
 
 	direntry_t *direntry;  /* dir of this entry: needed by mmove */
 
-	char *unixSourceName;  /* filename of the last opened Unix source
-				* file (Unix equiv of Dos direntry). Only used
-				* when "copying" from Unix */
+	const char *unixSourceName;  /* filename of the last opened Unix source
+				      * file (Unix equiv of Dos direntry). Only used
+				      * when "copying" from Unix */
 
 	Stream_t *targetDir; /* directory on Dos where to place files
 				or subdirectories. Needed by mcopy,
@@ -69,9 +71,9 @@ typedef struct MainParam_t {
 				 * basename as source should be conserved,
 				 * needed by mcopy, mmd, mmove */
 	
-	char *originalArg; /* original argument, complete with wildcards.
-			    * Used by mainloop internally for display in printed 
-			    * messages */
+	const char *originalArg; /* original argument, complete with wildcards.
+				  * Used by mainloop internally for display in printed 
+				  * messages */
 
 	int basenameHasWildcard; /* true if there are wildcards in the
 				  * basename. Output only parameter,
@@ -100,7 +102,7 @@ void mpPrintFilename(FILE *file, MainParam_t *mp);
 const char *mpPickTargetName(MainParam_t *mp); /* statically allocated string */
 
 int unix_dir_loop(Stream_t *Stream, MainParam_t *mp);
-int unix_loop(Stream_t *Stream UNUSEDP, MainParam_t *mp, char *arg,
+int unix_loop(Stream_t *Stream UNUSEDP, MainParam_t *mp, const char *arg,
 	      int follow_dir_link);
 
 #define MISSED_ONE 2  /* set if one cmd line argument didn't match any files */

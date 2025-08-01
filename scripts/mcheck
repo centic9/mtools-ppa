@@ -20,7 +20,7 @@
 #
 # Read every file on an MS-DOS formatted disk to make sure they're good.
 #
-# Requires: mdir and mread utilities from mtools in user's path.
+# Requires: mdir utility from mtools in user's path.
 #
 # 1994/02/19	DCN	Created
 # 1994/??/??	ALK	Added case statement for results of mdir

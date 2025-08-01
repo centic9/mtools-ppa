@@ -48,7 +48,12 @@ typedef struct SimpleFile_t {
 
 #include "lockdev.h"
 
+#ifdef OS_mingw32msvc
+/* [s]size_t change in 32/64 build, but win read/write are always [u]int (32) */
+typedef int (*iofn) (int, void *, unsigned);
+#else
 typedef ssize_t (*iofn) (int, void *, size_t);
+#endif
 
 static ssize_t file_io(SimpleFile_t *This, char *buf,
 		       mt_off_t where, size_t len,
@@ -312,6 +317,9 @@ APIRET rc;
 			This->fd = 0;
 		else
 			This->fd = 1;
+#if defined(OS_mingw32msvc)  /* Windows defaults to text mode */
+		_setmode(This->fd, _O_BINARY);
+#endif
 		This->seekable = 0;
 		if (MT_FSTAT(This->fd, &This->statbuf) < 0) {
 		    Free(This);

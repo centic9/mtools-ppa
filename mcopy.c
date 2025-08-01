@@ -48,7 +48,7 @@ static void set_mtime(const char *target, time_t mtime)
 		utimes(target, tv);
 #else
 #ifdef HAVE_UTIME
-#ifndef HAVE_UTIMBUF
+#ifndef HAVE_UTIME_H
 		struct utimbuf {
 			time_t actime;       /* access time */
 			time_t modtime;      /* modification time */
@@ -157,7 +157,7 @@ static int unix_target_lookup(Arg_t *arg, const char *in)
 	}
 }
 
-int target_lookup(Arg_t *arg, const char *in)
+static int target_lookup(Arg_t *arg, const char *in)
 {
 	if(in[0] && in[1] == ':' )
 		return dos_target_lookup(&arg->mp, in);
@@ -165,7 +165,7 @@ int target_lookup(Arg_t *arg, const char *in)
 		return unix_target_lookup(arg, in);
 }
 
-static int _unix_write(MainParam_t *mp, int needfilter, const char *unixFile);
+static int mt_unix_write(MainParam_t *mp, int needfilter, const char *unixFile);
 
 /* Write the Unix file */
 static int unix_write(MainParam_t *mp, int needfilter)
@@ -173,7 +173,7 @@ static int unix_write(MainParam_t *mp, int needfilter)
 	Arg_t *arg=(Arg_t *) mp->arg;
 
 	if(arg->type)
-		return _unix_write(mp, needfilter, "-");
+		return mt_unix_write(mp, needfilter, "-");
 	else {
 		char *unixFile = buildUnixFilename(arg);
 		int ret;
@@ -181,7 +181,7 @@ static int unix_write(MainParam_t *mp, int needfilter)
 			printOom();
 			return ERROR_ONE;
 		}
-		ret = _unix_write(mp, needfilter, unixFile);
+		ret = mt_unix_write(mp, needfilter, unixFile);
 		free(unixFile);
 		return ret;
 	}
@@ -189,14 +189,14 @@ static int unix_write(MainParam_t *mp, int needfilter)
 
 
 /* Write the Unix file */
-static int _unix_write(MainParam_t *mp, int needfilter, const char *unixFile)
+static int mt_unix_write(MainParam_t *mp, int needfilter, const char *unixFile)
 {
 	Arg_t *arg=(Arg_t *) mp->arg;
 	time_t mtime;
 	Stream_t *File=mp->File;
 	Stream_t *Target, *Source;
 	struct MT_STAT stbuf;
-	char errmsg[80];
+	char errmsg[200];
 
 	File->Class->get_data(File, &mtime, 0, 0, 0);
 
@@ -569,16 +569,24 @@ static int unix_to_dos(MainParam_t *mp)
 	return dos_write(0, mp, 1);
 }
 
-static void usage(int ret) NORETURN;
-static void usage(int ret)
+static void usage(int mtype, int ret) NORETURN;
+static void usage(int mtype, int ret)
 {
 	fprintf(stderr,
 		"Mtools version %s, dated %s\n", mversion, mdate);
-	fprintf(stderr,
-		"Usage: %s [-spatnmQVBT] [-D clash_option] sourcefile targetfile\n", progname);
-	fprintf(stderr,
-		"       %s [-spatnmQVBT] [-D clash_option] sourcefile [sourcefiles...] targetdirectory\n",
-		progname);
+	if(mtype) {
+	    fprintf(stderr,
+		    "Usage: %s [-ts] msdosfile [ msdosfiles... ]\n", progname);
+	} else {
+	    fprintf(stderr,
+		    "Usage: %s [-spatnmQVBT] [-D clash_option] sourcefile targetfile\n", progname);
+	    fprintf(stderr,
+		    "       %s [-spatnmQVBT] [-D clash_option] sourcefile [sourcefiles...] targetdirectory\n",
+		    progname);
+	    fprintf(stderr,
+		    "       %s [-tnvm] MSDOSsourcefile\n",
+		    progname);
+	}
 	exit(ret);
 }
 
@@ -604,7 +612,7 @@ void mcopy(int argc, char **argv, int mtype)
 	arg.type = mtype;
 	fastquit = 0;
 	if(helpFlag(argc, argv))
-		usage(0);
+		usage(mtype, 0);
 	while ((c = getopt(argc, argv, "i:abB/sptTnmvQD:oh")) != EOF) {
 		switch (c) {
 			case 'i':
@@ -619,7 +627,7 @@ void mcopy(int argc, char **argv, int mtype)
 				break;
 			case 'T':
 				arg.convertCharset = 1;
-				 /*-fallthrough*/
+				FALLTHROUGH
 			case 'a':
 			case 't':
 				arg.textmode = 1;
@@ -645,12 +653,12 @@ void mcopy(int argc, char **argv, int mtype)
 				break;
 			case 'D':
 				if(handle_clash_options(&arg.ch, *optarg))
-					usage(1);
+					usage(mtype, 1);
 				break;
 			case 'h':
-				usage(0);
+				usage(mtype, 0);
 			case '?':
-				usage(1);
+				usage(mtype, 1);
 			default:
 				break;
 
@@ -658,7 +666,7 @@ void mcopy(int argc, char **argv, int mtype)
 	}
 
 	if (argc - optind < 1)
-		usage(1);
+		usage(mtype, 1);
 
 	init_mp(&arg.mp);
 	arg.unixTarget = 0;
@@ -677,11 +685,9 @@ void mcopy(int argc, char **argv, int mtype)
 
 	if(mtype){
 		/* Mtype = copying to stdout */
-		arg.mp.targetName = strdup("-");
 		arg.unixTarget = strdup("");
 		arg.mp.callback = dos_to_unix;
 		arg.mp.dirCallback = unix_copydir;
-		arg.mp.unixcallback = unix_to_unix;
 	} else {
 		const char *target;
 		if (argc - optind == 1) {

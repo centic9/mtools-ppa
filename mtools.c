@@ -42,14 +42,12 @@ static const struct dispatch {
 	{"mmount",mmount, 0},
 	{"mpartition",mpartition, 0},
 	{"mrd",mdel, 1},
-	{"mread",mcopy, 0},
 	{"mmove",mmove, 0},
 	{"mren",mmove, 1},
 	{"mshowfat", mshowfat, 0},
 	{"mshortname", mshortname, 0},
 	{"mtoolstest", mtoolstest, 0},
 	{"mtype",mcopy, 1},
-	{"mwrite",mcopy, 0},
 	{"mzip", mzip, 0}
 };
 #define NDISPATCH (sizeof dispatch / sizeof dispatch[0])
@@ -107,9 +105,9 @@ int main(int argc,char **argv)
        argv[0] = _getname(argv[0]); _remext(argv[0]); name = argv[0];
 #else
 #ifdef OS_mingw32msvc
-	_stripexe(argv[0]);
+	mt_stripexe(argv[0]);
 #endif
-	name = _basename(argv[0]);
+	name = mt_basename(argv[0]);
 #endif
 	progname = argv[0];
 
@@ -120,10 +118,11 @@ int main(int argc,char **argv)
 
 	if(argc >= 3 &&
 	   !strcmp(argv[1], "-c") &&
-	   !strcmp(name, "mtools")) {
+	   !strcasecmp(name, "mtools")) {
 		argc-=2;
 		argv+=2;
 		name = argv[0];
+		progname = argv[0];
 	}
 
 
@@ -166,10 +165,10 @@ int main(int argc,char **argv)
 	read_config();
 	setup_signal();
 	for (i = 0; i < NDISPATCH; i++) {
-		if (!strcmp(name,dispatch[i].cmd))
+		if (!strcasecmp(name,dispatch[i].cmd))
 			dispatch[i].fn(argc, argv, dispatch[i].type);
 	}
-	if (strcmp(name,"mtools"))
+	if (strcasecmp(name,"mtools"))
 		fprintf(stderr,"Unknown mtools command '%s'\n",name);
 	fprintf(stderr,"Supported commands:");
 	for (i = 0; i < NDISPATCH; i++) {

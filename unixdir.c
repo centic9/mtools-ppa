@@ -29,6 +29,10 @@
 #include <dirent.h>
 #endif
 
+#ifdef HAVE_DIRECT_H
+#include <direct.h>
+#endif
+
 #else
 
 /* So far only supported platform that has no readdir is AT&T UnixPC.

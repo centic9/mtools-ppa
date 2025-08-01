@@ -1,5 +1,5 @@
 '\" t
-.TH mcopy 1 "21Mar23" mtools-4.0.43
+.TH mcopy 1 "22Feb25" mtools-4.0.48
 .SH Name
 mcopy - copy MSDOS files to/from Unix
 '\" t
@@ -59,7 +59,9 @@ on its position on the command line.
 \&\fR\&\f(CWt\fR\ 
 Text file transfer.  Mcopy translates incoming carriage return/line
 feeds to line feeds when copying from MS-DOS to Unix, and vice-versa when
-copying from Unix to MS-DOS.
+copying from Unix to MS-DOS. Moreover copying stops at Control-Z
+characters when copying from MS-DOS to Unix, and Control-Z is added at
+end when copying from Unix to MS-DOS.
 .TP
 \&\fR\&\f(CWb\fR\ 
 Batch mode. Optimized for huge recursive copies, but less secure if a
@@ -76,8 +78,7 @@ When mcopying multiple files, quits as soon as one copy fails (for
 example due to lacking storage space on the target disk)
 .TP
 \&\fR\&\f(CWa\fR\ 
-Text (ASCII) file transfer.  \fR\&\f(CWASCII\fR translates incoming carriage
-return/line feeds to line feeds.
+Text (ASCII) file transfer. Same as t above.
 .TP
 \&\fR\&\f(CWT\fR\ 
 Text (ASCII) file transfer with character set conversion.  Differs from
@@ -91,7 +92,7 @@ No confirmation when overwriting Unix files.  \fR\&\f(CWASCII\fR doesn't
 warn the user when overwriting an existing Unix file. If the target
 file already exists, and the \fR\&\f(CW-n\fR option is not in effect,
 \&\fR\&\f(CWmcopy\fR asks whether to overwrite the file or to rename the new
-file (see \(ifname clashes\(is) for details).  In order to switch off
+file (see \(ifname clashes\(is for details).  In order to switch off
 confirmation for DOS files, use \fR\&\f(CW-o\fR.
 .TP
 \&\fR\&\f(CWm\fR\ 

@@ -168,7 +168,7 @@ static inline void inst_boot_prg(union bootsector *boot, uint16_t offset)
 	  boot->boot.jump[1] = (uint8_t) (offset - 3);
 	  boot->boot.jump[2] = (uint8_t) ( (offset - 3) >> 8);
 	}
-	set_word(boot->boot.jump + offset + 20, offset + 24);
+	set_word(boot->bytes + offset + 20, offset + 24);
 }
 
 /* Set up the root directory */
@@ -241,7 +241,7 @@ static int calc_fat_len(Fs_t *Fs, uint32_t tot_sectors)
 
 #ifdef DEBUG
 	fprintf(stderr, "Fat start=%d\n", Fs->fat_start);
-	fprintf(stderr, "tot_sectors=%lu\n", tot_sectors);
+	fprintf(stderr, "tot_sectors=%"PRIu32"\n", tot_sectors);
 	fprintf(stderr, "dir_len=%d\n", Fs->dir_len);
 #endif
 	Fs->fat_len = 0;
@@ -259,7 +259,7 @@ static int calc_fat_len(Fs_t *Fs, uint32_t tot_sectors)
 		rem_sect--;
 
 #ifdef DEBUG
-	fprintf(stderr, "Rem sect=%lu\n", rem_sect);
+	fprintf(stderr, "Rem sect=%"PRIu32"\n", rem_sect);
 #endif
 
 	/* See fat_size_calculation.tex or
@@ -306,7 +306,7 @@ static int calc_fat_len(Fs_t *Fs, uint32_t tot_sectors)
 	}
 
 #ifdef DEBUG
-	fprintf(stderr, "Numerator=%lu denominator=%lu\n",
+	fprintf(stderr, "Numerator=%"PRIu32" denominator=%"PRIu32"\n",
 		numerator, denominator);
 #endif
 
@@ -332,7 +332,7 @@ static void check_fs_params_and_set_fat(Fs_t *Fs, uint32_t tot_sectors)
 
 #ifdef DEBUG
 	fprintf(stderr, "Num_clus=%d fat_len=%d nybbles=%d\n",
-		Fs->num_clus, Fs->fat_len, fat_nybbles);
+		Fs->num_clus, Fs->fat_len, Fs->fat_bits / 4);
 #endif
 
 #ifdef HAVE_ASSERT_H
@@ -1007,7 +1007,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 			case 'b':
 				haveBiosDisk=1;
 				biosDisk = atou8(optarg);
-
+				break;
 
 			/* flags added by mtools */
 			case 'F':
@@ -1103,7 +1103,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 				}
 				break;
 			case 'R':
-				Fs->fat_start = atou8(optarg);
+				Fs->fat_start = atou16(optarg);
 				break;
 			case 'h':
 				argheads = atou16(optarg);
@@ -1266,6 +1266,12 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 
 	/* create the image file if needed */
 	if (create) {
+		/* Write at end of image file to create it. It is safe
+		 * to re-use boot and zero out sector's memory buffer
+		 * for this, as in the case of create=1, there is no
+		 * old boot sector, and it will not have been read by
+		 * the PREADS in the devices loop above */
+		memset(boot.characters, '\0', Fs->sector_size);
 		PWRITES(Fs->head.Next, &boot.characters,
 			sectorsToBytes(Fs, tot_sectors-1),
 			Fs->sector_size);
@@ -1387,7 +1393,7 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 	if (!serial_set || Atari)
 		init_random();
 	if (!serial_set)
-		serial=(uint32_t) random();
+		serial=(uint32_t) lrand48();
 	set_dword(labelBlock->serial, serial);
 	label_name_pc(GET_DOSCONVERT((Stream_t *)Fs),
 		      label[0] ? label : "NO NAME    ", 0,
@@ -1410,9 +1416,9 @@ void mformat(int argc, char **argv, int dummy UNUSEDP)
 	}
 	if(Atari) {
 		boot.boot.banner[4] = 0;
-		boot.boot.banner[5] = (char) random();
-		boot.boot.banner[6] = (char) random();
-		boot.boot.banner[7] = (char) random();
+		boot.boot.banner[5] = (char) lrand48();
+		boot.boot.banner[6] = (char) lrand48();
+		boot.boot.banner[7] = (char) lrand48();
 	}
 
 	if(!keepBoot && bootOffset <= UINT16_MAX)

@@ -16,7 +16,7 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  *
  * mattrib.c
- * Change MSDOS file attribute flags
+ * Change MSDOS file attribute tags
  */
 
 #include "sysincludes.h"
@@ -184,7 +184,7 @@ void mattrib(int argc, char **argv, int type UNUSEDP)
 		switch (c) {
 			case 'h':
 				wantUsage = 1;
-				/* FALL THROUGH */
+				FALLTHROUGH
 			default:
 				arg.remove &= ~letterToCode(c);
 				break;

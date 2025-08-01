@@ -16,18 +16,22 @@ dnl along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
 dnl
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT
+
 AC_CONFIG_SRCDIR([buffer.c])
-AC_CONFIG_HEADERS([config.h])
+
+AC_USE_SYSTEM_EXTENSIONS dnl for strndup
 
 dnl Checks for compiler
 AC_PROG_CC
+
+dnl Get canonical host
+AC_CANONICAL_HOST
+
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
 AC_PATH_PROG(INSTALL_INFO, install-info, "")
 
-dnl Check for Systems
-AC_CANONICAL_TARGET
 
 AC_C_CONST
 AC_C_INLINE
@@ -106,11 +110,13 @@ AC_CHECK_LIB(iconv, iconv)
 dnl Checks for header files.
 AC_HEADER_SYS_WAIT
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS(getopt.h stdarg.h inttypes.h \
+AC_HEADER_MAJOR
+AC_CHECK_HEADERS(getopt.h stdarg.h \
 libc.h fcntl.h limits.h sys/file.h sys/ioctl.h time.h sys/time.h \
 sys/param.h memory.h malloc.h io.h signal.h sys/signal.h utime.h sgtty.h \
 sys/floppy.h mntent.h sys/sysmacros.h assert.h \
-iconv.h wctype.h wchar.h locale.h xlocale.h dirent.h)
+iconv.h wctype.h wchar.h locale.h xlocale.h )
+AC_CHECK_HEADERS(dirent.h direct.h, [break])
 AC_CHECK_HEADERS(termio.h sys/termio.h, [break])
 AC_CHECK_HEADERS(termios.h sys/termios.h, [break])
 
@@ -122,9 +128,12 @@ AC_SYS_LARGEFILE
 AC_TYPE_INT8_T
 AC_TYPE_INT16_T
 AC_TYPE_INT32_T
+AC_TYPE_INT64_T
 AC_TYPE_UINT8_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINTPTR_T
 AC_TYPE_SSIZE_T
 AC_TYPE_SIZE_T
 AC_TYPE_OFF_T
@@ -132,7 +141,6 @@ AC_TYPE_OFF_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
 
-AC_CHECK_TYPES(caddr_t)
 AC_CHECK_TYPES(long long)
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
@@ -142,7 +150,7 @@ AC_CHECK_SIZEOF(int)
 
 seek_function=
 
-if test $ac_cv_sizeof_off_t -ge 8 ; then
+if test "0$ac_cv_sizeof_off_t" -ge 8 ; then
    seek_function=lseek
 fi
 
@@ -218,38 +226,40 @@ AC_STRUCT_TM
 
 dnl Checks for library functions.
 
-AC_CHECK_FUNCS(strerror random srandom strchr strrchr lockf flock \
+AC_CHECK_FUNCS(strerror lrand48 srand48 strchr strrchr lockf flock \
 strcasecmp strncasecmp strnlen atexit on_exit getpass memmove \
 strdup strndup strcspn strspn strtoul strtol strtoll strtoui \
 memcpy strpbrk memset setenv seteuid setresuid \
 tcsetattr tcflush basename  \
 readdir snprintf setlocale strstr toupper_l strncasecmp_l \
-wcsdup wcscasecmp wcsnlen putwc \
+wcsdup wcscasecmp wcsnlen wcspbrk putwc \
 alarm sigaction usleep lstat unsetenv mkdir)
 
 
 AC_CHECK_FUNCS(utimes utime, [break])
 AC_CHECK_FUNCS(tzset gettimeofday)
 
-AC_CHECK_DECLS([sys_errlist, optarg])
+AC_CHECK_DECLS([sys_errlist, errno],,,[AC_INCLUDES_DEFAULT
+#include <errno.h>])
+AC_CHECK_DECLS([optarg])
 
 [
+echo "Host OS=$host_os"
 host_os0=`echo $host_os | sed 's/-/_/g'`
-host_os1=`echo $host_os0 | sed 's/\./_/g'`
-host_os2=`echo $host_os0 | sed 's/^\([^.]*\)\..*$/\1/g'`
-host_os3=`echo $host_os2 | sed 's/^\([^0-9]*\)[0-9]*$/\1/g'`
+host_os1=`echo "$host_os0" | sed 's/\./_/g'`
+host_os2=`echo "$host_os0" | sed 's/^\([^.]*\)\..*$/\1/g'`
+host_os3=`echo "$host_os2" | sed 's/^\([^0-9]*\)[0-9]*$/\1/g'`
 host_cpu1=`echo $host_cpu | sed 's/\./_/g'`
 host_vendor1=`echo $host_vendor | sed 's/\./_/g'`
 HOST_ID="-DCPU_$host_cpu1 -DVENDOR_$host_vendor1 -DOS_$host_os1"
-if [ $host_os1 != $host_os2 ] ; then
+if [ "$host_os1" != "$host_os2" ] ; then
 	HOST_ID="$HOST_ID -DOS_$host_os2"
 fi
-if [ $host_os1 != $host_os3 ] && [ $host_os2 != $host_os3 ] ; then
+if [ "$host_os1" != "$host_os3" ] && [ "$host_os2" != "$host_os3" ] ; then
 	HOST_ID="$HOST_ID -DOS_$host_os3"
 fi
 
-my_host_os=`echo $host_os1 $host_os2 $host_os3 | sort -u`
-objs=`echo $srcdir/*.c | sed 's/\.c$/.o/' `
+my_host_os=`echo "$host_os1" "$host_os2" "$host_os3" | sort -u`
 if [ "X$GCC" = "Xyes" ] ; then
     if [ "$host_os3" = aux ] ; then
 	    CFLAGS="$CFLAGS -ZP"
@@ -259,39 +269,39 @@ if [ "X$GCC" = "Xyes" ] ; then
        arm*-*-linux) CFLAGS="$CFLAGS -mstructure-size-boundary=8";;
     esac
 else
-    if [ $host_os3 = hpux ] ; then
+    if [ "$host_os3" = hpux ] ; then
 	    CPPFLAGS="$CPPFLAGS -Ae"
     fi
 
-    if [ $host_os3 = xenix ] ; then
+    if [ "$host_os3" = xenix ] ; then
 	    CFLAGS="$CFLAGS -M2e"
     fi
 fi
 
-if [ $host_os3 = hpux ] ; then
+if [ "$host_os3" = hpux ] ; then
 	    LDFLAGS="$LDFLAGS -z"
 fi
 
-if [ $host_os3 = xenix ] ; then
+if [ "$host_os3" = xenix ] ; then
     LDFLAGS="$LDFLAGS -M2e -i -f 5000"
 fi
 
-if [ $host_os2 = sysv4 ] ; then
+if [ "$host_os2" = sysv4 ] ; then
     SHLIB="-lc -L/usr/ucblib -lucb"
 else
     SHLIB=""
 fi
 
-if [ $host_os3 = isc ] ; then
+if [ "$host_os3" = isc ] ; then
     CFLAGS="$CFLAGS -D_SYSV3"
     SHLIB="-lc_s"
 fi
 
-if [ $host_os3 = solaris -a x$newVold = xxyes ] ; then
+if [ "$host_os3" = solaris -a x$newVold = xxyes ] ; then
     SHLIB="$SHLIB -s -lvolmgt"
 fi
 
-if [ $host_os3 = nextstep ] ; then
+if [ "$host_os3" = nextstep ] ; then
     CFLAGS="$CFLAGS -DBSD"
     SHLIB=""
 fi
@@ -328,13 +338,10 @@ if test X$use_floppyd = Xyes; then
     AC_DEFINE([USE_FLOPPYD],1,[Define when you want to include floppyd support])
     AC_CHECK_FUNCS(setpgrp getuserid getgroupid)
     AC_FUNC_SETPGRP
-
-    FLOPPYD_LIBS=""
-    AC_CHECK_LIB(X11, XOpenDisplay, [ FLOPPYD_LIBS="-lX11 $FLOPPYD_LIBS" ])
-    AC_CHECK_LIB(Xau, XauFileName, [ FLOPPYD_LIBS="-lXau $FLOPPYD_LIBS" ])
+    FLOPPYD_LIBS="-lX11"
     AC_PATH_XTRA
     AC_CHECK_HEADERS(sys/socket.h arpa/inet.h netdb.h netinet/in.h \
-                     netinet/tcp.h X11/Xauth.h X11/Xlib.h)
+                     netinet/tcp.h X11/Xlib.h)
 else
     FLOPPYD=
     BINFLOPPYD=
@@ -358,4 +365,5 @@ AC_SUBST(SHLIB)
 AC_SUBST(host_cpu)
 AC_SUBST(HOST_ID)
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_HEADERS([config.h])
 AC_OUTPUT

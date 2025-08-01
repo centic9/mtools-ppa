@@ -1,3 +1,20 @@
+mtools (4.0.48-1) unstable; urgency=medium
+
+  * QA upload.
+  * Add upstream signing key.
+  * New upstream release.
+  * Standards-Version 4.7.1, no change required.
+
+ -- Stephen Kitt <skitt@debian.org>  Sat, 22 Feb 2025 21:12:09 +0100
+
+mtools (4.0.47-1) unstable; urgency=medium
+
+  * QA upload.
+  * New upstream release.
+  * Update packaging VCS address.
+
+ -- Stephen Kitt <skitt@debian.org>  Sun, 19 Jan 2025 23:16:09 +0100
+
 mtools (4.0.43-1) unstable; urgency=medium
 
   * Orphan package.
