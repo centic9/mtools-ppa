@@ -1,3 +1,9 @@
+mtools (4.0.48-1ubuntu1) noble; urgency=medium
+
+  * Backport to Noble
+
+ -- Dominik Stadler (Ubuntu key) <dominik.stadler@gmx.at>  Fri, 01 Aug 2025 20:59:48 +0200
+
 mtools (4.0.48-1) unstable; urgency=medium
 
   * QA upload.
