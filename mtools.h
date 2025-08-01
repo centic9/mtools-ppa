@@ -131,7 +131,7 @@ static inline char ch_tolower(char ch)
 
 static inline void init_random(void)
 {
-	srandom((unsigned int)time (0));
+	srand48(time (0));
 }
 
 static inline size_t ptrdiff (const char *end, const char *begin)
@@ -167,9 +167,8 @@ char get_default_drive(void);
 void set_cmd_line_image(char *img);
 void check_number_parse_errno(char c, const char *optarg, char *endptr);
 void read_config(void);
-off_t str_to_offset_with_end(const char *str, char **endp);
 mt_off_t str_to_off_with_end(const char *str, char **endp);
-off_t str_to_offset(char *str);
+mt_off_t str_to_offset(char *str);
 uint32_t parseSize(char *sizeStr);
 unsigned int strtoui(const char *nptr, char **endptr, int base);
 unsigned int atoui(const char *nptr);
@@ -238,7 +237,11 @@ char getDrive(Stream_t *Stream);
 
 
 void printOom(void);
-int ask_confirmation(const char *, ...)  __attribute__ ((format (printf, 1, 2)));
+int ask_confirmation(const char *, ...)
+#if defined __GNUC__
+    __attribute__ ((format (printf, 1, 2)))
+#endif
+;
 
 int helpFlag(int, char **);
 

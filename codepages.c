@@ -15,7 +15,22 @@
  *  along with Mtools.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || defined(__clang__)
+# define HAVE_PRAGMA_DIAGNOSTIC 1
+#endif
+
+#if defined HAVE_PRAGMA_DIAGNOSTIC && defined __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wreserved-macro-identifier"
+#endif
+
 #include "config.h"
+
+#if defined HAVE_PRAGMA_DIAGNOSTIC && defined __clang__
+# pragma clang diagnostic pop
+#endif
+
 
 #ifndef HAVE_ICONV_H
 

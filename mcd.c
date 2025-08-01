@@ -73,7 +73,7 @@ void mcd(int argc, char **argv, int type UNUSEDP)
 	init_mp(&mp);
 	mp.lookupflags = ACCEPT_DIR | NO_DOTS;
 	mp.dirCallback = mcd_callback;
-	if (argc == 1) {
+	if (argc <= optind) {
 		printf("%s\n", mp.mcwd);
 		exit(0);
 	} else

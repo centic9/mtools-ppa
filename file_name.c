@@ -28,7 +28,8 @@ char *unix_normalize (doscp_t *cp, char *ans, dos_name_t *dn, size_t ans_size)
 	wchar_t wbuffer[13];
 	char *a;
 	int j;
-
+	size_t len;
+	
 	for (a=buffer,j=0; (j<8) && (dn->base[j] > ' '); ++j,++a)
 		*a = dn->base[j];
 	if(dn->ext[0] > ' ') {
@@ -36,9 +37,10 @@ char *unix_normalize (doscp_t *cp, char *ans, dos_name_t *dn, size_t ans_size)
 		for (j=0; j<3 && dn->ext[j] > ' '; ++j,++a)
 			*a = dn->ext[j];
 	}
-	*a++ = '\0';
-	dos_to_wchar(cp, buffer, wbuffer, 13);
-	wchar_to_native(wbuffer, ans, 13, ans_size);
+	*a = '\0';
+	len = (size_t)(a-buffer);
+	dos_to_wchar(cp, buffer, wbuffer, len);
+	wchar_to_native(wbuffer, ans, len, ans_size);
 	return ans;
 }
 
@@ -110,7 +112,7 @@ void dos_name(doscp_t *toDos, const char *name, int verbose UNUSEDP,
 		name = &name[2];
 
 	/* zap the leading path */
-	name = _basename(name);
+	name = mt_basename(name);
 	if ((s = strrchr(name, '\\')))
 		name = s + 1;
 
@@ -186,7 +188,7 @@ wchar_t *unix_name(doscp_t *dosCp,
 		strcpy(ans, tname);
 
 	/* fix special characters (above 0x80) */
-	dos_to_wchar(dosCp, ans, ret, 12);
+	dos_to_wchar(dosCp, ans, ret, strlen(ans));
 	return ret;
 }
 

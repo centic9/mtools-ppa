@@ -1,8 +1,9 @@
 Compilation
 -----------
 
- To compile mtools on Unix, first type ./configure, then make.  To
-compile mtools on a Bebox, refer to README.BEBOX.
+ To compile mtools on most Unix platforms, first type ./configure,
+then make.  For other platforms, see INSTALL file in this same
+directory
 
 Doc
 ---
@@ -31,6 +32,10 @@ Viktor Dukhovni (at Princeton, USA) had major input into v2.0.
 
 Since 2.0.7: maintained primarily and until now by Alain Knaff
 (Luxembourg) and David Niemi (Reston, Virginia, USA).
+
+The packaging process of mtools uses a modified version of Beverly
+A. Erlebacher's texi2roff tool to convert the texi documentation into
+man pages.
 
 Please report bugs to the mtools mailing list at info-mtools@gnu.org .
 

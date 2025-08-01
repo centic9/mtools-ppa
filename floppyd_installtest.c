@@ -192,7 +192,7 @@ static in_addr_t getipaddress(char *ipaddr)
 	}
 
 #ifdef DEBUG
-	fprintf(stderr, "IP lookup %s -> 0x%08lx\n", ipaddr, ip);
+	fprintf(stderr, "IP lookup %s -> 0x%08x\n", ipaddr, ip);
 #endif
 
 	return (ip);

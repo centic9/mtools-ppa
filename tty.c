@@ -178,7 +178,12 @@ FILE *opentty(int mode
 	if(notty)
 		return NULL;
 	if (tty == NULL) {
+#ifdef OS_mingw32msvc
+		/* tty is called CONIN$ on Windows ... */
+		ttyfd = open("CONIN$", O_RDONLY);
+#else
 		ttyfd = open("/dev/tty", O_RDONLY);
+#endif
 		if(ttyfd >= 0) {
 			tty = fdopen(ttyfd, "r");
 		}

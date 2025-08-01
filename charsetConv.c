@@ -34,6 +34,10 @@ struct doscp_t {
 
 static const char *wcharCp=NULL;
 
+/* FIXME: encodings after WCHAR_T should not all be tried in sequence,
+ * but rather according to platform's sizeof(wchar_t) and endianness
+ * https://stackoverflow.com/questions/62032729/using-iconv-with-wchar-t-on-linux
+ */
 static const char* wcharTries[] = {
 	"WCHAR_T",
 	"UTF-32BE", "UTF-32LE",
@@ -45,14 +49,30 @@ static const char* wcharTries[] = {
 };
 
 static const char *asciiTries[] = {
-	"ASCII", "ASCII-GR", "ISO8859-1"
+	"ASCII", "US-ASCII", "ASCII-GR", "ISO8859-1"
 };
 
 static const wchar_t *testString = L"ab";
 
+/* Use SUSv2 prototype for iconv, makes more sense than POSIX-1.2007
+ * https://stackoverflow.com/questions/45938990/why-does-the-iconv-function-need-a-non-const-inbuffer
+ */
+static inline size_t mt_iconv(iconv_t cd, const char **inbuf,
+			      size_t *inbytesleft,
+			      char **outbuf, size_t *outbytesleft) {
+#ifdef HAVE_PRAGMA_DIAGNOSTIC
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+#endif
+    return iconv(cd, inbuf, inbytesleft, outbuf, outbytesleft);
+#ifdef HAVE_PRAGMA_DIAGNOSTIC
+# pragma GCC diagnostic pop
+#endif
+}
+
 static int try(const char *testCp) {
 	size_t res;
-	char *inbuf = (char *)testString;
+	const char *inbuf = (const char *) testString;
 	size_t inbufLen = 2*sizeof(wchar_t);
 	char outbuf[3];
 	char *outbufP = outbuf;
@@ -67,9 +87,10 @@ static int try(const char *testCp) {
 	}
 	if(test == (iconv_t) -1)
 		goto fail0;
-	res = iconv(test,
-		    &inbuf, &inbufLen,
-		    &outbufP, &outbufLen);
+	res = mt_iconv(test,
+		       &inbuf, &inbufLen,
+		       &outbufP, &outbufLen);
+	iconv_close(test);
 	if(res != 0 || outbufLen != 0 || inbufLen != 0)
 		goto fail;
 	if(memcmp(outbuf, "ab", 2))
@@ -77,7 +98,6 @@ static int try(const char *testCp) {
 	/* fprintf(stderr, "%s ok\n", testCp); */
 	return 1;
  fail:
-	iconv_close(test);
  fail0:
 	/*fprintf(stderr, "%s fail\n", testCp);*/
 	return 0;
@@ -156,9 +176,7 @@ size_t dos_to_wchar(doscp_t *cp, const char *dos, wchar_t *wchar, size_t len)
 	size_t in_len=len;
 	size_t out_len=len*sizeof(wchar_t);
 	wchar_t *dptr=wchar;
-	char *dos2 = (char *) dos; /* Magic to be able to call iconv with its
-				      buggy prototype */
-	r=iconv(cp->from, &dos2, &in_len, (char **)&dptr, &out_len);
+	r=mt_iconv(cp->from, &dos,	&in_len, (char **)&dptr, &out_len);
 	if(r == (size_t) -1)
 		return r;
 	*dptr = L'\0';
@@ -171,7 +189,7 @@ size_t dos_to_wchar(doscp_t *cp, const char *dos, wchar_t *wchar, size_t len)
  * mangled will be set if there has been an untranslatable character.
  */
 static size_t safe_iconv(iconv_t conv, const wchar_t *wchar, char *dest,
-		      size_t in_len, size_t out_len, int *mangled)
+			 size_t in_len, size_t out_len, int *mangled)
 {
 	size_t r;
 	unsigned int i;
@@ -181,7 +199,8 @@ static size_t safe_iconv(iconv_t conv, const wchar_t *wchar, char *dest,
 	in_len=in_len*sizeof(wchar_t);
 
 	while(in_len > 0 && out_len > 0) {
-		r=iconv(conv, (char**)&wchar, &in_len, &dptr, &out_len);
+		r=mt_iconv(conv, (const char**)&wchar,
+			   &in_len, &dptr, &out_len);
 		if(r == (size_t) -1 || errno != EILSEQ) {
 			/* everything transformed, or error that is _not_ a bad
 			 * character */
@@ -328,13 +347,13 @@ static inline size_t mbrtowc(wchar_t *pwc, const char *s,
 
 #include <langinfo.h>
 
-static iconv_t to_native = NULL;
+static iconv_t to_native = 0;
 
 static void initialize_to_native(void)
 {
 	char *li, *cp;
 	size_t len;
-	if(to_native != NULL)
+	if(to_native != 0)
 		return;
 	li = nl_langinfo(CODESET);
 	len = strlen(li) + 11;

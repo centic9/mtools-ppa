@@ -44,7 +44,7 @@ static int dos_doctorfat(direntry_t *entry, MainParam_t *mp)
 	Fs_t *Fs = getFs(mp->File);
 	Arg_t *arg=(Arg_t *) mp->arg;
 
-	if(!arg->markbad && isRootEntry(entry)) {
+	if(!arg->markbad && !isRootEntry(entry)) {
 		/* if not root directory, change it */
 		set_word(entry->dir.start, arg->fat & 0xffff);
 		set_word(entry->dir.startHi, arg->fat >> 16);
@@ -82,6 +82,8 @@ void mdoctorfat(int argc, char **argv, int mtype UNUSEDP)
 	char *number, *eptr;
 	int i;
 	unsigned int offset;
+
+	noPrivileges=1;
 
 	/* get command line options */
 

@@ -508,7 +508,7 @@ static in_addr_t getipaddress(char *ipaddr)
 	}
 
 #ifdef DEBUG
-	fprintf(stderr, "IP lookup %s -> 0x%08lx\n", ipaddr, ip);
+	fprintf(stderr, "IP lookup %s -> 0x%08x\n", ipaddr, ip);
 #endif
 
 	return (ip);
@@ -586,8 +586,12 @@ Stream_t *FloppydOpen(struct device *dev,
 	}
 
 	if(floppyd_open(This, mode) < 0) {
-		sprintf(errmsg,
-			"Can't open remote drive: %s", strerror(errno));
+		if(errno == EINTR)
+			sprintf(errmsg,
+				"Can't open remote drive: Device in use");
+		else
+			sprintf(errmsg,
+				"Can't open remote drive: %s", strerror(errno));
 		close(This->fd);
 		Free(This);
 		return NULL;

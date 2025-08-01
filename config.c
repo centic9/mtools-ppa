@@ -69,32 +69,33 @@ const char *mtools_date_string="yyyy-mm-dd";
 
 typedef struct switches_l {
     const char *name;
-    caddr_t address;
+    void * address;
     enum {
 	T_INT,
 	T_STRING,
 	T_UINT,
 	T_UINT8,
 	T_UINT16,
-	T_UQSTRING
+	T_UQSTRING,
+	T_OFFS
     } type;
 } switches_t;
 
 static switches_t global_switches[] = {
-    { "MTOOLS_LOWER_CASE", (caddr_t) & mtools_ignore_short_case, T_UINT },
-    { "MTOOLS_FAT_COMPATIBILITY", (caddr_t) & mtools_fat_compatibility, T_UINT },
-    { "MTOOLS_SKIP_CHECK", (caddr_t) & mtools_skip_check, T_UINT },
-    { "MTOOLS_NO_VFAT", (caddr_t) & mtools_no_vfat, T_UINT },
-    { "MTOOLS_RATE_0", (caddr_t) &mtools_rate_0, T_UINT8 },
-    { "MTOOLS_RATE_ANY", (caddr_t) &mtools_rate_any, T_UINT8 },
-    { "MTOOLS_NAME_NUMERIC_TAIL", (caddr_t) &mtools_numeric_tail, T_UINT },
-    { "MTOOLS_DOTTED_DIR", (caddr_t) &mtools_dotted_dir, T_UINT },
+    { "MTOOLS_LOWER_CASE", (void *) & mtools_ignore_short_case, T_UINT },
+    { "MTOOLS_FAT_COMPATIBILITY", (void *) & mtools_fat_compatibility, T_UINT },
+    { "MTOOLS_SKIP_CHECK", (void *) & mtools_skip_check, T_UINT },
+    { "MTOOLS_NO_VFAT", (void *) & mtools_no_vfat, T_UINT },
+    { "MTOOLS_RATE_0", (void *) &mtools_rate_0, T_UINT8 },
+    { "MTOOLS_RATE_ANY", (void *) &mtools_rate_any, T_UINT8 },
+    { "MTOOLS_NAME_NUMERIC_TAIL", (void *) &mtools_numeric_tail, T_UINT },
+    { "MTOOLS_DOTTED_DIR", (void *) &mtools_dotted_dir, T_UINT },
     { "MTOOLS_TWENTY_FOUR_HOUR_CLOCK",
-      (caddr_t) &mtools_twenty_four_hour_clock, T_UINT },
+      (void *) &mtools_twenty_four_hour_clock, T_UINT },
     { "MTOOLS_DATE_STRING",
-      (caddr_t) &mtools_date_string, T_STRING },
-    { "MTOOLS_LOCK_TIMEOUT", (caddr_t) &mtools_lock_timeout, T_UINT },
-    { "DEFAULT_CODEPAGE", (caddr_t) &mtools_default_codepage, T_UINT }
+      (void *) &mtools_date_string, T_STRING },
+    { "MTOOLS_LOCK_TIMEOUT", (void *) &mtools_lock_timeout, T_UINT },
+    { "DEFAULT_CODEPAGE", (void *) &mtools_default_codepage, T_UINT }
 };
 
 typedef struct {
@@ -158,11 +159,11 @@ static struct {
     { "160k",			12, 40, 1, 8 }
 };
 
-#define OFFS(x) ((caddr_t)&((struct device *)0)->x)
+#define OFFS(x) ((void *)&((struct device *)0)->x)
 
 static switches_t dswitches[]= {
     { "FILE", OFFS(name), T_STRING },
-    { "OFFSET", OFFS(offset), T_UINT },
+    { "OFFSET", OFFS(offset), T_OFFS },
     { "PARTITION", OFFS(partition), T_UINT },
     { "FAT", OFFS(fat_bits), T_INT },
     { "FAT_BITS", OFFS(fat_bits), T_UINT },
@@ -252,10 +253,6 @@ static void syntax(const char *msg, int thisLine)
     exit(1);
 }
 
-#ifdef HAVE_PRAGMA_DIAGNOSTIC
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wcast-align"
-#endif
 static void get_env_conf(void)
 {
     char *s;
@@ -282,6 +279,9 @@ static void get_env_conf(void)
 	    case T_UQSTRING:
 		* ((char **)global_switches[i].address) = s;
 		break;
+	    case T_OFFS:
+		* ((mt_off_t *)global_switches[i].address) = str_to_offset(s);
+		break;
 	    }
 	    if(errno != 0) {
 		fprintf(stderr, "Bad number %s for %s (%s)\n", s,
@@ -292,9 +292,6 @@ static void get_env_conf(void)
 	}
     }
 }
-#ifdef HAVE_PRAGMA_DIAGNOSTIC
-#pragma GCC diagnostic pop
-#endif
 
 static int mtools_getline(void)
 {
@@ -421,6 +418,23 @@ static int get_number(void)
     return n;
 }
 
+static mt_off_t get_offset(void)
+{
+    char *last;
+    mt_off_t n;
+
+    skip_junk(1);
+    last = pos;
+    n= str_to_off_with_end(pos, &pos);
+    if(errno)
+	syntax("bad number", 0);
+    if(last == pos)
+	syntax("numeral expected", 0);
+    pos++;
+    token_nr++;
+    return n;
+}
+
 /* purge all entries pertaining to a given drive from the table */
 static void purge(char drive, int fn)
 {
@@ -508,17 +522,14 @@ static void finish_drive_clause(void)
     cur_dev = -1;
 }
 
-#ifdef HAVE_PRAGMA_DIAGNOSTIC
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wcast-align"
-#endif
-
 static int set_var(struct switches_l *switches, int nr,
-		   caddr_t base_address)
+		   char * base_address)
 {
     int i;
     for(i=0; i < nr; i++) {
 	if(match_token(switches[i].name)) {
+	    uintptr_t ptr = (uintptr_t)base_address+(size_t)switches[i].address;
+
 	    expect_char('=');
 	    /* All pointers cast back to pointers with alignment
 	     * constraints were such pointers with alignment
@@ -526,31 +537,25 @@ static int set_var(struct switches_l *switches, int nr,
 	     * constraint */
 
 	    if(switches[i].type == T_UINT)
-		* ((unsigned int *)((long)switches[i].address+base_address)) =
+		* ((unsigned int *)ptr) =
 		    (unsigned int) get_unumber(UINT_MAX);
 	    else if(switches[i].type == T_UINT8)
-		* ((uint8_t *)((long)switches[i].address+base_address)) =
-		    (uint8_t) get_unumber(UINT8_MAX);
+		* ((uint8_t *)ptr) = (uint8_t) get_unumber(UINT8_MAX);
 	    else if(switches[i].type == T_UINT16)
-		* ((uint16_t *)((long)switches[i].address+base_address)) =
-		    (uint16_t) get_unumber(UINT16_MAX);
+		* ((uint16_t *)ptr) =(uint16_t) get_unumber(UINT16_MAX);
 	    else if(switches[i].type == T_INT)
-		* ((int *)((long)switches[i].address+base_address)) =
-		    get_number();
+		* ((int *)ptr) = get_number();
 	    else if (switches[i].type == T_STRING)
-		* ((char**)((long)switches[i].address+base_address))=
-		    get_string();
+		* ((char**)ptr)= get_string();
 	    else if (switches[i].type == T_UQSTRING)
-		* ((char**)((long)switches[i].address+base_address))=
-		    get_unquoted_string();
+		* ((char**)ptr)= get_unquoted_string();
+	    else if (switches[i].type == T_OFFS)
+		* ((mt_off_t*)ptr)= get_offset();
 	    return 0;
 	}
     }
     return 1;
 }
-#ifdef HAVE_PRAGMA_DIAGNOSTIC
-#pragma GCC diagnostic pop
-#endif
 
 static int set_openflags(struct device *dev)
 {
@@ -678,7 +683,7 @@ static void parse_old_device_line(char drive)
 {
     char name[MAXPATHLEN];
     int items;
-    long offset;
+    mt_off_t offset;
 
     int heads, sectors, tracks;
 
@@ -690,25 +695,25 @@ static void parse_old_device_line(char drive)
 
     /* reserve slot */
     append();
-    items = sscanf(token,"%c %s %i %i %i %i %li",
+    items = sscanf(token,"%c %s %i %i %i %i " IMTOF,
 		   &devices[cur_dev].drive,name,&devices[cur_dev].fat_bits,
 		   &tracks,&heads,&sectors, &offset);
     devices[cur_dev].heads = tou16(heads, "heads");
     devices[cur_dev].sectors = tou16(sectors, "sectors");
     devices[cur_dev].tracks = (unsigned int) tracks;
-    devices[cur_dev].offset = (off_t) offset;
+    devices[cur_dev].offset = offset;
     switch(items){
 	case 2:
 	    devices[cur_dev].fat_bits = 0;
-	    /* fall thru */
+	    FALLTHROUGH
 	case 3:
 	    devices[cur_dev].sectors = 0;
 	    devices[cur_dev].heads = 0;
 	    devices[cur_dev].tracks = 0;
-	    /* fall thru */
+	    FALLTHROUGH
 	case 6:
 	    devices[cur_dev].offset = 0;
-	    /* fall thru */
+	    FALLTHROUGH
 	default:
 	    break;
 	case 0:
@@ -777,7 +782,7 @@ static int parse_one(int privilege)
     if((cur_dev < 0 ||
 	(set_var(dswitches,
 		 sizeof(dswitches)/sizeof(*dswitches),
-		 (caddr_t)&devices[cur_dev]) &&
+		 (void *)&devices[cur_dev]) &&
 	 set_openflags(&devices[cur_dev]) &&
 	 set_misc_flags(&devices[cur_dev]) &&
 	 set_def_format(&devices[cur_dev]))) &&
@@ -896,7 +901,7 @@ void mtoolstest(int argc, char **argv, int type  UNUSEDP)
 	       dev->name,dev->fat_bits);
 	printf("\ttracks=%d heads=%d sectors=%d hidden=%d\n",
 	       dev->tracks, dev->heads, dev->sectors, dev->hidden);
-	printf("\toffset=0x%lx\n", (long) dev->offset);
+	printf("\toffset=" XMTOF "\n", dev->offset);
 	printf("\tpartition=%d\n", dev->partition);
 
 	if(dev->misc_flags)

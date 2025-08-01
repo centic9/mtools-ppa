@@ -64,6 +64,15 @@ struct vfat_state {
 const char *short_illegals=";+=[]',\"*\\<>/?:|";
 const char *long_illegals = "\"*\\<>/?:|\005";
 
+/* Format a number into a string, without terminating the string */
+static void fmt_num(unsigned int num, char *base, int end, char prefix) {
+	for(;end;end--) {
+		base[end-1] = '0' + num % 10;
+		num = num / 10;
+	}
+	base[end] = prefix;
+}
+
 /* Automatically derive a new name */
 static void autorename(char *name,
 		       char tilda, char dot, const char *illegals,
@@ -71,7 +80,6 @@ static void autorename(char *name,
 {
 	int tildapos, dotpos;
 	unsigned int seqnum=0, maxseq=0;
-	char tmp;
 	char *p;
 
 #ifdef DEBUG
@@ -85,6 +93,8 @@ static void autorename(char *name,
 			bump = 0;
 		}
 
+	/* First step: find out whether the proposed name already ends
+	   in a sequence number, and fill in tildapos if so */
 	for(dotpos=0;
 	    name[dotpos] && dotpos < limit && name[dotpos] != dot ;
 	    dotpos++) {
@@ -96,10 +106,12 @@ static void autorename(char *name,
 			seqnum = seqnum * 10 + (uint8_t)(name[dotpos] - '0');
 			maxseq = maxseq * 10;
 		} else
-			tildapos = -1; /* sequence number interrupted */
+			tildapos = -1; /* "sequence number" followed
+					* by non-numeric characters,
+					* i.e. consider as not present */
 	}
 	if(tildapos == -1) {
-		/* no sequence number yet */
+		/* if no sequence number found at step 1, make space for one */
 		if(dotpos > limit - 2) {
 			tildapos = limit - 2;
 			dotpos = limit;
@@ -114,23 +126,25 @@ static void autorename(char *name,
 		if(seqnum > 999999) {
 			seqnum = 1;
 			tildapos = dotpos - 2;
-			/* this matches Win95's behavior, and also guarantees
-			 * us that the sequence numbers never get shorter */
+			/* produces a short sequence number within the former
+			 * big sequence number: A~9999~1 TST */
 		}
 		if (seqnum == maxseq) {
-		    if(dotpos >= limit)
-			tildapos--;
-		    else
-			dotpos++;
+			/* series of nines => make space for one more
+			 * digit */
+			if(dotpos >= limit)
+				tildapos--;
+			else
+				dotpos++;
 		}
 	}
 
-	tmp = name[dotpos];
 	if((bump && seqnum == 1) || seqnum > 1 || mtools_numeric_tail)
-		sprintf(name+tildapos,"%c%d",tilda, seqnum);
-	if(dot)
-	    name[dotpos]=tmp;
-	/* replace the character if it wasn't a space */
+		fmt_num(seqnum, name+tildapos, dotpos-tildapos, tilda);
+
+	/* terminate the string if long name */
+	if(!dot)
+		name[dotpos]='\0';
 #ifdef DEBUG
 	printf("Out autorename for name=%s.\n", name);
 #endif
@@ -581,10 +595,17 @@ static result_t checkNameForMatch(struct direntry_t *direntry,
 		case DCET_USED:
 			break;
 #ifdef DEBUG
+# if defined HAVE_PRAGMA_DIAGNOSTIC && defined __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wcovered-switch-default"
+# endif
 		default:
 			fprintf(stderr, "Unexpected entry type %d\n",
 				dce->type);
 			return RES_ERROR;
+# if defined HAVE_PRAGMA_DIAGNOSTIC && defined __clang__
+#  pragma clang diagnostic pop
+# endif
 #endif
 	}
 

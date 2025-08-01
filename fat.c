@@ -232,8 +232,8 @@ static unsigned char *loadSector(Fs_t *This,
 }
 
 
-static unsigned char *getAddress(Fs_t *Stream,
-				 unsigned int num, fatAccessMode_t mode)
+static uintptr_t getAddress(Fs_t *Stream,
+			    unsigned int num, fatAccessMode_t mode)
 {
 	unsigned char *ret;
 	unsigned int sector;
@@ -253,18 +253,18 @@ static unsigned char *getAddress(Fs_t *Stream,
 		Stream->lastFatAccessMode = mode;
 	}
 	offset = num & Stream->sectorMask;
-	return ret+offset;
+	return (uintptr_t)ret+offset;
 }
 
 
 static int readByte(Fs_t *Stream, unsigned int start)
 {
-	unsigned char *address;
+	uintptr_t address;
 
 	address = getAddress(Stream, start, FAT_ACCESS_READ);
 	if(!address)
 		return -1;
-	return *address;
+	return *(uint8_t *)address;
 }
 
 
@@ -311,17 +311,17 @@ static unsigned int fat12_decode(Fs_t *Stream, unsigned int num)
 static void fat12_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 {
 	unsigned int start = num * 3 / 2;
-	unsigned char *address0 = getAddress(Stream, start, FAT_ACCESS_WRITE);
-	unsigned char *address1 = getAddress(Stream, start+1, FAT_ACCESS_WRITE);
+	uintptr_t address0 = getAddress(Stream, start, FAT_ACCESS_WRITE);
+	uintptr_t address1 = getAddress(Stream, start+1, FAT_ACCESS_WRITE);
 
 	if (num & 1) {
 		/* (odd) not on byte boundary */
-		*address0 = (*address0 & 0x0f) | ((code << 4) & 0xf0);
-		*address1 = (code >> 4) & 0xff;
+		*(uint8_t *)address0 = (*(uint8_t *)address0 & 0x0f) | ((code << 4) & 0xf0);
+		*(uint8_t *)address1 = (code >> 4) & 0xff;
 	} else {
 		/* (even) on byte boundary */
-		*address0 = code & 0xff;
-		*address1 = (*address1 & 0xf0) | ((code >> 8) & 0x0f);
+		*(uint8_t *)address0 = code & 0xff;
+		*(uint8_t *)address1 = (*(uint8_t *)address1 & 0xf0) | ((code >> 8) & 0x0f);
 	}
 }
 
@@ -336,28 +336,22 @@ static void fat12_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 
 static unsigned int fat16_decode(Fs_t *Stream, unsigned int num)
 {
-	unsigned char *address = getAddress(Stream, num << 1, FAT_ACCESS_READ);
+	uintptr_t address = getAddress(Stream, num << 1, FAT_ACCESS_READ);
 	if(!address)
 		return 1;
-	return WORD(address);
+	return WORD((uint8_t *)address);
 }
 
 static void fat16_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 {
-	unsigned char *address;
+	uintptr_t address;
 	if(code > UINT16_MAX) {
 		fprintf(stderr, "FAT16 code %x too big\n", code);
 		exit(1);
 	}
 	address = getAddress(Stream, num << 1, FAT_ACCESS_WRITE);
-	set_word(address, (uint16_t) code);
+	set_word((uint8_t *)address, (uint16_t) code);
 }
-
-
-#ifdef HAVE_PRAGMA_DIAGNOSTIC
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wcast-align"
-#endif
 
 /* Ignore alignment warnings about casting to type with higher
  * alignment requirement. Requirement is met, as initial pointer is an
@@ -365,29 +359,21 @@ static void fat16_encode(Fs_t *Stream, unsigned int num, unsigned int code)
  * manpage is "suitably aligned for any built-in type */
 static unsigned int fast_fat16_decode(Fs_t *Stream, unsigned int num)
 {
-	unsigned short *address =
-		(unsigned short *) getAddress(Stream, num << 1,
-					      FAT_ACCESS_READ);
+	uintptr_t address = getAddress(Stream, num << 1, FAT_ACCESS_READ);
 	if(!address)
 		return 1;
-	return *address;
+	return *(uint16_t *) address;
 }
 
 static void fast_fat16_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 {
-	unsigned short *address =
-		(unsigned short *) getAddress(Stream, num << 1,
-					      FAT_ACCESS_WRITE);
+	uintptr_t address = getAddress(Stream, num << 1, FAT_ACCESS_WRITE);
 	if(code > UINT16_MAX) {
 		fprintf(stderr, "FAT16 code %x too big\n", code);
 		exit(1);
 	}
-	*address = (uint16_t) code;
+	*(uint16_t *) address = (uint16_t) code;
 }
-
-#ifdef HAVE_PRAGMA_DIAGNOSTIC
-# pragma GCC diagnostic pop
-#endif
 
 /*
  * Fat 32 encoding
@@ -397,42 +383,33 @@ static void fast_fat16_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 
 static unsigned int fat32_decode(Fs_t *Stream, unsigned int num)
 {
-	unsigned char *address = getAddress(Stream, num << 2, FAT_ACCESS_READ);
+	uintptr_t address = getAddress(Stream, num << 2, FAT_ACCESS_READ);
 	if(!address)
 		return 1;
-	return DWORD(address) & FAT32_ADDR;
+	return DWORD((uint8_t *)address) & FAT32_ADDR;
 }
 
 static void fat32_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 {
-	unsigned char *address = getAddress(Stream, num << 2, FAT_ACCESS_WRITE);
-	set_dword(address,(code&FAT32_ADDR) | (DWORD(address)&FAT32_HIGH));
+	uintptr_t address = getAddress(Stream, num << 2, FAT_ACCESS_WRITE);
+	set_dword((uint8_t *)address,
+		  (code&FAT32_ADDR) | (DWORD((uint8_t *)address)&FAT32_HIGH));
 }
 
-#ifdef HAVE_PRAGMA_DIAGNOSTIC
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wcast-align"
-#endif
 static unsigned int fast_fat32_decode(Fs_t *Stream, unsigned int num)
 {
-	unsigned int *address =
-		(unsigned int *) getAddress(Stream, num << 2,
-					    FAT_ACCESS_READ);
+	uintptr_t address = getAddress(Stream, num << 2, FAT_ACCESS_READ);
 	if(!address)
 		return 1;
-	return (*address) & FAT32_ADDR;
+	return (*(uint32_t *) address) & FAT32_ADDR;
 }
 
 static void fast_fat32_encode(Fs_t *Stream, unsigned int num, unsigned int code)
 {
-	unsigned int *address =
-		(unsigned int *) getAddress(Stream, num << 2,
-					    FAT_ACCESS_WRITE);
-	*address = (*address & FAT32_HIGH) | (code & FAT32_ADDR);
+	uintptr_t address = getAddress(Stream, num << 2, FAT_ACCESS_WRITE);
+	*(uint32_t *)address =
+		(*(uint32_t *)address & FAT32_HIGH) | (code & FAT32_ADDR);
 }
-#ifdef HAVE_PRAGMA_DIAGNOSTIC
-# pragma GCC diagnostic pop
-#endif
 
 /*
  * Write the FAT table to the disk.  Up to now the FAT manipulation has
@@ -520,7 +497,7 @@ int zero_fat(Fs_t *Stream, uint8_t media_descriptor)
 {
 	unsigned int i, j;
 	unsigned int fat_start;
-	unsigned char *buf;
+	uint8_t *buf;
 
 	buf = malloc(Stream->sector_size);
 	if(!buf) {
@@ -674,8 +651,9 @@ static int check_fat(Fs_t *This)
  */
 static int check_media_type(Fs_t *This, union bootsector *boot)
 {
-	unsigned char *address;
-
+	uintptr_t address;
+	uint8_t *ptr;
+	
 	This->FatMap = GetFatMap(This);
 	if (This->FatMap == NULL) {
 		perror("alloc fat map");
@@ -688,26 +666,27 @@ static int check_media_type(Fs_t *This, union bootsector *boot)
 			"Could not read first FAT sector\n");
 		return -1;
 	}
-
+	ptr = (uint8_t *) address;
+	
 	if(mtools_skip_check)
 		return 0;
 
-	if(!address[0] && !address[1] && !address[2])
+	if(!ptr[0] && !ptr[1] && !ptr[2])
 		/* Some Atari disks have zeroes where Dos has media descriptor
 		 * and 0xff.  Do not consider this as an error */
 		return 0;
 
-	if((address[0] != boot->boot.descr && boot->boot.descr >= 0xf0 &&
-	    ((address[0] != 0xf9 && address[0] != 0xf7)
-	     || boot->boot.descr != 0xf0)) || address[0] < 0xf0) {
+	if((ptr[0] != boot->boot.descr && boot->boot.descr >= 0xf0 &&
+	    ((ptr[0] != 0xf9 && ptr[0] != 0xf7)
+	     || boot->boot.descr != 0xf0)) || ptr[0] < 0xf0) {
 		fprintf(stderr,
 			"Bad media types %02x/%02x, probably non-MSDOS disk\n",
-				address[0],
+				ptr[0],
 				boot->boot.descr);
 		return -1;
 	}
 
-	if(address[1] != 0xff || address[2] != 0xff){
+	if(ptr[1] != 0xff || ptr[2] != 0xff){
 		fprintf(stderr,"Initial bytes of fat is not 0xff\n");
 		return -1;
 	}

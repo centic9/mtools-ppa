@@ -1,3 +1,51 @@
+mtools (4.0.48) stable; urgency=low
+  * portability fixes, mostly for Watcom compiler
+  * cleaned up some other warnings
+  * various runtime fixes for windows (/dev/tty vs CONIN$)
+  * use correct mtools (sub)command name in usage() when using -c
+  * other usage() spelling/wording fixes
+  * fix mtype'ing multiple files at once
+  * integrate mkmanpages into make system, clean it, and credit
+    texi2roff's original developer and others
+  * document compilation on less usual environments in INSTALL
+  * uninitialized buffer fix in mformat
+  * fix parameter counting error in mcd, and document that image
+    file name is not remembered
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 22 Feb 2025 16:24:12 +0100
+mtools (4.0.47) stable; urgency=low
+  * fixed some of the manpage issues reported by manpage-l10n
+  * unix-dir copying on Windows fix
+  * new no-daemon mode for floppyd to make testing easier
+  * make floppyd independant of XauFileName (portability)
+  * autoconf fixes
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 19 Jan 2025 09:17:00 +0100
+mtools (4.0.46) stable; urgency=low
+  * iconv buffer overflow fixes
+  * removed references to mread and mwrite (obsolete subcommands
+    from mcopy)
+  * documented mdoctorfat, and addressed 2 bugs/oversights
+  * removed references to obsolete mread and mwrite
+  * portability fixes (dietlibc and MacOS X) & simplification
+
+ -- Alain Knaff <alain@knaff.lu>  Thu, 21 Nov 2024 07:57:50 +0100
+mtools (4.0.45) stable; urgency=low
+  * Fixed iconv descriptor leak
+  * Fixed size of error message buffer
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 28 Sep 2024 15:17:58 +0200
+mtools (4.0.44) stable; urgency=low
+  * Added documentation for size parameters
+  * Fix parsing of fat_start (reserved sectors) in mformat.c so
+    as to allow more than 255
+  * Rewrite autorename in vfat.c such that it doesn't
+    (temporarily) overwrite byte after name string
+  * Switch statement fall-through fixes (size parsing, and bios disk in
+    mformat.c)
+  * Compilation warning fixes, mostly for CLANG
+
+ -- Alain Knaff <alain@knaff.lu>  Sun,  2 Jun 2024 09:40:05 +0200
 mtools (4.0.43) stable; urgency=low
   * Fix root directory test in mattrib
   * -b BiosDisk flag for mformat to allow setting physdrive to a
@@ -7,7 +55,6 @@ mtools (4.0.43) stable; urgency=low
   * Make recursive copy more consistent
   * Trailing slash now always implies target should be a directory
   * Code cleanup
-
 
  -- Alain Knaff <alain@knaff.lu>  Tue, 21 Mar 2023 23:20:45 +0100
 mtools (4.0.42) stable; urgency=low

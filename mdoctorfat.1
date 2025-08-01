@@ -1,7 +1,7 @@
 '\" t
-.TH mshowfat 1 "22Feb25" mtools-4.0.48
+.TH mdoctorfat 1 "22Feb25" mtools-4.0.48
 .SH Name
-mshowfat - shows FAT clusters allocated to file
+mdoctorfat - doctors the allocation table of a file
 '\" t
 .de TQ
 .br
@@ -20,19 +20,37 @@ end of this man page for details.
 .PP
 .SH Description
 .PP
-The \fR\&\f(CWmshowfat\fR command is used to display the FAT entries for a
-file.  Syntax:
+The \fR\&\f(CWmdoctorfat\fR command was initially intended as a
+test/debugging tool. It allows to flag FAT clusters as bad blocks, and
+also to change the clusters allocated to a file. No consistency check
+is done, clusters previously allocated to the file are not freed. Use
+at your own risk.
+.PP
+Syntax:
 .PP
 .ft I
 .nf
-\&\fR\&\f(CWmshowfat\fR [\fR\&\f(CW-o\fR \fIoffset\fR] \fIfiles\fR
+\&\fR\&\f(CWmdoctorfat\fR [\fR\&\f(CW-o\fR \fIoffset\fR] \fR\&\f(CW-b\fR \fIdrive\fR \fIclusters\fR
+\&\fR\&\f(CWmdoctorfat\fR [\fR\&\f(CW-o\fR \fIoffset\fR] [\fR\&\f(CW-s\fR \fIsize\fR] \fIfile\fR \fIclusters\fR
 .fi
 .ft R
  
 .PP
-If no offset is given, a list of all clusters occupied by the file is
-printed. If an offset is given, only the number of the cluster
-containing that offset (in bytes) is printed.
+If flag \fR\&\f(CW-b\fR is present, the command marks the clusters as bad blocks
+rather than change the allocation of a file.
+.PP
+If flag \fR\&\f(CW-b\fR is not present, the commands sets the clusters to
+allocated to the file.
+.PP
+If option \fR\&\f(CW-s\fR is given in addition to the \fR\&\f(CW-b\fR, this also
+changes the size in bytes of the file.
+.PP
+The cluster list is represented as a sequence of clusters or cluster
+ranges. Example: \fR\&\f(CW7-10 20 21-24\fR. Each range needs to be a
+different parameter.
+.PP
+If \fR\&\f(CW-o\fR is given, this specifies an offset to be added to each
+cluster (offset is expressed in number of clusters).
 .PP
 .SH See\ Also
 Mtools' texinfo doc
